@@ -513,6 +513,22 @@ wizard, or by editing `NetHost.txt`.
 
 ## Crashes and corruption: checks that are missing
 
+### Warping onto a surface taller than 1024 rows overwrites the stack
+`InternalWarpSurfaceToSurface` (lithtech.exe, 0x0040e120) · `src/engine/lithtech/clientinterface.cpp`
+
+> **✅ FIXED in the modern build** (`NOLFSRC_MODERN`, M-P3-23): the edge
+> tables are static and hold 8192 rows; a taller destination is refused.
+
+The software warp behind `WarpSurfaceToSurface*` (and the scaled draws that
+fall back to it) builds a left and a right edge table for the polygon,
+indexed by the destination's row, in two 1024-entry arrays on its stack. The
+polygon is clipped to the destination first, so on a surface up to 1024 rows
+high this holds; on a taller one (the screen at 1080p, 1440p or 4K) any warp
+reaching below row 1023 writes past the arrays, over the function's own
+arguments, and the call to the format's warp routine jumps to whatever its
+pointer has become (a page fault at address 0). Retail's 2001 screens were
+never that tall.
+
 ### `GetMovementData` reads one past its table, and the word there is a NaN
 `GetMovementData` (Object.lto) · `src/game/ObjectDLL/AIMovement.cpp`
 

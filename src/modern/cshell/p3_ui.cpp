@@ -97,14 +97,9 @@ LTBOOL P3_PointOnCtrl(CLTGUICtrl *pCtrl, int x, int y, LTBOOL bRow)
 	int nWidth = pCtrl->GetWidth();
 	int nHeight = pCtrl->GetHeight();
 
-	// A row of a folder's list is laid out in layout units, so on the screen
-	// it covers its size times the menu scale (its text does not grow, the
-	// row does).
-	if (bRow && P3_MenuScale() > 1.0f)
-	{
-		nWidth = P3_MenuLen(nWidth);
-		nHeight = P3_MenuLen(nHeight);
-	}
+	// A control's size is its text's, which is drawn at the menu scale
+	// (M-P3-23): on the screen it covers just that.
+	(void)bRow;
 
 	return (x >= nLeft && x <= nLeft + nWidth &&
 			y >= nTop && y <= nTop + nHeight);

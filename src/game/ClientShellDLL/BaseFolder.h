@@ -23,6 +23,18 @@
 #include "cshell/p3_ui.h"
 #endif
 
+// M-P3-23: a width of the 640x480 page, in screen pixels: the menus' text
+// is drawn at the page's scale, so the columns it sits in are too. The
+// release build's widths are the layout's. P3_L is the other way: a size of
+// that text (a font's height), in the page's units, for positions.
+#ifdef NOLFSRC_MODERN
+#define P3_W(n)		P3_MenuLen(n)
+#define P3_L(n)		P3_LayoutLen(n)
+#else
+#define P3_W(n)		(n)
+#define P3_L(n)		(n)
+#endif
+
 
 #define MAX_INT_ATTACHMENTS 5
 struct INT_ATTACH

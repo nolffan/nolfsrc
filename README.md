@@ -248,6 +248,9 @@ This project builds on the work of others:
 - **FFmpeg** (<https://ffmpeg.org>), on which the modern build's Bink player
   is built; **zlib**; and **Capstone**, which the tools use to read the
   retail machine code.
+- **Vernon Adams**, for Bowlby One SC, the modern build's menu font, and
+  **the Noto Project**, for Noto Sans Mono, its console's (both SIL Open
+  Font License).
 - **Wine**, **Proton** and **DXVK**, which run the game on Linux and the
   Steam Deck, and **OpenSpy** (<https://openspy.net>), whose master server
   replaces GameSpy's.

@@ -107,20 +107,30 @@ void CFolderNew::BuildMissionList()
             pCheck->Create(g_pLTClient,"interface\\small_check-off.pcx","interface\\small_check-on.pcx");
 		pCheck->Select((mis < nextMission));
 
+#ifdef NOLFSRC_MODERN
+		pCheck->SetScale(P3_MenuScale());	// M-P3-23: at the text's scale
+#endif
 		int nWidth = pCheck->GetWidth();
-        CStaticTextCtrl *pCtrl = CreateStaticTextItem(hStr,cmd,LTNULL,(nListWidth - nWidth),0,LTFALSE,pFont);
+        CStaticTextCtrl *pCtrl = CreateStaticTextItem(hStr,cmd,LTNULL,(P3_W(nListWidth) - nWidth),0,LTFALSE,pFont);
         pCtrl->Enable(LTTRUE);
 
 
 		int nHeight = Max(pCtrl->GetHeight(),pCheck->GetHeight());
 
-		CGroupCtrl *pGroup = AddGroup(nListWidth,nHeight,cmd);
+		CGroupCtrl *pGroup = AddGroup(P3_W(nListWidth),nHeight,cmd);
         g_pLTClient->FreeString(hStr);
 
         LTIntPt offset;
 
+#ifdef NOLFSRC_MODERN
+		// M-P3-23: the tick and the name centred on each other
+		offset.y = (nHeight - pCheck->GetHeight()) / 2;
+#endif
         pGroup->AddControl(pCheck,offset,LTFALSE);
 		offset.x = nWidth;
+#ifdef NOLFSRC_MODERN
+		offset.y = (nHeight - pCtrl->GetHeight()) / 2;
+#endif
         pGroup->AddControl(pCtrl,offset,LTTRUE);
 
 //		AddPhotoBitmap(g_pInterfaceResMgr->GetSharedSurface(pMission->szPhoto));

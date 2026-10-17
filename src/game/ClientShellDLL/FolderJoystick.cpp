@@ -104,7 +104,7 @@ void CFolderJoystick::BuildAxisFolders()
 
 
 	// Turn folder options
-	pTitleCtrl= AddStaticTextItem(IDS_JOYSTICK_TURNLEFTRIGHTAXIS,LTNULL,IDS_HELP_JOYSTICK_LEFTRIGHT,200,0,LTTRUE,GetMediumFont());
+	pTitleCtrl= AddStaticTextItem(IDS_JOYSTICK_TURNLEFTRIGHTAXIS,LTNULL,IDS_HELP_JOYSTICK_LEFTRIGHT,P3_W(200),0,LTTRUE,GetMediumFont());
 	if (pTitleCtrl)
 	{
         pTitleCtrl->Enable(LTFALSE);
@@ -117,7 +117,7 @@ void CFolderJoystick::BuildAxisFolders()
 	AddPageBreak();
 
 	// Look folder options
-	pTitleCtrl= AddStaticTextItem(IDS_JOYSTICK_LOOKUPDOWNAXIS,LTNULL,IDS_HELP_JOYSTICK_UPDOWN,200,0,LTTRUE,GetMediumFont());
+	pTitleCtrl= AddStaticTextItem(IDS_JOYSTICK_LOOKUPDOWNAXIS,LTNULL,IDS_HELP_JOYSTICK_UPDOWN,P3_W(200),0,LTTRUE,GetMediumFont());
 	if (pTitleCtrl)
 	{
         pTitleCtrl->Enable(LTFALSE);
@@ -129,7 +129,7 @@ void CFolderJoystick::BuildAxisFolders()
 	AddPageBreak();
 
 	// Move folder options
-	pTitleCtrl= AddStaticTextItem(IDS_JOYSTICK_MOVEFORWARDBACKWARDAXIS,LTNULL,IDS_HELP_JOYSTICK_MOVE,200,0,LTTRUE,GetMediumFont());
+	pTitleCtrl= AddStaticTextItem(IDS_JOYSTICK_MOVEFORWARDBACKWARDAXIS,LTNULL,IDS_HELP_JOYSTICK_MOVE,P3_W(200),0,LTTRUE,GetMediumFont());
 	if (pTitleCtrl)
 	{
         pTitleCtrl->Enable(LTFALSE);
@@ -141,7 +141,7 @@ void CFolderJoystick::BuildAxisFolders()
 	AddPageBreak();
 
 	// Strafe folder options
-	pTitleCtrl= AddStaticTextItem(IDS_JOYSTICK_STRAFELEFTRIGHTAXIS,LTNULL,IDS_HELP_JOYSTICK_STRAFE,200,0,LTTRUE,GetMediumFont());
+	pTitleCtrl= AddStaticTextItem(IDS_JOYSTICK_STRAFELEFTRIGHTAXIS,LTNULL,IDS_HELP_JOYSTICK_STRAFE,P3_W(200),0,LTTRUE,GetMediumFont());
 	if (pTitleCtrl)
 	{
         pTitleCtrl->Enable(LTFALSE);

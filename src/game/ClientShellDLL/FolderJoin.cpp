@@ -235,31 +235,31 @@ LTBOOL CFolderJoin::Build()
 	//Add Server Header
     LTIntPt pos(rcServerRect.left + nIndent,rcServerRect.top);
 	CLTGUIFont *pFont = GetMediumFont();
-	nBarHeight = pFont->GetHeight();
+	nBarHeight = P3_L(pFont->GetHeight());
 
 
-	CStaticTextCtrl *pCtrl = CreateStaticTextItem(IDS_SERVER_NAME,CMD_SORT_SERV_NAME,IDS_HELP_SERVER_NAME,nGameWidth,pFont->GetHeight(),LTFALSE,pFont);
+	CStaticTextCtrl *pCtrl = CreateStaticTextItem(IDS_SERVER_NAME,CMD_SORT_SERV_NAME,IDS_HELP_SERVER_NAME,P3_W(nGameWidth),pFont->GetHeight(),LTFALSE,pFont);
     AddFixedControl(pCtrl,pos,LTTRUE);
 	pServerNameCtrl = pCtrl;
 	pos.x += nGameWidth+nGap;
 
-	pCtrl = CreateStaticTextItem(IDS_SERVER_PLAYERS,CMD_SORT_SERV_PLAYERS,IDS_HELP_SERVER_PLAYERS,nPlayerWidth,pFont->GetHeight(),LTFALSE,pFont);
+	pCtrl = CreateStaticTextItem(IDS_SERVER_PLAYERS,CMD_SORT_SERV_PLAYERS,IDS_HELP_SERVER_PLAYERS,P3_W(nPlayerWidth),pFont->GetHeight(),LTFALSE,pFont);
     AddFixedControl(pCtrl,pos,LTTRUE);
 	pServerPlayersCtrl = pCtrl;
 	pos.x += nPlayerWidth+nGap;
 
-	pCtrl = CreateStaticTextItem(IDS_SERVER_PING,CMD_SORT_SERV_PING,IDS_HELP_SERVER_PING,nPingWidth,pFont->GetHeight(),LTFALSE,pFont);
+	pCtrl = CreateStaticTextItem(IDS_SERVER_PING,CMD_SORT_SERV_PING,IDS_HELP_SERVER_PING,P3_W(nPingWidth),pFont->GetHeight(),LTFALSE,pFont);
     AddFixedControl(pCtrl,pos,LTTRUE);
 	pServerPingCtrl = pCtrl;
 	pos.x += nPingWidth+nGap;
 
 	pFont = GetMediumFont();
-    pCtrl = CreateStaticTextItem(IDS_SERVER_GAME,CMD_SORT_SERV_GAME,LTNULL,nTypeWidth,pFont->GetHeight(),LTFALSE,pFont);
+    pCtrl = CreateStaticTextItem(IDS_SERVER_GAME,CMD_SORT_SERV_GAME,LTNULL,P3_W(nTypeWidth),pFont->GetHeight(),LTFALSE,pFont);
     AddFixedControl(pCtrl,pos,LTFALSE);
 	pServerGameCtrl = pCtrl;
 	pos.x += nTypeWidth+nGap;
 
-    pCtrl = CreateStaticTextItem(IDS_SERVER_MAP,CMD_SORT_SERV_MAP,LTNULL,nMapWidth,pFont->GetHeight(),LTFALSE,pFont);
+    pCtrl = CreateStaticTextItem(IDS_SERVER_MAP,CMD_SORT_SERV_MAP,LTNULL,P3_W(nMapWidth),pFont->GetHeight(),LTFALSE,pFont);
 	pServerMapCtrl = pCtrl;
     AddFixedControl(pCtrl,pos,LTFALSE);
 
@@ -290,17 +290,17 @@ LTBOOL CFolderJoin::Build()
 	pFont = GetMediumFont();
     pos = LTIntPt(rcPlayerRect.left + nIndent,rcPlayerRect.top);
 
-	pCtrl = CreateStaticTextItem(IDS_JOIN_PLAYER_NAME,CMD_SORT_PLYR_NAME,IDS_HELP_SORT_PLYR_NAME,nNameWidth,pFont->GetHeight(),LTFALSE,pFont);
+	pCtrl = CreateStaticTextItem(IDS_JOIN_PLAYER_NAME,CMD_SORT_PLYR_NAME,IDS_HELP_SORT_PLYR_NAME,P3_W(nNameWidth),pFont->GetHeight(),LTFALSE,pFont);
     AddFixedControl(pCtrl,pos,LTTRUE);
 	pPlayerNameCtrl = pCtrl;
 	pos.x += nNameWidth+nGap;
 
-	pCtrl = CreateStaticTextItem(IDS_JOIN_PLAYER_SCORE,CMD_SORT_PLYR_SCORE,IDS_HELP_SORT_PLYR_SCORE,nScoreWidth,pFont->GetHeight(),LTFALSE,pFont);
+	pCtrl = CreateStaticTextItem(IDS_JOIN_PLAYER_SCORE,CMD_SORT_PLYR_SCORE,IDS_HELP_SORT_PLYR_SCORE,P3_W(nScoreWidth),pFont->GetHeight(),LTFALSE,pFont);
     AddFixedControl(pCtrl,pos,LTTRUE);
 	pPlayerFragCtrl = pCtrl;
 	pos.x += nScoreWidth+nGap;
 
-	pCtrl = CreateStaticTextItem(IDS_SERVER_PING,CMD_SORT_PLYR_PING,IDS_HELP_SORT_PLYR_PING,nPingWidth,pFont->GetHeight(),LTFALSE,pFont);
+	pCtrl = CreateStaticTextItem(IDS_SERVER_PING,CMD_SORT_PLYR_PING,IDS_HELP_SORT_PLYR_PING,P3_W(nPingWidth),pFont->GetHeight(),LTFALSE,pFont);
 	pPlayerPingCtrl = pCtrl;
     AddFixedControl(pCtrl,pos,LTTRUE);
 
@@ -333,7 +333,7 @@ LTBOOL CFolderJoin::Build()
 	pos.y = rcCommandRect.top;
 	m_pRefresh = CreateTextItem(IDS_SERVER_REFRESH,CMD_REFRESH_SERVERS,IDS_HELP_REFRESH,LTFALSE,pFont);
     AddFixedControl(m_pRefresh,pos,LTTRUE);
-	pos.y += pFont->GetHeight();
+	pos.y += P3_L(pFont->GetHeight());
 
 	// [blg] re-ping is not support in the GameSpy SDK
 	//m_pRePing = CreateTextItem(IDS_SERVER_REPING,CMD_REPING_SERVERS,IDS_HELP_REPING,LTFALSE,pFont);
@@ -343,20 +343,20 @@ LTBOOL CFolderJoin::Build()
 	m_pVersionFilter = CreateTextItem(IDS_ALL_VERSIONS,CMD_VERSION_FILTER,IDS_HELP_VERSION_FILTER,LTFALSE,pFont,&m_nVersionFilter);
 	m_pVersionFilter->AddString(IDS_CURRENT_VERSION);
     AddFixedControl(m_pVersionFilter,pos,LTTRUE);
-	pos.y += pFont->GetHeight();
+	pos.y += P3_L(pFont->GetHeight());
 
 	m_pGameFilter = CreateTextItem(anGameFilterID[0],CMD_GAME_FILTER,IDS_HELP_GAME_FILTER,LTFALSE,pFont,&m_nGameFilter);
 	m_pGameFilter->AddString(anGameFilterID[1]);
 	m_pGameFilter->AddString(anGameFilterID[2]);
     AddFixedControl(m_pGameFilter,pos,LTTRUE);
-	pos.y += pFont->GetHeight();
+	pos.y += P3_L(pFont->GetHeight());
 
 	m_pPopFilter = CreateTextItem(anPopFilterID[0],CMD_POP_FILTER,IDS_HELP_POP_FILTER,LTFALSE,pFont,&m_nPopFilter);
 	m_pPopFilter->AddString(anPopFilterID[1]);
 	m_pPopFilter->AddString(anPopFilterID[2]);
 	m_pPopFilter->AddString(anPopFilterID[3]);
     AddFixedControl(m_pPopFilter,pos,LTTRUE);
-	pos.y += pFont->GetHeight();
+	pos.y += P3_L(pFont->GetHeight());
 
 	m_pJoin = CreateTextItem(IDS_JOIN_GAME,CMD_JOIN,IDS_HELP_JOIN_GAME,LTFALSE,pFont);
     m_pJoin->Enable(LTFALSE);
@@ -368,12 +368,12 @@ LTBOOL CFolderJoin::Build()
 	pFont = GetMediumFont();
     pos = LTIntPt(rcOptionRect.left + nIndent,rcOptionRect.top);
 
-    pCtrl = CreateStaticTextItem(IDS_OPTION_NAME,LTNULL,LTNULL,nNameWidth,pFont->GetHeight(),LTTRUE,pFont);
+    pCtrl = CreateStaticTextItem(IDS_OPTION_NAME,LTNULL,LTNULL,P3_W(nNameWidth),pFont->GetHeight(),LTTRUE,pFont);
     pCtrl->Enable(LTFALSE);
     AddFixedControl(pCtrl,pos,LTFALSE);
 	pos.x += nOptionWidth+nGap;
 
-    pCtrl = CreateStaticTextItem(IDS_OPTION_VALUE,LTNULL,LTNULL,nScoreWidth,pFont->GetHeight(),LTTRUE,pFont);
+    pCtrl = CreateStaticTextItem(IDS_OPTION_VALUE,LTNULL,LTNULL,P3_W(nScoreWidth),pFont->GetHeight(),LTTRUE,pFont);
     pCtrl->Enable(LTFALSE);
     AddFixedControl(pCtrl,pos,LTFALSE);
 

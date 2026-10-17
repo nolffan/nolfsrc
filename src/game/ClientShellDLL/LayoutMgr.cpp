@@ -1702,16 +1702,32 @@ LTIntPt CLayoutMgr::GetSubtitleFullScreenPos()
 
 int CLayoutMgr::GetDialoguePosition()
 {
+#ifdef NOLFSRC_MODERN
+	// M-P3-23: the in-game dialogue, decision and menu windows hold the menu
+	// fonts, drawn at the menu scale: their sizes and places scale with them
+	return P3_MenuLen(GetInt(LO_DIALOGUE_TAG, LO_WINDOW_POS));
+#else
 	return GetInt(LO_DIALOGUE_TAG, LO_WINDOW_POS);
+#endif
 }
 
 LTIntPt CLayoutMgr::GetDialogueSize()
 {
+#ifdef NOLFSRC_MODERN
+	LTIntPt pt = GetPoint(LO_DIALOGUE_TAG, LO_WINDOW_SIZE);
+	return LTIntPt(P3_MenuLen(pt.x), P3_MenuLen(pt.y));
+#else
 	return GetPoint(LO_DIALOGUE_TAG, LO_WINDOW_SIZE);
+#endif
 }
 LTIntPt CLayoutMgr::GetDialogueTextOffset()
 {
+#ifdef NOLFSRC_MODERN
+	LTIntPt pt = GetPoint(LO_DIALOGUE_TAG, LO_WINDOW_TEXT_OFFSET);
+	return LTIntPt(P3_MenuLen(pt.x), P3_MenuLen(pt.y));
+#else
 	return GetPoint(LO_DIALOGUE_TAG, LO_WINDOW_TEXT_OFFSET);
+#endif
 }
 
 void CLayoutMgr::GetDialogueBackground(char *pBuf, int nBufLen)
@@ -1758,18 +1774,31 @@ void CLayoutMgr::GetDialogueCloseSound(char *pBuf, int nBufLen)
 
 int CLayoutMgr::GetDecisionPosition()
 {
+#ifdef NOLFSRC_MODERN
+	return P3_MenuLen(GetInt(LO_DECISION_TAG, LO_WINDOW_POS));
+#else
 	return GetInt(LO_DECISION_TAG, LO_WINDOW_POS);
+#endif
 }
 
 
 LTIntPt CLayoutMgr::GetDecisionTextOffset()
 {
+#ifdef NOLFSRC_MODERN
+	LTIntPt pt = GetPoint(LO_DECISION_TAG, LO_WINDOW_TEXT_OFFSET);
+	return LTIntPt(P3_MenuLen(pt.x), P3_MenuLen(pt.y));
+#else
 	return GetPoint(LO_DECISION_TAG, LO_WINDOW_TEXT_OFFSET);
+#endif
 }
 
 int CLayoutMgr::GetDecisionSpacing()
 {
+#ifdef NOLFSRC_MODERN
+	return P3_MenuLen(GetInt(LO_DECISION_TAG, LO_WINDOW_SPACING));
+#else
 	return GetInt(LO_DECISION_TAG, LO_WINDOW_SPACING);
+#endif
 }
 
 void CLayoutMgr::GetDecisionBackground(char *pBuf, int nBufLen)
@@ -1803,18 +1832,31 @@ LTFLOAT CLayoutMgr::GetDecisionCloseTime()
 
 int CLayoutMgr::GetMenuPosition()
 {
+#ifdef NOLFSRC_MODERN
+	return P3_MenuLen(GetInt(LO_MENU_TAG, LO_WINDOW_POS));
+#else
 	return GetInt(LO_MENU_TAG, LO_WINDOW_POS);
+#endif
 }
 
 
 LTIntPt CLayoutMgr::GetMenuTextOffset()
 {
+#ifdef NOLFSRC_MODERN
+	LTIntPt pt = GetPoint(LO_MENU_TAG, LO_WINDOW_TEXT_OFFSET);
+	return LTIntPt(P3_MenuLen(pt.x), P3_MenuLen(pt.y));
+#else
 	return GetPoint(LO_MENU_TAG, LO_WINDOW_TEXT_OFFSET);
+#endif
 }
 
 int CLayoutMgr::GetMenuSpacing()
 {
+#ifdef NOLFSRC_MODERN
+	return P3_MenuLen(GetInt(LO_MENU_TAG, LO_WINDOW_SPACING));
+#else
 	return GetInt(LO_MENU_TAG, LO_WINDOW_SPACING);
+#endif
 }
 
 void CLayoutMgr::GetMenuBackground(char *pBuf, int nBufLen)

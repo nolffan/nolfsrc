@@ -163,8 +163,8 @@ LTBOOL CBaseFolder::Init(int nFolderID)
 
 	m_nAlignment = g_pLayoutMgr->GetFolderItemAlign((eFolderID)nFolderID);
 
-	int nWidth = m_HelpRect.right - m_HelpRect.left;
-	int nHeight = m_HelpRect.bottom - m_HelpRect.top;
+	int nWidth = P3_W(m_HelpRect.right - m_HelpRect.left);
+	int nHeight = P3_W(m_HelpRect.bottom - m_HelpRect.top);
 	if (!m_hHelpSurf)
 		m_hHelpSurf = g_pLTClient->CreateSurface((uint32)nWidth,(uint32)nHeight);
 
@@ -416,6 +416,11 @@ LTBOOL CBaseFolder::Render(HSURFACE hDestSurf)
 		}
 		size.x=m_controlArray[i]->GetWidth();
 		size.y=m_controlArray[i]->GetHeight();
+#ifdef NOLFSRC_MODERN
+		// M-P3-23: the control is as tall as its text, drawn at the page's
+		// scale; the page is laid out in layout units
+		size.y=P3_LayoutLen(size.y);
+#endif
 
 		if ( y+size.y <= GetPageBottom() )
 		{
@@ -1230,6 +1235,11 @@ void CBaseFolder::CalculateLastDrawn()
 
 		size.x=m_controlArray[i]->GetWidth();
 		size.y=m_controlArray[i]->GetHeight();
+#ifdef NOLFSRC_MODERN
+		// M-P3-23: the control is as tall as its text, drawn at the page's
+		// scale; the page is laid out in layout units
+		size.y=P3_LayoutLen(size.y);
+#endif
 
 		if ( y+size.y <= GetPageBottom() )
 		{
@@ -1409,6 +1419,10 @@ LTBOOL CBaseFolder::PreviousPage(LTBOOL bChangeSelection)
 				break;
 			}
 			int y=m_controlArray[i]->GetHeight();
+#ifdef NOLFSRC_MODERN
+			// M-P3-23: in layout units, as the page
+			y=P3_LayoutLen(y);
+#endif
 
 			if ( height > y )
 			{
@@ -2519,8 +2533,8 @@ void CBaseFolder::UpdateHelpText()
 	{
 		m_dwCurrHelpID = dwID;
 
-		int nWidth = m_HelpRect.right - m_HelpRect.left;
-		int nHeight = m_HelpRect.bottom - m_HelpRect.top;
+		int nWidth = P3_W(m_HelpRect.right - m_HelpRect.left);
+		int nHeight = P3_W(m_HelpRect.bottom - m_HelpRect.top);
         LTRect rect(0,0,nWidth,nHeight);
         g_pLTClient->FillRect(m_hHelpSurf,&rect,kBlack);
 

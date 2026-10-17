@@ -33,6 +33,7 @@
 #include "VarTrack.h"
 #include "cshell/p2_console.h"
 #include "cshell/p2_log.h"
+#include "cshell/p3_ttf.h"
 
 extern CGameClientShell* g_pGameClientShell;
 extern CCheatMgr*        g_pCheatMgr;
@@ -713,11 +714,15 @@ void P2Console_Draw()
 
 	if (!s_bVisible) return;
 
-	pFont = g_pInterfaceResMgr ? g_pInterfaceResMgr->GetSmallFont() : LTNULL;
-	if (!pFont) return;
-
 	hScreen = g_pLTClient->GetScreenSurface();
 	g_pLTClient->GetSurfaceDims(hScreen, &nWidth, &nHeight);
+
+	// M-P3-25: Noto Sans Mono in English (the menus' small font, Bowlby One
+	// SC since M-P3-24, is all capitals and wide); the small font otherwise
+	pFont = (g_pInterfaceResMgr && g_pInterfaceResMgr->IsEnglish()) ? P3_TTF_ConsoleFont((int)nHeight) : LTNULL;
+	if (!pFont)
+		pFont = g_pInterfaceResMgr ? g_pInterfaceResMgr->GetSmallFont() : LTNULL;
+	if (!pFont) return;
 
 	nConHeight = nHeight / 2;
 	nLineHeight = pFont->GetHeight() + 2;
