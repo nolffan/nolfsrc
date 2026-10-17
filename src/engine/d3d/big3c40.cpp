@@ -724,13 +724,10 @@
 //      and a bRet variable with `goto` puts the result in the frame;
 //    * the set-up reads *pnVerts and *ppVerts before g_p1008b87c (any
 //      order with pOut first spills nClip and reloads it for pass 1).
-//  What is left is pass 1's pOutStart: the shipped code stores
-//  g_p1008b87c to -0xcc in the set-up, beside pOut, and pass 1 has no
-//  `pOutStart = *ppOut` store; ours reloads pOut and stores it in pass 1
-//  (the whole residual is that shift).  Not moved by an outer pOutStart
-//  initialised there and passed by pointer, the assignment at the top
-//  of the pass, an initialised declaration, indexing the flag array, or
-//  the macro form.
+//  Now IDENTICAL: the driver has its own pOutStart, assigned with pOut
+//  and read first (`pOut = pOutStart = g_p1008b87c`; never read, it keeps
+//  the one load in both shipped slots, and pOut first no longer spills
+//  nClip), and the far pass sets pV first (CLIP3C40_VERTFIRST).
 // ======================================================================= //
 
 struct Vert3c40                                         // 32 bytes
@@ -885,8 +882,12 @@ static inline float ClipEdgeFar(LTVector* a, LTVector* b, LTVector* dst)
 	return t;
 }
 
+// A pass's first two set-up statements; the far pass has pV first.
+#define CLIP3C40_FLAGFIRST  pFlag = anInside; pV = *ppVerts;
+#define CLIP3C40_VERTFIRST  pV = *ppVerts; pFlag = anInside;
+
 // One single-plane pass: the family member's body, verbatim.
-#define CLIP3C40_PASS(NAME, INSIDE, EDGE)                                    \
+#define CLIP3C40_PASS(NAME, INSIDE, EDGE, SETUP)                             \
 static inline LTBOOL NAME(Vert3c40** ppVerts, int32* pnVerts, Vert3c40** ppOut) \
 {                                                                            \
 	uint32     anInside[CLIP_MAX_VERTS];                                     \
@@ -903,8 +904,7 @@ static inline LTBOOL NAME(Vert3c40** ppVerts, int32* pnVerts, Vert3c40** ppOut) 
 	++g_1008be44;                                                            \
                                                                              \
 	nInside = 0;                                                             \
-	pFlag   = anInside;                                                      \
-	pV      = *ppVerts;                                                      \
+	SETUP                                                                    \
 	pEnd    = pV + *pnVerts;                                                 \
                                                                              \
 	for (; pV != pEnd; ++pV)                                                 \
@@ -952,12 +952,12 @@ static inline LTBOOL NAME(Vert3c40** ppVerts, int32* pnVerts, Vert3c40** ppOut) 
 	return LTTRUE;                                                           \
 }
 
-CLIP3C40_PASS(ClipNear3c40,   pV->v.z >= g_1008b908,  ClipEdgeNear)
-CLIP3C40_PASS(ClipLeft3c40,   -pV->v.z < pV->v.x,     ClipEdgeLeft)
-CLIP3C40_PASS(ClipTop3c40,    pV->v.y < pV->v.z,      ClipEdgeTop)
-CLIP3C40_PASS(ClipRight3c40,  pV->v.x < pV->v.z,      ClipEdgeRight)
-CLIP3C40_PASS(ClipBottom3c40, -pV->v.z < pV->v.y,     ClipEdgeBottom)
-CLIP3C40_PASS(ClipFar3c40,    pV->v.z <= g_1008b910,  ClipEdgeFar)
+CLIP3C40_PASS(ClipNear3c40,   pV->v.z >= g_1008b908,  ClipEdgeNear, CLIP3C40_FLAGFIRST)
+CLIP3C40_PASS(ClipLeft3c40,   -pV->v.z < pV->v.x,     ClipEdgeLeft, CLIP3C40_FLAGFIRST)
+CLIP3C40_PASS(ClipTop3c40,    pV->v.y < pV->v.z,      ClipEdgeTop, CLIP3C40_FLAGFIRST)
+CLIP3C40_PASS(ClipRight3c40,  pV->v.x < pV->v.z,      ClipEdgeRight, CLIP3C40_FLAGFIRST)
+CLIP3C40_PASS(ClipBottom3c40, -pV->v.z < pV->v.y,     ClipEdgeBottom, CLIP3C40_FLAGFIRST)
+CLIP3C40_PASS(ClipFar3c40,    pV->v.z <= g_1008b910,  ClipEdgeFar, CLIP3C40_VERTFIRST)
 
 
 // ======================================================================= //
@@ -970,6 +970,7 @@ static inline LTBOOL ClipAll3c40(uint32 nClip, Vert3c40** ppVerts,
 {
 	Vert3c40*	pIn;
 	Vert3c40*	pOut;
+	Vert3c40*	pOutStart;
 	int32		nIn;
 
 	if (g_n1008d7a0)
@@ -980,9 +981,9 @@ static inline LTBOOL ClipAll3c40(uint32 nClip, Vert3c40** ppVerts,
 			return LTTRUE;
 	}
 
+	pOut = pOutStart = g_p1008b87c;
 	nIn  = *pnVerts;
 	pIn  = *ppVerts;
-	pOut = g_p1008b87c;
 
 	if (nClip & 0x01)
 		if (!ClipNear3c40(&pIn, &nIn, &pOut))

@@ -78,7 +78,7 @@ inline void LTVec::Norm(float nVal)
 void sub_10069ed0(LTVec* pIn, LTVec* pHint, LTVec* pOut)
 {
 	LTVec	vUp;
-	float	fDot;
+	volatile float	fDot;
 
 	if (!pHint)
 	{

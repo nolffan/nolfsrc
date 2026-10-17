@@ -1573,6 +1573,7 @@ static inline LTBOOL Plane32_10001fe0(uint32* pUnused, RVert28030** ppVerts, int
 static inline LTBOOL Clip32_1000f4b0(uint32 nClipFlags, RVert28030** ppVerts, int32* pnVerts)
 {
 	RVert28030*     pOut;
+	RVert28030*     pOutStart;
 	RVert28030*     pVerts;
 	int32      nVerts;
 	uint32     anUnused[6];
@@ -1584,7 +1585,7 @@ static inline LTBOOL Clip32_1000f4b0(uint32 nClipFlags, RVert28030** ppVerts, in
 			return LTTRUE;
 	}
 
-	pOut   = g_p1008b87c;
+	pOut   = pOutStart = g_p1008b87c;
 	pVerts = *ppVerts;
 	nVerts = *pnVerts;
 

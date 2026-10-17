@@ -245,7 +245,7 @@ inline LTBOOL NAME(SClipVertA** ppVerts, int32* pnVerts, SClipVertA** ppOut)    
 	{                                                                       \
 		pOutStart = *ppOut;                                                 \
 		iPrev     = *pnVerts - 1;                                           \
-		pPrev     = *ppVerts + iPrev;                                       \
+		pPrev     = *ppVerts + (*pnVerts - 1);                              \
                                                                             \
 		for (i = 0; i < *pnVerts; ++i)                                      \
 		{                                                                   \
@@ -287,6 +287,7 @@ CLIP_FN(ClipFar,    (pV->v.z <= g_1008b910), ClipEdgeFar)
 inline LTBOOL ClipPoly(uint32 nClipFlags, SClipVertA** ppVerts, int32* pnVerts)
 {
 	SClipVertA*  pOut;
+	SClipVertA*  pOutStart;
 	SClipVertA*  pVerts;
 	int32      nVerts;
 
@@ -297,7 +298,7 @@ inline LTBOOL ClipPoly(uint32 nClipFlags, SClipVertA** ppVerts, int32* pnVerts)
 			return LTTRUE;
 	}
 
-	pOut   = g_1008b87c;
+	pOut   = pOutStart = g_1008b87c;
 	pVerts = *ppVerts;
 	nVerts = *pnVerts;
 

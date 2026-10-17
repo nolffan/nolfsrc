@@ -1803,3 +1803,6 @@
 # 0x1008e6e8  defined by a TU; reached from initialised data
 /ALTERNATENAME:_d3dobj_1008e6e8=?g_1008e6e8@@3VC1003b1c0@@A
 # ---- END other spellings of one d3d.ren global ----
+# 0x1002e350  DrawTerrainSections, defined in w28_100256d0_qipni.cpp over World2e350 (the world's
+# layout) so the TU's /Qip does not pair it; RenderScene's call names the Ctx1008beac signature
+/ALTERNATENAME:?sub_1002e350@@YAXPAUCtx1008beac@@@Z=?sub_1002e350@@YAXPAUWorld2e350@@@Z

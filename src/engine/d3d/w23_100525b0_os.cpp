@@ -685,7 +685,7 @@ static inline LTBOOL ClipPoly(uint32 nClipFlags, SClipVertA** ppVerts,
 			return LTTRUE;
 	}
 
-	pOut   = g_1008b87c;
+	pOut   = *(SClipVertA* volatile*)&g_1008b87c;
 	pVerts = *ppVerts;
 	nVerts = *pnVerts;
 

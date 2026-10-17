@@ -35,8 +35,8 @@
 //      clip flags before the owner, 0x100123a0 reads the next element
 //      before storing the flags and clears +0x04 before +0x08.
 //
-//  0x100124a4 itself is still far (9001 bytes against 8353; it was 10611
-//  as a lone /O2 file).
+//  0x100124a4 itself is a near: 8347 bytes against 8353 (it was 10611
+//  as a lone /O2 file); see the notes above ClipPoly124's helpers.
 //
 //  ================== THE EXTENT IS NOT WHAT THE ROW SAYS ================ //
 //
@@ -927,10 +927,13 @@ void sub_100123a0()
 //      old longhand blocks) -> 0.891 (blocks over the driver's locals,
 //      w23_10050e60_os.cpp's old CLIP_BLOCK) -> 0.964 (these), and the
 //      driver's flag word and vertex pointer land in the shipped slots.
-//  Left: register choice in the prologue's three flag initialisers, the
-//  `setne`/`sete` materialisations at 0x100125c5 / 0x100125ff (ours
-//  branch), the clip family's crossing residue (w1_10001000.cpp item 1),
-//  and the bind-failure block placed early (0x10014289 in the shipped).
+//  Now 8347 bytes against 8353, 2043 of 2044 instructions matched: the
+//  prologue's flags set b80, bMoved, b88 in that order; the done-latch's
+//  false arm skips the draw test (`goto L_NoDraw`, the shipped threaded
+//  `je 0x100126a9`); ClipPoly124 loads pOut through a temporary and
+//  ClipNear124 takes pOutStart before its counter.  Left: the unclipped
+//  transform's second row (MatVMul_H's), the fan's early pVerts load and
+//  the bind-failure block's placement.
 // ----------------------------------------------------------------------- //
 #define CLIP_EPSILON    0.00001f
 #define CLIP_MAX_VERTS  50
@@ -1074,6 +1077,7 @@ static inline LTBOOL ClipNear124(uint32* pUnused, RVert** ppVerts, int32* pnVert
 	int32      i;
 	int32      iPrev;
 
+	pOutStart = *ppOut;
 	++g_1008be44;
 
 	nInside = 0;
@@ -1094,7 +1098,6 @@ static inline LTBOOL ClipNear124(uint32* pUnused, RVert** ppVerts, int32* pnVert
 
 	if (nInside != *pnVerts)
 	{
-		pOutStart = *ppOut;
 		iPrev     = *pnVerts - 1;
 		pPrev     = *ppVerts + iPrev;
 
@@ -1486,7 +1489,8 @@ static inline LTBOOL ClipPoly124(uint32 nClipFlags, RVert** ppVerts, int32* pnVe
 			return LTTRUE;
 	}
 
-	pOut   = g_1008b87c;
+	RVert* pT = g_1008b87c;
+	pOut   = pT;
 	pVerts = *ppVerts;
 	nVerts = *pnVerts;
 
@@ -1707,8 +1711,8 @@ void sub_100124a0(Obj124a4* pObj)
 	// 0x100124c3 / 0x100124d4 -- `xor %dl,%dl ; inc %dl` and `mov $0x1,%dh`,
 	// two one-byte TRUEs materialised before the branch.
 	b80    = LTTRUE;
-	b88    = LTTRUE;
 	bMoved = 0;
+	b88    = LTTRUE;
 
 	// 0x100124d2 .. 0x10012500 -- three tests, all three must hold, and the
 	// false arm of each is the same `bEnvMap = 0`.
@@ -1754,10 +1758,13 @@ void sub_100124a0(Obj124a4* pObj)
 
 	if (bDraw)
 		pObj->m_pTexture44->m_nDone20 = 1;
+	else if (!pObj->m_p2c)
+		goto L_NoDraw;
 
 	if (pObj->m_p2c)
 		bDraw = sub_10039d70(pObj, bDraw);
 
+L_NoDraw:
 	bTransform = b80;
 
 	if (bDraw)

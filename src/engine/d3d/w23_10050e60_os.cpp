@@ -704,7 +704,7 @@ static inline LTBOOL sub_1000f4b0(uint32 nClipFlags, ClipVert** ppVerts, int32* 
 			return LTTRUE;
 	}
 
-	pOut   = g_1008b87c;
+	pOut   = *(ClipVert* volatile*)&g_1008b87c;
 	pVerts = *ppVerts;
 	nVerts = *pnVerts;
 
@@ -769,10 +769,7 @@ inline LTBOOL XFormClip(ClipVert** ppVerts, int32* pnVerts, XForm10050e60* pM)
 		pWalk = *ppVerts;
 		while (nLeft--)
 		{
-			fOOW = 1.0f / (float)(pM->m[3][0] * pWalk->v.x
-			                    + pM->m[3][1] * pWalk->v.y
-			                    + pM->m[3][2] * pWalk->v.z
-			                    + pM->m[3][3]);
+			fOOW = 1.0f / (float)(pM->m[3][2] * pWalk->v.z + pM->m[3][1] * pWalk->v.y + pM->m[3][0] * pWalk->v.x + pM->m[3][3]);
 
 			vScreen.x = (pWalk->v.x * pM->m[0][0]
 			           + pWalk->v.y * pM->m[0][1]

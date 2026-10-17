@@ -192,9 +192,9 @@ LTBOOL sub_10033ba0(RenderStructInit* pInit, D3DGuid guid)
 
 	memset(bTried, 0, sizeof(bTried));
 
+	zf.nZFormats = 0;
 	g_p1008d98c = &zf.nZFormats;
 	g_p1008d990 = zf.aZFormats;
-	zf.nZFormats = 0;
 
 	if (g_pD3D->lpVtbl->EnumZBufferFormats(g_pD3D, &guid, sub_100329a0, LTNULL) != 0 ||
 		zf.nZFormats == 0)

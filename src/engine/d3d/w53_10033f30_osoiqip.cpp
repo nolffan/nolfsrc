@@ -384,8 +384,8 @@ LTBOOL sub_10033fa0(D3DRenderData* pData, void* pUnknown, uint32 nColorKey)
 	ddsd.dwSize = sizeof(ddsd);
 
 	if (pData->m_pSurface->lpVtbl->Lock(pData->m_pSurface, LTNULL, &ddsd,
-	                                    DDLOCK_WAIT | DDLOCK_READONLY, LTNULL) != 0)
-		return LTFALSE;
+	                                    DDLOCK_WAIT | DDLOCK_READONLY, LTNULL) == 0)
+	{
 
 	pSrcBits = ddsd.lpSurface;
 
@@ -549,6 +549,9 @@ LTBOOL sub_10033fa0(D3DRenderData* pData, void* pUnknown, uint32 nColorKey)
 	pData->m_pSurface->lpVtbl->Unlock(pData->m_pSurface, LTNULL);
 
 	return LTTRUE;
+	}
+
+	return LTFALSE;
 }
 
 

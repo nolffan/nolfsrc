@@ -285,6 +285,7 @@ CLIP_FN(ClipFar,    (pV->z <= g_1008b910), ClipEdgeFar)
 inline LTBOOL ClipPoly(uint32 nClipFlags, ClipVert** ppVerts, int32* pnVerts)
 {
 	ClipVert*  pOut;
+	ClipVert*  pOutStart;
 	ClipVert*  pVerts;
 	int32      nVerts;
 
@@ -295,7 +296,7 @@ inline LTBOOL ClipPoly(uint32 nClipFlags, ClipVert** ppVerts, int32* pnVerts)
 			return LTTRUE;
 	}
 
-	pOut   = g_1008b87c;
+	pOut   = pOutStart = g_1008b87c;
 	pVerts = *ppVerts;
 	nVerts = *pnVerts;
 

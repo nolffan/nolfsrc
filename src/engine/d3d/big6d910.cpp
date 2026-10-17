@@ -1121,7 +1121,7 @@ int32 sub_1006d910(Obj6d910* pObj, void* pCtx)
 
 	// -- 0x1006db9a: all four assignments are in the shipped bytes
 	//    (0x1006dba5, 0x1006dbab, 0x1006dbb7, 0x1006dbbd).
-	pOut      = g_p1008b87c;
+	pOut      = *(Vert6d910* volatile*)&g_p1008b87c;
 	pOutStart = g_p1008b87c;
 	pIn       = pVerts;
 	nIn       = nVerts;

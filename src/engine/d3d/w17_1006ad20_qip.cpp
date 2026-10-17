@@ -626,8 +626,9 @@ static LTBOOL sub_1006b500(LMCtx* pCtx, LMPoly* pPoly, LMAnim* pAnim,
 
 		pSrcA = aA;
 		pSrcB = aB;
-		for (nLeft = pPoly->m_nWidth48 * pPoly->m_nHeight49; nLeft; nLeft--)
+		for (nLeft = pPoly->m_nWidth48 * pPoly->m_nHeight49; nLeft; )
 		{
+			nLeft--;
 			*pL = (uint8)(*pSrcA + (((*pSrcB - *pSrcA) * nBlend) >> 6));
 			pSrcA++;
 			pSrcB++;
@@ -651,14 +652,16 @@ static LTBOOL sub_1006b500(LMCtx* pCtx, LMPoly* pPoly, LMAnim* pAnim,
 	rz = info.m_vOrigin00.z;
 	pL = aLayer;
 	pRowD = pOut;
-	for (y = info.m_nHeight48; y; y--)
+	for (y = info.m_nHeight48; y; )
 	{
+		y--;
 		px = rx;
 		py = ry;
 		pz = rz;
 		pD = pRowD;
-		for (x = info.m_nWidth44; x; x--)
+		for (x = info.m_nWidth44; x; )
 		{
+			x--;
 			info.m_fDist30 = (float)((px - info.m_vLight24.x) * (px - info.m_vLight24.x) +
 			                         (py - info.m_vLight24.y) * (py - info.m_vLight24.y) +
 			                         (pz - info.m_vLight24.z) * (pz - info.m_vLight24.z));
@@ -848,7 +851,8 @@ LTBOOL sub_1006be50(void* pCtxArg, void* pPolyArg, uint32 bForce)
 
 	nDone = 0;
 	bLayered = 0;
-	for (i = 0; i < pPoly->m_nRefs10; i++)
+	i = 0;
+	do
 	{
 		pRef = &pPoly->m_pRefs0c[i];
 		if (pRef->m_iAnim00 >= pCtx->m_nAnims0c)
@@ -910,7 +914,7 @@ LTBOOL sub_1006be50(void* pCtxArg, void* pPolyArg, uint32 bForce)
 		}
 
 		nDone++;
-	}
+	} while (++i < pPoly->m_nRefs10);
 
 	if (!nDone)
 		memset(aAccum, 0, nBytes);

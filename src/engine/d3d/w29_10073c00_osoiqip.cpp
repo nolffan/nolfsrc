@@ -317,6 +317,13 @@ inline bool IsCompressed(uint32 nType)
 }
 
 
+// 0x10073c08's two tests want an int answer.
+static inline int IsCompressedInt(uint32 nType)
+{
+	return nType == 4 || nType == 5 || nType == 6;
+}
+
+
 // ----------------------------------------------------------------------- //
 //  0x10073c00 -- source and destination share a format: rows copied, or
 //  OR-ed (the destination into the SOURCE, as lithtech's 0x0045d1e0 does);
@@ -334,10 +341,10 @@ uint32 sub_10073c00(FormatMgr* pMgr, ConvertRequest* pRequest)
 	pSrcRow   = pRequest->m_pSrcData;
 	pDstRow   = pRequest->m_pDstData;
 
-	if (IsCompressed(pRequest->m_pSrcFormat->m_nType) != IsCompressed(pRequest->m_pDstFormat->m_nType))
+	if (IsCompressedInt(pRequest->m_pSrcFormat->m_nType) != IsCompressedInt(pRequest->m_pDstFormat->m_nType))
 		return 1;
 
-	if (IsCompressed(pRequest->m_pSrcFormat->m_nType))
+	if (IsCompressedInt(pRequest->m_pSrcFormat->m_nType))
 	{
 		if (pRequest->m_nFlags & 1)
 			return 1;

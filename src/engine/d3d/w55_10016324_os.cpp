@@ -52,9 +52,14 @@
 //  is WORSE here (95 -> 119; each plane alone 84..90): this driver's
 //  pVerts is not kept in memory as 0x100525b0's is.  Plane 1's
 //  `pOutStart = *ppOut` read before its classify loop gives 82 (the
-//  shipped plane-1 pOutStart is forwarded from the driver's pOut), but
-//  that order breaks w1_10002310.cpp's byte-identical out-of-line copy
-//  of the same body, so it is not taken.
+//  shipped plane-1 pOutStart is forwarded from the driver's pOut).  That
+//  order breaks w1_10002310.cpp's byte-identical out-of-line copy of the
+//  same body, but it is taken here, inlined: it is what the shipped
+//  driver does (one load of g_1008b87c stored to -0x40 and -0x10), and
+//  w30_1000f020_osqipni.cpp's inlined near plane needs the same order.
+//  With it, the volatile read of g_p1008beac at the light-grid call (as
+//  w63_10060010_qip.cpp reads it) and the +0x14 dword chained
+//  [0] = [3] = [2] = [1]: 1778 of 1790 instructions matched.
 //
 //  WHICH FLAG -- /Os (the readings below are superseded).
 //    The shipped prologue is `sub $0x870 ; push %edi ; push %edi ;
@@ -534,6 +539,7 @@ static inline LTBOOL sub_10001000(uint32* pUnused, RVert** ppVerts, int32* pnVer
 	int32      i;
 	int32      iPrev;
 
+	pOutStart = *ppOut;
 	++g_1008be44;
 
 	nInside = 0;
@@ -554,7 +560,6 @@ static inline LTBOOL sub_10001000(uint32* pUnused, RVert** ppVerts, int32* pnVer
 
 	if (nInside != *pnVerts)
 	{
-		pOutStart = *ppOut;
 		iPrev     = *pnVerts - 1;
 		pPrev     = *ppVerts + iPrev;
 
@@ -872,8 +877,8 @@ static inline LTBOOL sub_10001fe0(uint32* pUnused, RVert** ppVerts, int32* pnVer
 	++g_1008be44;
 
 	nInside = 0;
-	pFlag   = anInside;
 	pV      = *ppVerts;
+	pFlag   = anInside;
 	pEnd    = pV + *pnVerts;
 
 	for (; pV != pEnd; ++pV)
@@ -1064,7 +1069,7 @@ void CModelDraw::sub_10016324(SModel* pModel, uint8 nAlpha)
 	// 0x1001689c .. 0x100169ac.
 	if (g_1008b054 && g_p1008beac)
 	{
-		sub_10014b60(g_p1008beac + 0xfc, &m_v410, nRGB);
+		sub_10014b60(*(uint8* volatile*)&g_p1008beac + 0xfc, &m_v410, nRGB);
 
 		aVerts[0].m_r = aVerts[1].m_r = aVerts[2].m_r = aVerts[3].m_r =
 			g_ColorRamp2[nRGB[2]];
@@ -1088,8 +1093,8 @@ void CModelDraw::sub_10016324(SModel* pModel, uint8 nAlpha)
 	aVerts[0].m_a = aVerts[1].m_a = aVerts[2].m_a = aVerts[3].m_a = nAlpha;
 
 	// 0x100169cc -- one dword of `this` into every vertex's +0x14.
-	*(uint32*)&aVerts[0].m_sb = *(uint32*)&aVerts[1].m_sb =
-	*(uint32*)&aVerts[2].m_sb = *(uint32*)&aVerts[3].m_sb = m_n480;
+	*(uint32*)&aVerts[0].m_sb = *(uint32*)&aVerts[3].m_sb =
+	*(uint32*)&aVerts[2].m_sb = *(uint32*)&aVerts[1].m_sb = m_n480;
 
 	// 0x100169f0 .. 0x10016a09.
 	pVerts      = aVerts;

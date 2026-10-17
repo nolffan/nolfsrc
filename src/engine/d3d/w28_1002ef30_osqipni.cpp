@@ -1272,8 +1272,8 @@ static inline LTBOOL ClipPlaneFar(uint32* pUnused, Vert2ef34** ppVerts, int32* p
 	++g_n1008be44;
 
 	nInside = 0;
-	pFlag   = anInside;
 	pV      = *ppVerts;
+	pFlag   = anInside;
 	pEnd    = pV + *pnVerts;
 
 	for (; pV != pEnd; ++pV)
@@ -1326,6 +1326,7 @@ static inline LTBOOL ClipPlaneFar(uint32* pUnused, Vert2ef34** ppVerts, int32* p
 static inline LTBOOL ClipPoly(uint32 nClipFlags, Vert2ef34** ppVerts, int32* pnVerts)
 {
 	Vert2ef34*     pOut;
+	Vert2ef34*     pOutStart;
 	Vert2ef34*     pVerts;
 	int32      nVerts;
 	uint32     anUnused[6];
@@ -1337,7 +1338,7 @@ static inline LTBOOL ClipPoly(uint32 nClipFlags, Vert2ef34** ppVerts, int32* pnV
 			return LTTRUE;
 	}
 
-	pOut   = g_p1008b87c;
+	pOut   = pOutStart = g_p1008b87c;
 	pVerts = *ppVerts;
 	nVerts = *pnVerts;
 

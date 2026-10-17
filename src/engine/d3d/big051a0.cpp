@@ -1102,8 +1102,8 @@ static inline LTBOOL sub_10003410(uint32* pUnused, Vert051a0** ppVerts, int32* p
 	++g_n1008be44;
 
 	nInside = 0;
-	pFlag   = anInside;
 	pV      = *ppVerts;
+	pFlag   = anInside;
 	pEnd    = pV + *pnVerts;
 
 	for (; pV != pEnd; ++pV)
@@ -1180,6 +1180,7 @@ static inline LTBOOL ClipPoly051a0(uint32 nClipFlags, Vert051a0** ppVerts,
                                      int32* pnVerts)
 {
 	Vert051a0*  pOut;
+	Vert051a0*  pOutStart;
 	Vert051a0*  pVerts;
 	int32       nVerts;
 	uint32      anUnused[6];
@@ -1191,7 +1192,8 @@ static inline LTBOOL ClipPoly051a0(uint32 nClipFlags, Vert051a0** ppVerts,
 			return LTTRUE;
 	}
 
-	pOut   = g_p1008b87c;
+	// pOutStart is never read; see big3c40.cpp.
+	pOut   = pOutStart = g_p1008b87c;
 	pVerts = *ppVerts;
 	nVerts = *pnVerts;
 

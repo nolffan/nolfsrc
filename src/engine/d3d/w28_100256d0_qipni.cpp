@@ -2948,6 +2948,7 @@ static inline LTBOOL ClipAll299a8(uint32 nClip, RVert299a8** ppVerts,
 {
 	RVert299a8*  pIn;
 	RVert299a8*  pOut;
+	RVert299a8*  pOutStart;
 	int32        nIn;
 
 	if (g_n1008d7a0)
@@ -2960,7 +2961,7 @@ static inline LTBOOL ClipAll299a8(uint32 nClip, RVert299a8** ppVerts,
 
 	nIn  = *pnVerts;
 	pIn  = *ppVerts;
-	pOut = g_p1008b87c;
+	pOut = pOutStart = g_p1008b87c;
 
 	if (nClip & 0x01)
 		if (!ClipNear299a8(&pIn, &nIn, &pOut))
@@ -4672,13 +4673,9 @@ extern void sub_1002d0b0();
 struct Ctx1008beac;
 // (0x1002cf48 is sub_1002cf40's register entry, defined above.)
 
-// 0x1002e350 -- 368 bytes, w4_10023fb0.cpp.  It makes a register-ABI
-// call of its own (0x1002dd6c), so in the shipped build it shares this
-// TU; but its own entry is a normal framed prologue with no stack shim and
-// this function calls it through the stack.  Measured:
-// defined in this file it gets a /Qip pair and a register call from here
-// whatever the spelling -- before or after this function, `__cdecl`,
-// `extern "C"` -- so it stays in w4_10023fb0.cpp.
+// 0x1002e350 -- defined below, after the world's layout.  RenderScene
+// calls it through this declaration, which nothing in this file defines:
+// see the note at the definition.
 extern void sub_1002e350(Ctx1008beac* pWorld);
 
 // 0x100145f0 -- d3dqip3.cpp: "a bare `c3`, an empty function".
@@ -4736,6 +4733,82 @@ struct Ctx1008beac
 };
 
 extern Ctx1008beac* g_p1008beac;                        // 0x1008beac
+
+// ======================================================================= //
+//  0x1002e350 -- DrawTerrainSections (moved here from w4_10023fb0.cpp):
+//  with ZENABLE (render state 7) saved and forced on and the current
+//  stage's texture dropped, walk the world's models (+0x18c/+0x190); for
+//  each one whose slot-0 virtual answers zero, look every 0xc0-byte
+//  section (+0x13c/+0x140) up in the world's +0x6c object (slot-0
+//  virtual, keyed by &section->+0x48) and draw the box it answers (its
+//  +0x18 and +0x24 vectors) through 0x1002dd60.  Then put state 7 back.
+//
+//  IDENTICAL here.  The shipped code calls the box drawer at its /Qip
+//  REGISTER entry 0x1002dd6c, so it shares this TU with it; but its own
+//  entry has no stack shim, and RenderScene (above) calls it on the stack.
+//  Defined under the name RenderScene calls, icl gives it a /Qip pair and
+//  RenderScene a register call.  So it takes its world as World2e350 (the
+//  same layout): its own mangled name, which nothing in this file calls,
+//  and the link's alias (link/aliases.rsp) resolves RenderScene's
+//  ?sub_1002e350@@YAXPAUCtx1008beac@@@Z to it.
+// ======================================================================= //
+struct World2e350 : public Ctx1008beac
+{
+};
+
+class CRenderStateSet2e350
+{
+public:
+	CRenderStateSet2e350(uint32 nState, uint32 nValue)
+	{
+		m_nState = nState;
+		g_pD3DDevice->lpVtbl->GetRenderState(g_pD3DDevice, nState, &m_nOld);
+		g_pD3DDevice->lpVtbl->SetRenderState(g_pD3DDevice, m_nState, nValue);
+	}
+
+	~CRenderStateSet2e350()
+	{
+		g_pD3DDevice->lpVtbl->SetRenderState(g_pD3DDevice, m_nState, m_nOld);
+	}
+
+	uint32  m_nState;                                   // +0x00
+	uint32  m_nOld;                                     // +0x04
+};
+
+void sub_1002e350(World2e350* pWorld)
+{
+	uint32          nStage;
+	uint32          i, j;
+	TerrainModel*   pModel;
+	TerrainSection* pSect;
+	TerrainBox*     pBox;
+
+	CRenderStateSet2e350 ssZ(7, 1);                     // D3DRENDERSTATE_ZENABLE
+
+	nStage = g_1008d7d0;
+	if (g_a1008e684[nStage])
+	{
+		g_pD3DDevice->lpVtbl->SetTexture(g_pD3DDevice, nStage, LTNULL);
+		g_a1008e684[nStage] = LTNULL;
+	}
+
+	for (i = 0; i < pWorld->m_nModels; i++)
+	{
+		pModel = pWorld->m_ppModels[i]->m_pModel;
+		if (pModel->IsHidden())
+			continue;
+
+		for (j = 0; j < pModel->m_nSections; j++)
+		{
+			pSect = &pModel->m_pSections[j];
+			pBox = pWorld->m_Lookup.Find(pSect->m_Key48);
+			if (pBox)
+				sub_1002dd60(pBox->m_vMin, pBox->m_vMax,
+				             (uint32)pSect + (uint32)pModel);
+		}
+	}
+
+}
 
 
 

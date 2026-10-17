@@ -731,6 +731,7 @@ static inline LTBOOL sub_10001fe0(uint32* pUnused, ClipVert** ppVerts, int32* pn
 static inline LTBOOL sub_1000f4b0(uint32 nClipFlags, ClipVert** ppVerts, int32* pnVerts)
 {
 	ClipVert*     pOut;
+	ClipVert*     pOutStart;
 	ClipVert*     pVerts;
 	int32      nVerts;
 	uint32     anUnused[6];
@@ -742,7 +743,7 @@ static inline LTBOOL sub_1000f4b0(uint32 nClipFlags, ClipVert** ppVerts, int32* 
 			return LTTRUE;
 	}
 
-	pOut   = g_1008b87c;
+	pOut   = pOutStart = g_1008b87c;
 	pVerts = *ppVerts;
 	nVerts = *pnVerts;
 
