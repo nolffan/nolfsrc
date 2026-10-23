@@ -47,3 +47,13 @@ So `build/libs.sh`, `build/build.sh` and `build/engine.sh` compile a copy of
 the build outputs back into `src/`. Test the variant macros only with
 `#ifdef` or `#ifndef`; anything else (`#if defined(...)`, `#elif`) stops the
 release build with an error.
+
+## Optional native mod manager
+
+`cshell/mod_manager.*` uses the stock NOLF controls and a generated catalog.
+`launcher/mod_startup.h` and `mod_helper_launch.h` start the adjacent bundled
+helper without a shell or interpreter lookup; missing components preserve the
+original launcher path. The layout is a player-data recipe under `data/`.
+All retail-file hooks remain inside `NOLFSRC_MODERN`. There is no gameplay
+adapter dependency. See [the release contract](../../docs/MOD_HELPER_RELEASE.md)
+and [validation](../../docs/MOD_MANAGER_VALIDATION.md).

@@ -305,6 +305,7 @@ char s_aFolderTag[FOLDER_ID_UNASSIGNED+1][32] =
 #ifdef NOLFSRC_MODERN
 	// M-P7-06: the Controller options folder
 	"FolderController",		//FOLDER_ID_CONTROLLER,
+	"FolderModManager",		//FOLDER_ID_MOD_MANAGER,
 #endif
 
 	LO_DEFAULT_TAG			//FOLDER_ID_UNASSIGNED,

@@ -84,7 +84,7 @@ foreach ($f in Get-ChildItem -LiteralPath $here -Recurse -File -Force) {
     $leaf = $f.Name
     if (@('SHA256SUMS', 'autoexec.cfg', 'nolfcmds.txt', 'NetHost.txt', 'run-cmds.txt',
           'AIReactionReset.txt') -contains $rel) { continue }
-    if ($rel -like 'Save/*' -or $rel -like 'cd/*' -or $rel -like '*.part') { continue }
+    if ($rel -like 'Save/*' -or $rel -like 'Mods/*' -or $rel -like 'cd/*' -or $rel -like '*.part') { continue }
     if (@('Thumbs.db', 'desktop.ini', '.DS_Store') -contains $leaf) { continue }
     if (-not $rel.Contains('/') -and
         @('*.log', '*.bmp', '*.iso', '*.bin', '*.cue', '*.zip' | Where-Object { $rel -like $_ }).Count) { continue }

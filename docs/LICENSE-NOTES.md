@@ -77,3 +77,20 @@ It also has Microsoft's DirectMusic DLLs (`ms_dmime.dll` and the rest, from
 End-User Runtime they come from. Check its terms before passing on a game
 directory that carries them. `lithtech.exe.manifest`, which points the game
 at them, was written for this project.
+
+## Optional mod manager runtime
+
+The independently written mod framework follows the existing modern/build source
+structure and does not change the terms of Monolith code or assets. Its source
+and synthetic test generators contain no retail data. Optional generated example
+art is dedicated under CC0-1.0 and is not automatically included in releases.
+
+The separate Windows helper build bundles CPython and its standard library,
+Tcl/Tk for the optional advanced interface, PyInstaller's bootloader and app-local
+Microsoft runtime DLLs from the official CPython installation. The build retains
+the Python and Tcl/Tk notices and PyInstaller's licence with its bootloader
+exception. Additional versioned third-party notices and origin hashes are under
+`build/mod_helper_licenses/`. Review Microsoft's redistribution terms before
+shipping its DLLs. No third-party runtime binary is added to this repository.
+See [MOD_HELPER_RELEASE.md](MOD_HELPER_RELEASE.md) for the qualified versions and
+release boundaries. Existing middleware/licensing questions above are unchanged.

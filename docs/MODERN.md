@@ -399,3 +399,13 @@ objectives, intel and subtitles) and its credits, which the retail GOTY
 retail game and compiles them into our `CRes.dll` (`BUILDING.md`, step 2c), in the release
 build and therefore in the modern one too, so its resources are the retail
 GOTY ones (411 of 411 byte-identical). M-P4-08 is covered by that.
+
+## Optional native resource mod management
+
+The independently developed data-only ZIP/REZ manager adds a native Mods folder,
+normal-launch discovery and transactional restart into a selected profile. It
+contains no additional weapons, ADS, gore or physics systems. The client and
+launcher hooks are guarded by NOLFSRC_MODERN; stripped retail source is unchanged.
+Player workflow: [MOD_MANAGER.md](MOD_MANAGER.md). Build integration, storage,
+runtime notices and platform boundaries: [MOD_HELPER_RELEASE.md](MOD_HELPER_RELEASE.md).
+Qualification and source-scope review: [MOD_MANAGER_VALIDATION.md](MOD_MANAGER_VALIDATION.md).

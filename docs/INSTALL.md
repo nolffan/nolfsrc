@@ -258,3 +258,14 @@ Server is clicked (or the process is ended).
 
 In the legacy build, `-nowiz` is only read when another argument follows
 it (a bug of the original server, which `linux-server.sh` works around).
+
+## Optional native ZIP/REZ mods (modern Windows build)
+
+A distribution prepared with the optional bundled mod component supports:
+**drop ZIP/REZ into Mods -> launch NOLF.exe -> Mods -> enable -> Save choices ->
+Restart game**. New packages start disabled. There is no player Python setup,
+manual extraction or external application requirement. See
+[MOD_MANAGER.md](MOD_MANAGER.md) for profiles, conflicts, saves and limitations.
+The standard release without the optional component keeps its original launcher.
+Release builders use [MOD_HELPER_RELEASE.md](MOD_HELPER_RELEASE.md); the helper
+alone does not convert an arbitrary retail installation into a managed one.

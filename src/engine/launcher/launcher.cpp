@@ -17,6 +17,9 @@
 #include "RezFind.h"
 #include "Utils.h"
 #include "launcher.h"
+#ifdef NOLFSRC_MODERN
+#include "../../modern/launcher/mod_startup.h"
+#endif
 
 
 // Globals...
@@ -106,6 +109,9 @@ int ErrorMsg(HWND hWnd, int nStringID, UINT nType)
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+#ifdef NOLFSRC_MODERN
+	if (NolfModStartup()) return 0;
+#endif
 	g_hInstApp = hInstance;
 
 	AfxWinInit(hInstance, NULL, lpCmdLine, 0);

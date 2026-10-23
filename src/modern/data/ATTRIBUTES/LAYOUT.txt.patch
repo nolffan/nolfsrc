@@ -176,3 +176,24 @@
  
  
  /************************************************************************
+@@ -2029,3 +2152,20 @@
+ PositionUR	= (560,90)
+ PositionLR	= (560,390)
+ PositionLL	= (80,390)
++
++[FolderModManager]
++PageRect = (70,92,230,350)
++FontSize			= 0
++ColumnWidth = 134
++SliderWidth			= 150
++ScaleName0			= "WeaponBackgroundSpr1"
++ScaleName1			= "GreenTextBoxMod1"
++ScaleName2			= "GreenTextBoxMod2"
++ScaleName3			= "HorzBarTMod1"
++ScaleName4			= "HorzBarBMod1"
++ScaleName5			= "HelpTextBoxSpr1"
++ScaleName6			= "HelpTextBoxSpr2"
++ScaleName7			= "RoundSelectionSpr6"
++ScaleName8			= "RoundyMovingMod3"
++ScaleName9			= "RoundyMovingMod4"
++

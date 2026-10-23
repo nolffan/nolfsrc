@@ -401,3 +401,12 @@ The playtest runs the game in `out/play/<name>/`, so a playtest's
   engine with (`linux-run.sh`'s launcher writes its own): the rez stack of the retail GOTY install with
   `custom/` last, a 640x480 window, and the intro movies off (they stall
   under some Wine setups).
+
+## Optional native mod manager component
+
+The modern build compiles the native Mods folder and launcher bridge. To prepare
+a self-contained Windows component and a separate managed installation from an
+owned modern game, follow [MOD_HELPER_RELEASE.md](MOD_HELPER_RELEASE.md). Python
+and PyInstaller are build-time tools only; players use NOLF.exe and its native
+menu. This optional process leaves the legacy build, public disc installer and
+original game input intact. No runtime binaries or retail assets are committed.

@@ -11,6 +11,9 @@
 #include "WinUtil.h"
 #include "GameClientShell.h"
 #include "ModelButeMgr.h"
+#ifdef NOLFSRC_MODERN
+#include "cshell/mod_manager.h"
+#endif
 
 extern CGameClientShell* g_pGameClientShell;
 namespace
@@ -64,6 +67,10 @@ LTBOOL CFolderMain::Build()
 	AddLink(IDS_OPTIONS,FOLDER_CMD_OPTIONS,	IDS_HELP_OPTIONS,pos.x,	pos.y);
 
 	pos = g_pLayoutMgr->GetFolderCustomPoint((eFolderID)m_nFolderID,"QuitPos");
+#ifdef NOLFSRC_MODERN
+    AddFixedControl(CreateTextItem("Mods",FOLDER_CMD_CUSTOM+900,MOD_HELP_MAIN),pos);
+    pos.y += 32;
+#endif
 	AddLink(IDS_EXIT,FOLDER_CMD_QUIT,IDS_HELP_EXIT,	pos.x,	pos.y);
 
 	m_BuildVersion = g_pLTClient->CreateString((char*)g_pVersionMgr->GetVersion());
@@ -79,6 +86,14 @@ LTBOOL CFolderMain::Build()
 
 }
 
+#ifdef NOLFSRC_MODERN
+HSTRING CFolderMain::GetHelpString(uint32 id,int index)
+{
+    if(id==MOD_HELP_MAIN) return g_pLTClient->CreateString("Choose installed mods and saved profiles. Restart NOLF to apply your choices.");
+    return CBaseFolder::GetHelpString(id,index);
+}
+
+#endif
 void CFolderMain::OnFocus(LTBOOL bFocus)
 {
 	if (bFocus)
@@ -124,6 +139,11 @@ uint32 CFolderMain::OnCommand(uint32 dwCommand, uint32 dwParam1, uint32 dwParam2
 {
 	switch(dwCommand)
 	{
+#ifdef NOLFSRC_MODERN
+    case FOLDER_CMD_CUSTOM+900:
+        m_pFolderMgr->SetCurrentFolder(FOLDER_ID_MOD_MANAGER);
+        break;
+#endif
 	case FOLDER_CMD_SINGLE_PLAYER:
 		{
 			m_pFolderMgr->SetCurrentFolder(FOLDER_ID_SINGLE);

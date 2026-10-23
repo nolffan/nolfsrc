@@ -75,6 +75,7 @@
 #ifdef NOLFSRC_MODERN
 // M-P7-06: the Controller options folder
 #include "cshell/p7_foldercontroller.h"
+#include "cshell/mod_manager.h"
 #endif
 extern CGameClientShell* g_pGameClientShell;
 
@@ -586,6 +587,9 @@ void CFolderMgr::AddFolder(eFolderID folderID)
 	// M-P7-06: the Controller options folder
 	case FOLDER_ID_CONTROLLER:
 		pFolder = debug_new(CFolderController);
+		break;
+	case FOLDER_ID_MOD_MANAGER:
+		pFolder = debug_new(CFolderModManager);
 		break;
 #endif
 	}
