@@ -11,6 +11,10 @@
 // ----------------------------------------------------------------------- //
 
 #include "stdafx.h"
+#ifdef NOLFSRC_MODERN
+// Native resource mod menu input and opt-in resource validation.
+#include "cshell/mod_manager.h"
+#endif
 #include "GameClientShell.h"
 #include "MsgIds.h"
 #include "CommandIds.h"
@@ -1798,6 +1802,9 @@ void CGameClientShell::Update()
 
 void CGameClientShell::UpdatePlaying()
 {
+#ifdef NOLFSRC_MODERN
+    ModManagerProbeUpdate();
+#endif
 	// Handle first update...
 
 	if (m_bFirstUpdate)
@@ -8468,6 +8475,7 @@ LRESULT CALLBACK HookedWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 #ifdef NOLFSRC_MODERN
 	// M-P1-03: raw mouse input (WM_INPUT), the cursor while captured
 	P1Input_OnWindowMessage(hWnd, uMsg, wParam, lParam);
+    if(uMsg==WM_MOUSEWHEEL && ModMenuMouseWheel((short)HIWORD(wParam))) return 0;
 #endif
 	switch(uMsg)
 	{

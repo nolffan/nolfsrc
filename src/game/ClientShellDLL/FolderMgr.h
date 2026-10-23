@@ -83,6 +83,7 @@ enum eFolderID
 #ifdef NOLFSRC_MODERN
 	// M-P7-06: the Controller options folder
 	FOLDER_ID_CONTROLLER,
+	FOLDER_ID_MOD_MANAGER,
 #endif
 
 	//this must be the last id

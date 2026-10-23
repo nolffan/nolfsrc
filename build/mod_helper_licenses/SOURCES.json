@@ -1,0 +1,14 @@
+{
+  "Tcl-8.6.12-license.terms": {
+    "url": "https://raw.githubusercontent.com/tcltk/tcl/core-8-6-12/license.terms",
+    "sha256": "c0a69a2bfd757361ec7e6143973b103c90409316b49e9c88db26ad6388e79f16"
+  },
+  "zlib-1.2.13-LICENSE": {
+    "url": "https://raw.githubusercontent.com/madler/zlib/v1.2.13/LICENSE",
+    "sha256": "845efc77857d485d91fb3e0b884aaa929368c717ae8186b66fe1ed2495753243"
+  },
+  "Expat-2.5.0-COPYING": {
+    "url": "https://raw.githubusercontent.com/libexpat/libexpat/R_2_5_0/expat/COPYING",
+    "sha256": "122f2c27000472a201d337b9b31f7eb2b52d091b02857061a8880371612d9534"
+  }
+}
