@@ -45,6 +45,11 @@ public:
 	void			GetDisabledBitmap(char* pBuf, int nBufLen);
 
     void            SetTransparentColor(HLTCOLOR hTrans) {m_hTrans = hTrans;}
+#ifdef NOLFSRC_MODERN
+	// M-P3-23: drawn and measured at this scale (the menu scale for the
+	// check boxes beside menu text, which is drawn at it); 1 by default
+	void			SetScale(LTFLOAT fScale) {m_fScale = fScale;}
+#endif
 
 
 protected:
@@ -65,6 +70,11 @@ protected:
 
 	// Receives a message when the "enter" key is pressed.
 	CLTGUICommandHandler	*m_pCommandHandler;
+#ifdef NOLFSRC_MODERN
+	LTFLOAT			m_fScale;
+	int				Scaled(int n) {return (int)((LTFLOAT)n * m_fScale + 0.5f);}
+	void			DrawState(HSURFACE hDestSurf, char *szSurface);
+#endif
 
 };
 

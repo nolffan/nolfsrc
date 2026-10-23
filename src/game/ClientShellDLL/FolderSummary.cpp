@@ -135,10 +135,10 @@ void CFolderSummary::UpdateData()
 	CLTGUIColumnTextCtrl *pRanks=AddColumnText(LTNULL, LTNULL, LTTRUE, GetLargeFont());
 
 	// The rank header
-	pRanks->AddColumn(IDS_STAT_RANK, 200, LTF_JUSTIFY_LEFT);
+	pRanks->AddColumn(IDS_STAT_RANK, P3_W(200), LTF_JUSTIFY_LEFT);
 	if (m_nFolderID != FOLDER_ID_FAILURE)
 	{
-		pRanks->AddColumn(IDS_SUMMARY_BEST, 200, LTF_JUSTIFY_LEFT);
+		pRanks->AddColumn(IDS_SUMMARY_BEST, P3_W(200), LTF_JUSTIFY_LEFT);
 	}
     pRanks->Enable(LTFALSE);
 
@@ -149,13 +149,13 @@ void CFolderSummary::UpdateData()
 	int nRankId = 0;
 	if (m_nFolderID == FOLDER_ID_FAILURE)
 	{
-		pRanks->AddColumn(IDS_STAT_FAILED, 200, LTF_JUSTIFY_LEFT);
+		pRanks->AddColumn(IDS_STAT_FAILED, P3_W(200), LTF_JUSTIFY_LEFT);
 	}
 	else
 	{
 		fRank = pMSummary->fCurRank;
 		nRankId = g_pMissionMgr->GetMissionRating()->GetRankId(fRank);
-		pRanks->AddColumn(nRankId, 200, LTF_JUSTIFY_LEFT);
+		pRanks->AddColumn(nRankId, P3_W(200), LTF_JUSTIFY_LEFT);
 	}
 
 
@@ -164,7 +164,7 @@ void CFolderSummary::UpdateData()
 		//best rank
 		fRank = pMSummary->fBestRank;
 		nRankId = g_pMissionMgr->GetMissionRating()->GetRankId(fRank);
-		pRanks->AddColumn(nRankId, 200, LTF_JUSTIFY_LEFT);
+		pRanks->AddColumn(nRankId, P3_W(200), LTF_JUSTIFY_LEFT);
 	}
     pRanks->Enable(LTFALSE);
 

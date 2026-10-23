@@ -243,22 +243,22 @@ void CFolderCustomControls::InitColumns(int nFilter,int nFirstEntry,int nEntries
 	switch (nFilter)
 	{
 	case COM_MOVE:
-		pCtrl = AddStaticTextItem(IDS_MOVE_CONTROLS,LTNULL,LTNULL,200,0,LTTRUE,GetMediumFont());
+		pCtrl = AddStaticTextItem(IDS_MOVE_CONTROLS,LTNULL,LTNULL,P3_W(200),0,LTTRUE,GetMediumFont());
 		pCtrl->Enable(LTFALSE);
 		break;
 	case COM_INV:
 		AddPageBreak();
-		pCtrl = AddStaticTextItem(IDS_INV_CONTROLS,LTNULL,LTNULL,200,0,LTTRUE,GetMediumFont());
+		pCtrl = AddStaticTextItem(IDS_INV_CONTROLS,LTNULL,LTNULL,P3_W(200),0,LTTRUE,GetMediumFont());
 		pCtrl->Enable(LTFALSE);
 		break;
 	case COM_VIEW:
 		AddPageBreak();
-		pCtrl = AddStaticTextItem(IDS_VIEW_CONTROLS,LTNULL,LTNULL,200,0,LTTRUE,GetMediumFont());
+		pCtrl = AddStaticTextItem(IDS_VIEW_CONTROLS,LTNULL,LTNULL,P3_W(200),0,LTTRUE,GetMediumFont());
 		pCtrl->Enable(LTFALSE);
 		break;
 	case COM_MISC:
 		AddPageBreak();
-		pCtrl = AddStaticTextItem(IDS_MISC_CONTROLS,LTNULL,LTNULL,200,0,LTTRUE,GetMediumFont());
+		pCtrl = AddStaticTextItem(IDS_MISC_CONTROLS,LTNULL,LTNULL,P3_W(200),0,LTTRUE,GetMediumFont());
 		pCtrl->Enable(LTFALSE);
 		break;
 	}
@@ -270,16 +270,16 @@ void CFolderCustomControls::InitColumns(int nFilter,int nFirstEntry,int nEntries
 		CLTGUIColumnTextCtrl *pCtrl=AddColumnText(FOLDER_CMD_CHANGE_CONTROL, IDS_HELP_SETCONTROL, LTFALSE);
 
 		// The "action" column
-		pCtrl->AddColumn(m_pEntries[nFirstEntry+i].nStringID, m_nActionWidth, LTF_JUSTIFY_LEFT);
+		pCtrl->AddColumn(m_pEntries[nFirstEntry+i].nStringID, P3_W(m_nActionWidth), LTF_JUSTIFY_LEFT);
 
 		// This is a buffer column to space things out on the screen
-		pCtrl->AddColumn(hEmpty, m_nBufferWidth, LTF_JUSTIFY_LEFT);
+		pCtrl->AddColumn(hEmpty, P3_W(m_nBufferWidth), LTF_JUSTIFY_LEFT);
 
 		// The equals column.  Changes from "" to "=" when the user is binding the key
-		pCtrl->AddColumn(hEmpty, m_nEqualsWidth, LTF_JUSTIFY_LEFT);
+		pCtrl->AddColumn(hEmpty, P3_W(m_nEqualsWidth), LTF_JUSTIFY_LEFT);
 
 		// The column that contains the key which is assigned to the control!
-		pCtrl->AddColumn(IDS_CONTROL_UNASSIGNED, 100, LTF_JUSTIFY_LEFT);
+		pCtrl->AddColumn(IDS_CONTROL_UNASSIGNED, P3_W(100), LTF_JUSTIFY_LEFT);
 
 		pCtrl->SetParam1(1+nFirstEntry+i);
 

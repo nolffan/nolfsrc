@@ -89,7 +89,7 @@ LTBOOL CBaseSelectionFolder::Build()
 
     m_pName = CreateTextItem(IDS_SPACER,LTNULL,LTNULL,LTTRUE,pFont);
     m_pName->Enable(LTFALSE);
-	m_pName->SetFixedWidth(m_NameRect.right - m_NameRect.left);
+	m_pName->SetFixedWidth(P3_W(m_NameRect.right - m_NameRect.left));
     AddFixedControl(m_pName,NamePos,LTFALSE);
 
 
@@ -101,7 +101,7 @@ LTBOOL CBaseSelectionFolder::Build()
 		pFont = GetMediumFont();
 	else
 		pFont = GetLargeFont();
-    m_pDescription = CreateStaticTextItem(IDS_SPACER,LTNULL,LTNULL,(m_DescriptionRect.right - m_DescriptionRect.left),0,LTTRUE,pFont);
+    m_pDescription = CreateStaticTextItem(IDS_SPACER,LTNULL,LTNULL,P3_W(m_DescriptionRect.right - m_DescriptionRect.left),0,LTTRUE,pFont);
     m_pDescription->Enable(LTFALSE);
     AddFixedControl(m_pDescription,DescriptionPos,LTFALSE);
 
@@ -617,7 +617,7 @@ int CBaseSelectionFolder::AddToSlot(int nItemId, int nNameId, LTBOOL bRequired)
 		
 
 	LTIntPt offset(0,0);
-	int nWidth = (m_ListRect.right - m_ListRect.left) + (2*m_SlotOffset.x);
+	int nWidth = P3_W((m_ListRect.right - m_ListRect.left) + (2*m_SlotOffset.x));
 	int nHeight = Max(pBmp->GetHeight(),pCtrl->GetHeight()) + 2;
 	CGroupCtrl*	pGroup = CreateGroup(nWidth,nHeight,nNameId);
 
@@ -749,7 +749,7 @@ int CBaseSelectionFolder::AddEmptySlot()
 		
 
 	LTIntPt offset(0,0);
-	int nWidth = (m_ListRect.right - m_ListRect.left) + (2*m_SlotOffset.x);
+	int nWidth = P3_W((m_ListRect.right - m_ListRect.left) + (2*m_SlotOffset.x));
 	int nHeight = Max(pBmp->GetHeight(),pCtrl->GetHeight()) + 2;
 	CGroupCtrl*	pGroup = CreateGroup(nWidth,nHeight,LTNULL);
 
@@ -803,7 +803,7 @@ void CBaseSelectionFolder::RemoveFromSlot(int nItemId)
 		
 
 	LTIntPt offset(0,0);
-	int nWidth = (m_ListRect.right - m_ListRect.left) + (2*m_SlotOffset.x);
+	int nWidth = P3_W((m_ListRect.right - m_ListRect.left) + (2*m_SlotOffset.x));
 	int nHeight = Max(pBmp->GetHeight(),pCtrl->GetHeight()) + 2;
 	CGroupCtrl*	pGroup = CreateGroup(nWidth,nHeight,LTNULL);
 

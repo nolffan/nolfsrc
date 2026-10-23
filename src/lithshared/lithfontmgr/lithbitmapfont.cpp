@@ -52,6 +52,11 @@ LithBitmapFont::LithBitmapFont()
 	m_nY = 0;
 	m_nExtraLetterSpace = 0;
 	m_nWaitLines = 1;
+#ifdef NOLFSRC_MODERN
+	m_fScale = 1.0f;
+	m_nBaseAvgWidth = 0;
+	m_bGlyphSheet = LTFALSE;
+#endif
 }
 
 //*********************************************************************************
@@ -102,6 +107,13 @@ LTBOOL LithBitmapFont::Init(ILTClient *pClient, LITHFONTCREATESTRUCT *lfCS)
 				}
 
 				CalcAvgWidth();
+
+#ifdef NOLFSRC_MODERN
+				// M-P3-23: the image's measures, which SetScale scales
+				memcpy(m_nBaseWidths, m_lfOD.pWidths, sizeof(m_nBaseWidths));
+				m_nBaseAvgWidth = m_nAvgWidth;
+				SetScale(m_fScale);
+#endif
 
 				return LTTRUE;
 			}
@@ -1011,6 +1023,10 @@ void LithBitmapFont::_Draw(int nX, int nY, uint32 nIndex1, uint32 nIndex2)
 		}
 		else if (nChar <= LTF_NUM_TOTAL_CHARS - 1)
 		{
+#ifdef NOLFSRC_MODERN
+			// M-P3-23: at the font's scale, from a glyph sheet or the strip
+			DrawGlyphModern(nX, nY, nChar, LTFALSE);
+#else
 			m_rRect.left = m_lfOD.pOffsets[nChar];
 			m_rRect.right = m_lfOD.pOffsets[nChar+1];
 
@@ -1022,6 +1038,7 @@ void LithBitmapFont::_Draw(int nX, int nY, uint32 nIndex1, uint32 nIndex2)
 			{
 				m_pClient->DrawSurfaceToSurface(m_pDest, m_pFont, &m_rRect, nX, nY);
 			}
+#endif
 
 			nX += m_lfOD.pWidths[nChar] + m_nExtraLetterSpace;
 			nIndex1++;
@@ -1065,11 +1082,15 @@ void LithBitmapFont::_DrawSolid(int nX, int nY, uint32 nIndex1, uint32 nIndex2)
 		}
 		else if (nChar <= LTF_NUM_TOTAL_CHARS - 1)
 		{
+#ifdef NOLFSRC_MODERN
+			DrawGlyphModern(nX, nY, nChar, LTTRUE);
+#else
 			m_rRect.left = m_lfOD.pOffsets[nChar];
 			m_rRect.right = m_lfOD.pOffsets[nChar+1];
 
 			m_pClient->DrawSurfaceSolidColor(m_pDest, m_pFont, &m_rRect, nX, nY,
 											 m_hTransColor, m_lfDD->hColor);
+#endif
 
 			nX += m_lfOD.pWidths[nChar] + m_nExtraLetterSpace;
 			nIndex1++;
@@ -1095,6 +1116,20 @@ LTBOOL LithBitmapFont::ClipFont(LTRect &rcFont)
 			if (rcFont.top > m_lfDD->rcClip.bottom || rcFont.bottom < m_lfDD->rcClip.top)
 				return LTFALSE;
 
+#ifdef NOLFSRC_MODERN
+			// M-P3-23: the clip is in screen pixels, the source rows the
+			// image's
+			if (rcFont.top < m_lfDD->rcClip.top)
+			{
+				m_rRect.top = (int)((LTFLOAT)(m_lfDD->rcClip.top - rcFont.top) / m_fScale + 0.5f);
+				rcFont.top = m_lfDD->rcClip.top;
+			}
+
+			if (rcFont.bottom > m_lfDD->rcClip.bottom)
+			{
+				m_rRect.bottom += (int)((LTFLOAT)(m_lfDD->rcClip.bottom - rcFont.bottom) / m_fScale - 0.5f);
+			}
+#else
 			if (rcFont.top < m_lfDD->rcClip.top)
 			{
 				m_rRect.top = m_lfDD->rcClip.top - rcFont.top;
@@ -1105,6 +1140,7 @@ LTBOOL LithBitmapFont::ClipFont(LTRect &rcFont)
 			{
 				m_rRect.bottom += m_lfDD->rcClip.bottom - rcFont.bottom;
 			}
+#endif
 		}
 	}
 	else
@@ -1129,3 +1165,117 @@ LTBOOL LithBitmapFont::ClipFont(LTRect &rcFont)
 
 	return LTTRUE;
 }
+
+#ifdef NOLFSRC_MODERN
+//*********************************************************************************
+
+// M-P3-23: the measures the text is laid out with, at the new scale. The
+// image's own are kept from Init (they are what FontData.fnt caches).
+void LithBitmapFont::SetScale(LTFLOAT fScale)
+{
+	if (fScale < 0.25f)
+		fScale = 0.25f;
+	m_fScale = fScale;
+
+	if (!m_pFont || !m_nSurfHeight)
+		return;
+
+	for (int i = 0; i < LTF_NUM_TOTAL_CHARS; i++)
+		m_lfOD.pWidths[i] = m_nBaseWidths[i] ? (uint32)ScaledLen((int)m_nBaseWidths[i]) : 0;
+	m_nAvgWidth = (uint32)ScaledLen((int)m_nBaseAvgWidth);
+	m_nHeight = ScaledLen((int)m_nSurfHeight);
+}
+
+//*********************************************************************************
+
+// M-P3-24: a font from a glyph sheet the game drew itself (cshell/p3_ttf.cpp):
+// each glyph's place on the sheet and its width are given, so nothing is
+// scanned for; rows of glyphs keep the sheet within a texture's size. The
+// glyphs are white on black, drawn blended as the retail bitmap fonts are.
+// The sheet becomes the font's and is deleted with it.
+LTBOOL LithBitmapFont::InitFromGlyphs(ILTClient *pClient, HSURFACE hSheet, char *szRefName,
+									  uint32 nCellHeight, const uint32 *pX, const uint32 *pY,
+									  const uint32 *pWidths, uint32 nSpaceWidth)
+{
+	LITHFONTCREATESTRUCT lfCS;
+	lfCS.szRefName = szRefName;
+
+	if (!hSheet || !nCellHeight || !LithFont::Init(pClient, &lfCS))
+		return LTFALSE;
+
+	m_pFont = hSheet;
+	m_pClient->GetSurfaceDims(m_pFont, &m_nSurfWidth, &m_nSurfHeight);
+	m_nSurfHeight = nCellHeight;			// a glyph's height, not the sheet's
+	m_nHeight = nCellHeight;
+	m_rRect.Init(0, 0, 0, nCellHeight);
+	m_nGroupFlags = LTF_INCLUDE_ALL;
+	m_bChromaKey = LTFALSE;
+	m_hTransColor = SETRGB(0, 0, 0);
+	m_bGlyphSheet = LTTRUE;
+
+	for (int i = 0; i < LTF_NUM_TOTAL_CHARS; i++)
+	{
+		m_nGlyphX[i] = pX[i];
+		m_nGlyphY[i] = pY[i];
+		m_lfOD.pWidths[i] = pWidths[i];
+		m_lfOD.pOffsets[i] = 0;
+	}
+	m_lfOD.pOffsets[LTF_NUM_TOTAL_CHARS] = 0;
+
+	// The "average width" is what a space steps: the font's own space
+	CalcAvgWidth();
+	if (nSpaceWidth)
+		m_nAvgWidth = nSpaceWidth;
+	memcpy(m_nBaseWidths, m_lfOD.pWidths, sizeof(m_nBaseWidths));
+	m_nBaseAvgWidth = m_nAvgWidth;
+	m_fScale = 1.0f;
+	return LTTRUE;
+}
+
+// One glyph at (nX, nY), at the font's scale, from the strip (retail's
+// layout: the glyph between its offset and the next) or a glyph sheet. The
+// rows m_rRect's top and bottom give are the line's clip, in the glyph.
+void LithBitmapFont::DrawGlyphModern(int nX, int nY, uint32 nChar, LTBOOL bSolid)
+{
+	LTRect rcSrc;
+	if (m_bGlyphSheet)
+	{
+		rcSrc.left = m_nGlyphX[nChar];
+		rcSrc.right = m_nGlyphX[nChar] + m_nBaseWidths[nChar];
+		rcSrc.top = m_rRect.top + m_nGlyphY[nChar];
+		rcSrc.bottom = m_rRect.bottom + m_nGlyphY[nChar];
+	}
+	else
+	{
+		rcSrc.left = m_lfOD.pOffsets[nChar];
+		rcSrc.right = m_lfOD.pOffsets[nChar+1];
+		rcSrc.top = m_rRect.top;
+		rcSrc.bottom = m_rRect.bottom;
+	}
+	m_rRect.left = rcSrc.left;
+	m_rRect.right = rcSrc.right;
+
+	if (m_fScale == 1.0f)
+	{
+		if (bSolid)
+			m_pClient->DrawSurfaceSolidColor(m_pDest, m_pFont, &rcSrc, nX, nY, m_hTransColor, m_lfDD->hColor);
+		else if (m_bChromaKey)
+			m_pClient->DrawSurfaceToSurfaceTransparent(m_pDest, m_pFont, &rcSrc, nX, nY, m_hTransColor);
+		else
+			m_pClient->DrawSurfaceToSurface(m_pDest, m_pFont, &rcSrc, nX, nY);
+		return;
+	}
+
+	// an empty scaled glyph draws nothing (and the engine would warp it
+	// rather than blit it)
+	LTRect rcDest(nX, nY, nX + ScaledLen(rcSrc.right - rcSrc.left), nY + ScaledLen(rcSrc.bottom - rcSrc.top));
+	if (rcDest.right <= rcDest.left || rcDest.bottom <= rcDest.top)
+		return;
+	if (bSolid)
+		m_pClient->ScaleSurfaceToSurfaceSolidColor(m_pDest, m_pFont, &rcDest, &rcSrc, m_hTransColor, m_lfDD->hColor);
+	else if (m_bChromaKey)
+		m_pClient->ScaleSurfaceToSurfaceTransparent(m_pDest, m_pFont, &rcDest, &rcSrc, m_hTransColor);
+	else
+		m_pClient->ScaleSurfaceToSurface(m_pDest, m_pFont, &rcDest, &rcSrc);
+}
+#endif

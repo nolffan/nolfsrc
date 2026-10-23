@@ -86,7 +86,7 @@ LTBOOL CFolderPlayer::Build()
     m_pEdit->Enable(LTFALSE);
 	m_pEdit->SetAlignment(LTF_JUSTIFY_CENTER);
 
-	m_pNameGroup = AddGroup(640,m_pLabel->GetHeight(),IDS_HELP_PLAYER_NAME);
+	m_pNameGroup = AddGroup(P3_W(640),m_pLabel->GetHeight(),IDS_HELP_PLAYER_NAME);
 
     LTIntPt offset(0,0);
     m_pNameGroup->AddControl(m_pLabel,offset,LTTRUE);

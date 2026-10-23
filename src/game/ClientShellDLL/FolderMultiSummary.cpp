@@ -71,7 +71,7 @@ void CFolderMultiSummary::Escape()
 {
 	if (m_bEscaped) return;
 	m_bEscaped = LTTRUE;
-	CStaticTextCtrl *pBrief = AddStaticTextItem(IDS_STARTNEXTLEVEL,LTNULL,LTNULL,480,0,LTTRUE,GetSmallFont());
+	CStaticTextCtrl *pBrief = AddStaticTextItem(IDS_STARTNEXTLEVEL,LTNULL,LTNULL,P3_W(480),0,LTTRUE,GetSmallFont());
 	if (pBrief)
 	{
 		pBrief->Enable(LTFALSE);
@@ -98,7 +98,7 @@ void CFolderMultiSummary::OnFocus(LTBOOL bFocus)
 		if (missionId)
 		{
 			CLTGUITextItemCtrl* pCtrl =AddTextItem(missionId,LTNULL,0,LTTRUE,GetLargeFont());
-			pCtrl->SetFixedWidth(480);
+			pCtrl->SetFixedWidth(P3_W(480));
 			pCtrl->Enable(LTFALSE);
 		}
 
@@ -127,7 +127,7 @@ void CFolderMultiSummary::OnFocus(LTBOOL bFocus)
 		}
 		if (missionId) AddBlankLine();
 
-		CStaticTextCtrl *pBrief = AddStaticTextItem(leID,LTNULL,LTNULL,480,0,LTTRUE,GetLargeFont());
+		CStaticTextCtrl *pBrief = AddStaticTextItem(leID,LTNULL,LTNULL,P3_W(480),0,LTTRUE,GetLargeFont());
 		if (pBrief)
 		{
 			pBrief->Enable(LTFALSE);
@@ -138,7 +138,7 @@ void CFolderMultiSummary::OnFocus(LTBOOL bFocus)
 		if (endString)
 		{
 			CLTGUITextItemCtrl* pCtrl =AddTextItem(endString,LTNULL,0,LTTRUE,GetLargeFont());
-			pCtrl->SetFixedWidth(480);
+			pCtrl->SetFixedWidth(P3_W(480));
 			pCtrl->Enable(LTFALSE);
 			AddBlankLine();
 		}
@@ -163,24 +163,24 @@ void CFolderMultiSummary::OnFocus(LTBOOL bFocus)
 
 				TEAM_INFO *pTeam = pCIMgr->GetTeam(1);
 				HSTRING hName = g_pLTClient->CreateString(pTeam->szName);
-				pCtrl->AddColumn(hName, kName, LTF_JUSTIFY_LEFT);
+				pCtrl->AddColumn(hName, P3_W(kName), LTF_JUSTIFY_LEFT);
 				g_pLTClient->FreeString(hName);
 
 				sprintf(score,"%d",pTeam->nScore);
 				HSTRING hScore = g_pLTClient->CreateString(score);
-				pCtrl->AddColumn(hScore, kScore, LTF_JUSTIFY_RIGHT);
+				pCtrl->AddColumn(hScore, P3_W(kScore), LTF_JUSTIFY_RIGHT);
 				g_pLTClient->FreeString(hScore);
 
-				pCtrl->AddColumn(hEmpty, kGap, LTF_JUSTIFY_LEFT);
+				pCtrl->AddColumn(hEmpty, P3_W(kGap), LTF_JUSTIFY_LEFT);
 
 				pTeam = pCIMgr->GetTeam(2);
 				hName = g_pLTClient->CreateString(pTeam->szName);
-				pCtrl->AddColumn(hName, kName, LTF_JUSTIFY_LEFT);
+				pCtrl->AddColumn(hName, P3_W(kName), LTF_JUSTIFY_LEFT);
 				g_pLTClient->FreeString(hName);
 				
 				sprintf(score,"%d",pTeam->nScore);
 				hScore = g_pLTClient->CreateString(score);
-				pCtrl->AddColumn(hScore, kScore, LTF_JUSTIFY_RIGHT);
+				pCtrl->AddColumn(hScore, P3_W(kScore), LTF_JUSTIFY_RIGHT);
 				g_pLTClient->FreeString(hScore);
 				
 				AddBlankLine();
@@ -200,11 +200,11 @@ void CFolderMultiSummary::OnFocus(LTBOOL bFocus)
 						{
 							pCtrls[nNumCtrls] = AddColumnText(LTNULL,LTNULL,LTTRUE,GetSmallFont());
 							pCtrls[nNumCtrls]->Enable(LTFALSE);
-							pCtrls[nNumCtrls]->AddColumn(hEmpty, kName, LTF_JUSTIFY_LEFT);
-							pCtrls[nNumCtrls]->AddColumn(hEmpty, kScore, LTF_JUSTIFY_RIGHT);
-							pCtrls[nNumCtrls]->AddColumn(hEmpty, kGap, LTF_JUSTIFY_LEFT);
-							pCtrls[nNumCtrls]->AddColumn(hEmpty, kName, LTF_JUSTIFY_LEFT);
-							pCtrls[nNumCtrls]->AddColumn(hEmpty, kScore, LTF_JUSTIFY_RIGHT);
+							pCtrls[nNumCtrls]->AddColumn(hEmpty, P3_W(kName), LTF_JUSTIFY_LEFT);
+							pCtrls[nNumCtrls]->AddColumn(hEmpty, P3_W(kScore), LTF_JUSTIFY_RIGHT);
+							pCtrls[nNumCtrls]->AddColumn(hEmpty, P3_W(kGap), LTF_JUSTIFY_LEFT);
+							pCtrls[nNumCtrls]->AddColumn(hEmpty, P3_W(kName), LTF_JUSTIFY_LEFT);
+							pCtrls[nNumCtrls]->AddColumn(hEmpty, P3_W(kScore), LTF_JUSTIFY_RIGHT);
 							nNumCtrls++;
 						}
 
@@ -243,11 +243,11 @@ void CFolderMultiSummary::OnFocus(LTBOOL bFocus)
 				{
 					CLTGUIColumnTextCtrl *pCtrl = AddColumnText(LTNULL,LTNULL,LTTRUE,GetSmallFont());
 					pCtrl->Enable(LTFALSE);
-					pCtrl->AddColumn(ptr->hstrName, kName, LTF_JUSTIFY_LEFT);
+					pCtrl->AddColumn(ptr->hstrName, P3_W(kName), LTF_JUSTIFY_LEFT);
 					
 					sprintf(score,"%d (%d)",ptr->nFrags, (uint32)ptr->m_Ping);
 					HSTRING hScore = g_pLTClient->CreateString(score);
-					pCtrl->AddColumn(hScore, kScore, LTF_JUSTIFY_RIGHT);
+					pCtrl->AddColumn(hScore, P3_W(kScore), LTF_JUSTIFY_RIGHT);
 					g_pLTClient->FreeString(hScore);
 
 					if (ptr->nID == nLocalID)
@@ -292,7 +292,7 @@ void CFolderMultiSummary::BuildObjectivesList()
 		if (pCtrl)
 		{
             pCtrl->Enable(LTFALSE);
-			pCtrl->SetFixedWidth(440);
+			pCtrl->SetFixedWidth(P3_W(440));
 			int nIndex= 0;
 			CBitmapCtrl *pCheck = new CBitmapCtrl;
 			if (pCompObjList->Have(objID,nIndex))
@@ -304,14 +304,17 @@ void CFolderMultiSummary::BuildObjectivesList()
                 pCheck->Create(g_pLTClient,"interface\\check-off.pcx");
 			}
 
+#ifdef NOLFSRC_MODERN
+			pCheck->SetScale(P3_MenuScale());	// M-P3-23: at the text's scale
+#endif
 			int strHeight = pCtrl->GetHeight();
 			int bmpHeight = pCheck->GetHeight();
 			int height = Max(strHeight,bmpHeight) + 4;
 
 
-			pGroup->Create(480,height);
+			pGroup->Create(P3_W(480),height);
 
-            LTIntPt offset(40, (height - strHeight) / 2 );
+            LTIntPt offset(P3_W(40), (height - strHeight) / 2 );
 			pGroup->AddControl(pCtrl,offset);
 
 			offset.x = 0;
@@ -354,7 +357,7 @@ LTBOOL CFolderMultiSummary::Render(HSURFACE hDestSurf)
 		lastPos.y += yo + GetSmallFont()->GetHeight();
 #endif
 
-		LTRect rcTeam(firstPos.x-8, firstPos.y-8, firstPos.x+kName+kScore+8, lastPos.y+8);
+		LTRect rcTeam(firstPos.x-8, firstPos.y-8, firstPos.x+P3_W(kName+kScore)+8, lastPos.y+8);
 
 		float fOldAlpha;
 		g_pLTClient->GetSurfaceAlpha(pCIMgr->GetTeam(1)->hBanner, fOldAlpha);

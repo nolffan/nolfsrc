@@ -39,7 +39,7 @@ LTBOOL CFolderMission::Build()
     HSTRING hTxt = LTNULL;
 
     m_pMissionCtrl=AddTextItem(IDS_SPACER,LTNULL,0,LTTRUE, GetLargeFont());
-	m_pMissionCtrl->SetFixedWidth(480);
+	m_pMissionCtrl->SetFixedWidth(P3_W(480));
     m_pMissionCtrl->Enable(LTFALSE);
 
     CLTGUITextItemCtrl* pCtrl = AddTextItem(IDS_SPACER,LTNULL,0,LTTRUE, GetLargeFont());
@@ -48,7 +48,7 @@ LTBOOL CFolderMission::Build()
 //	AddPageBreak();
 
     pCtrl=AddTextItem(IDS_OBJECTIVES,LTNULL,0,LTTRUE, GetLargeFont());
-	pCtrl->SetFixedWidth(480);
+	pCtrl->SetFixedWidth(P3_W(480));
     pCtrl->Enable(LTFALSE);
 
 
@@ -193,7 +193,7 @@ void CFolderMission::BuildObjectivesList()
 		if (pCtrl)
 		{
             pCtrl->Enable(LTFALSE);
-			pCtrl->SetFixedWidth(440);
+			pCtrl->SetFixedWidth(P3_W(440));
 			int nIndex= 0;
 			CBitmapCtrl *pCheck = debug_new(CBitmapCtrl);
 			if (pCompObjList->Have(objID,nIndex))
@@ -205,14 +205,17 @@ void CFolderMission::BuildObjectivesList()
                 pCheck->Create(g_pLTClient,"interface\\check-off.pcx");
 			}
 
+#ifdef NOLFSRC_MODERN
+			pCheck->SetScale(P3_MenuScale());	// M-P3-23: at the text's scale
+#endif
 			int strHeight = pCtrl->GetHeight();
 			int bmpHeight = pCheck->GetHeight();
 			int height = Max(strHeight,bmpHeight) + 4;
 
 
-			pGroup->Create(480,height);
+			pGroup->Create(P3_W(480),height);
 
-            LTIntPt offset(40, (height - strHeight) / 2 );
+            LTIntPt offset(P3_W(40), (height - strHeight) / 2 );
 			pGroup->AddControl(pCtrl,offset);
 
 			offset.x = 0;

@@ -2446,14 +2446,29 @@ LTRESULT sub_40e120(HSURFACE hDest, HSURFACE hSrc, LTWarpPt* pCoords,
 	CSurface*     pSrc;
 	int           i;
 	uint32        nMinY, nMaxY;
+#ifdef NOLFSRC_MODERN
+	// fixed: the edge tables are indexed by the destination's row, and
+	// retail's held 1024 rows on the stack: a warp onto rows 1024 and down
+	// of a taller surface (the screen at 1080p and up) wrote past them, over
+	// this function's own arguments, and the call below jumped to whatever
+	// pWarpFn had become (RETAIL_BUGS.md). Static tables, for screens up to
+	// 8192 rows; the warps all run on the game's thread.
+	static SWarpEdgeQ40E right[8192];
+	static SWarpEdgeQ40E left[8192];
+#else
 	SWarpEdgeQ40E right[1024];
 	SWarpEdgeQ40E left[1024];
+#endif
 
 	pDest = (CSurface*)hDest;
 	pSrc  = (CSurface*)hSrc;
 
 	if (!pSrc || !pDest)                                            // 0x0040e136
 		RETURN_ERROR(1, "InternalWarpSurfaceToSurface", LT_INVALIDPARAMS);
+#ifdef NOLFSRC_MODERN
+	if (pDest->m_nHeight > sizeof(left) / sizeof(left[0]))
+		RETURN_ERROR(1, "InternalWarpSurfaceToSurface", LT_INVALIDPARAMS);
+#endif
 
 	if (nCoords > MAX_WARP_POINTS_Q40E)                             // 0x0040e154
 		nCoords = MAX_WARP_POINTS_Q40E;

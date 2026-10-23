@@ -14,6 +14,7 @@
 #ifdef NOLFSRC_MODERN
 // M-P3: menus and HUD at any resolution
 #include "cshell/p3_ui.h"
+#include "cshell/p3_ttf.h"
 #endif
 
 
@@ -499,6 +500,11 @@ LTBOOL CInterfaceResMgr::InitFonts()
 //      CLTGUIFont::SetWrapMethod(LTFALSE);
 //	}
 
+#ifdef NOLFSRC_MODERN
+	// M-P3-23: the menu fonts at the page's scale
+	ScaleMenuFonts();
+#endif
+
     return LTTRUE;
 
 }
@@ -609,8 +615,60 @@ void CInterfaceResMgr::ScreenDimsChanged()
 #ifdef NOLFSRC_MODERN
 	// M-P1-06: size, centre or un-frame the window for the new mode
 	P1Window_Apply();
+
+	// M-P3-23: the menu fonts follow the page
+	ScaleMenuFonts();
 #endif
 }
+
+#ifdef NOLFSRC_MODERN
+// M-P3-23: the five fonts the menus draw with (and the message boxes, the
+// loading screen, dialogue choices and the credits, which use them too) are
+// drawn at the menu page's scale, the screen's height over
+// 480, as the page itself is. The HUD's fonts are left as they are (the
+// HUD has its own scale, M-P3-12). Bitmap fonts only: the engine fonts of
+// other languages are not affected.
+void CInterfaceResMgr::ScaleMenuFonts()
+{
+	LTFLOAT fScale = P3_MenuScale();
+	CLTGUIFont* apFonts[] = { m_pSmallFont, m_pMediumFont, m_pLargeFont, m_pHelpFont, m_pTitleFont };
+
+	// M-P3-24: the fonts drawn afresh from the TrueType font at this scale
+	// (MenuFont), when it is in use, each at its retail image's height times
+	// the scale; without it they are the retail images scaled. Only English:
+	// other languages use engine fonts.
+	const int nFonts = sizeof(apFonts) / sizeof(apFonts[0]);
+	static LTFLOAT s_afTTFScale[5] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };	// 0: not drawn from it
+	static int s_anRetailHeight[5] = { 0, 0, 0, 0, 0 };
+	static char* s_aszRef[5] = { "P3TTF_SMALL", "P3TTF_MED", "P3TTF_LARGE", "P3TTF_HELP", "P3TTF_TITLE" };
+	LTBOOL bTTF[5] = { LTFALSE, LTFALSE, LTFALSE, LTFALSE, LTFALSE };
+	if (IsEnglish() && P3_TTF_Enabled())
+	{
+		for (int j = 0; j < nFonts; j++)
+		{
+			if (!apFonts[j])
+				continue;
+			if (!s_anRetailHeight[j])
+			{
+				// still the retail image: its height at scale 1
+				LTFLOAT fOld = apFonts[j]->GetScale();
+				s_anRetailHeight[j] = (int)((LTFLOAT)apFonts[j]->GetHeight() / (fOld > 0.0f ? fOld : 1.0f) + 0.5f);
+			}
+			if (s_afTTFScale[j] == fScale)
+				bTTF[j] = LTTRUE;		// already drawn at this scale
+			else if (P3_TTF_MakeFont(apFonts[j], s_anRetailHeight[j], fScale, s_aszRef[j]))
+				bTTF[j] = LTTRUE;
+			s_afTTFScale[j] = bTTF[j] ? fScale : s_afTTFScale[j];
+		}
+	}
+
+	for (int i = 0; i < nFonts; i++)
+	{
+		if (apFonts[i] && !bTTF[i])
+			apFonts[i]->SetScale(fScale);
+	}
+}
+#endif
 
 
 HSURFACE CInterfaceResMgr::GetSurfaceLoading()

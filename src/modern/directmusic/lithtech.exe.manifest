@@ -75,4 +75,12 @@
   <file name="ms_dswave.dll">
     <comClass clsid="{8A667154-F9CB-11D2-AD8A-0060B0575ABC}" threadingModel="Both" description="Microsoft DirectSound Wave"/>
   </file>
+  <!-- M-P3-23: DPI-aware, so with Windows' display scaling the game is
+       drawn at the screen's own pixels, not stretched from a smaller
+       virtual screen (and its modes are the screen's real ones). -->
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware>
+    </windowsSettings>
+  </application>
 </assembly>

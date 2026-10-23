@@ -10,6 +10,13 @@
 ;
 ****************************************************************************/
 #include "StdAfx.h"
+#ifdef NOLFSRC_MODERN
+// M-P3-23: the wrapping width at the menu fonts' scale
+#include "cshell/p3_ui.h"
+#define P3_WIN_WIDTH(n)	P3_MenuLen(n)
+#else
+#define P3_WIN_WIDTH(n)	(n)
+#endif
 #include "LTMenuWnd.h"
 #include "LTGuiMgr.h"
 #include "LTWndMessages.h"
@@ -301,7 +308,7 @@ void CLTMenuWnd::AddItem(const char *szText, uint8 byCommand)
 		m_curSz.y += g_pLayoutMgr->GetMenuSpacing();
 
 	// Set the window position
-    LTIntPt ptCur = m_ItemWnds[m_nNumItems].SetText(szText,MENUWND_MAX_WIDTH);
+    LTIntPt ptCur = m_ItemWnds[m_nNumItems].SetText(szText,P3_WIN_WIDTH(MENUWND_MAX_WIDTH));
 	m_ItemWnds[m_nNumItems].SetSelectable(TRUE);
 	m_ItemWnds[m_nNumItems].MoveWindow(ptPos.x,ptPos.y+m_curSz.y);
 	m_curSz.x = Max(m_curSz.x,ptCur.x);

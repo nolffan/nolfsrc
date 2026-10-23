@@ -507,15 +507,15 @@ void CFolderViewInventory::AddMod(int nWeaponID, int nID)
 	CLTGUITextItemCtrl* pSpace = CreateTextItem("-",LTNULL, LTNULL,LTFALSE,m_pFont);
 
 	int nIndent = g_pLayoutMgr->GetFolderCustomInt((eFolderID)m_nFolderID,"Indent");
-	LTIntPt offset(nIndent,0);
-	int nWidth = (m_ListRect.right - m_ListRect.left);
+	LTIntPt offset(P3_W(nIndent),0);
+	int nWidth = P3_W(m_ListRect.right - m_ListRect.left);
 	int nHeight = pCtrl->GetHeight() + 2;
 	CGroupCtrl*	pGroup = CreateGroup(nWidth,nHeight,LTNULL);
 
 	offset.y = (nHeight - pSpace->GetHeight()) / 2;
 	pGroup->AddControl(pSpace,offset);
 
-	offset.x = nIndent + pSpace->GetWidth() + 8;
+	offset.x = P3_W(nIndent) + pSpace->GetWidth() + 8;
 	offset.y = (nHeight - pCtrl->GetHeight()) / 2;
 	pGroup->AddControl(pCtrl,offset,LTTRUE);
 
@@ -549,8 +549,8 @@ void CFolderViewInventory::AddAmmo(int nWeaponID, int nID, LTBOOL bInfinite)
 
 
 	int nIndent = g_pLayoutMgr->GetFolderCustomInt((eFolderID)m_nFolderID,"Indent");
-	LTIntPt offset(nIndent,0);
-	int nWidth = (m_ListRect.right - m_ListRect.left);
+	LTIntPt offset(P3_W(nIndent),0);
+	int nWidth = P3_W(m_ListRect.right - m_ListRect.left);
 	int nHeight = pCtrl->GetHeight() + 2;
 	CGroupCtrl*	pGroup = CreateGroup(nWidth,nHeight,LTNULL);
 

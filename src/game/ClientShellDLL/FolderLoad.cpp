@@ -131,13 +131,13 @@ void CFolderLoad::BuildSavedLevelList()
 			CLTGUIColumnTextCtrl* pColCtrl = AddColumnText(FOLDER_CMD_CUSTOM, IDS_HELP_QUICKLOAD, LTFALSE, GetSmallFont());
 
 			// The world name column
-			pColCtrl->AddColumn(hLoad, kColumnWidth, LTF_JUSTIFY_LEFT);
+			pColCtrl->AddColumn(hLoad, P3_W(kColumnWidth), LTF_JUSTIFY_LEFT);
 
 			if (strlen(sQuickSave.szTime) > 0)
 			{
 				// The column that contains the date/time
 				HSTRING hTime=g_pLTClient->CreateString(sQuickSave.szTime);
-				pColCtrl->AddColumn(hTime, 230, LTF_JUSTIFY_LEFT);
+				pColCtrl->AddColumn(hTime, P3_W(230), LTF_JUSTIFY_LEFT);
 				g_pLTClient->FreeString(hTime);
 			}
 			g_pLTClient->FreeString(hLoad);
@@ -161,13 +161,13 @@ void CFolderLoad::BuildSavedLevelList()
 			CLTGUIColumnTextCtrl* pColCtrl = AddColumnText(FOLDER_CMD_CUSTOM+1, IDS_HELP_RELOAD, LTFALSE, GetSmallFont());
 
 			// The world name column
-			pColCtrl->AddColumn(hLoad, kColumnWidth, LTF_JUSTIFY_LEFT);
+			pColCtrl->AddColumn(hLoad, P3_W(kColumnWidth), LTF_JUSTIFY_LEFT);
 
 			if (strlen(sAutoSave.szTime) > 0)
 			{
 				// The column that contains the date/time
 				HSTRING hTime=g_pLTClient->CreateString(sAutoSave.szTime);
-				pColCtrl->AddColumn(hTime, 230, LTF_JUSTIFY_LEFT);
+				pColCtrl->AddColumn(hTime, P3_W(230), LTF_JUSTIFY_LEFT);
 				g_pLTClient->FreeString(hTime);
 			}
 			g_pLTClient->FreeString(hLoad);
@@ -198,13 +198,13 @@ void CFolderLoad::BuildSavedLevelList()
 				CLTGUIColumnTextCtrl* pCtrl = AddColumnText(FOLDER_CMD_CUSTOM+2+i, IDS_HELP_LOADGAME, LTFALSE, GetSmallFont());
 
 				// The world name column
-				pCtrl->AddColumn(hLoad, kColumnWidth, LTF_JUSTIFY_LEFT);
+				pCtrl->AddColumn(hLoad, P3_W(kColumnWidth), LTF_JUSTIFY_LEFT);
 
 				if (strlen(sSave.szTime) > 0)
 				{
 					// The column that contains the date/time
 					HSTRING hTime=g_pLTClient->CreateString(sSave.szTime);
-					pCtrl->AddColumn(hTime, 230, LTF_JUSTIFY_LEFT);
+					pCtrl->AddColumn(hTime, P3_W(230), LTF_JUSTIFY_LEFT);
 					g_pLTClient->FreeString(hTime);
 				}
 				g_pLTClient->FreeString(hLoad);

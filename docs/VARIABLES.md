@@ -47,6 +47,7 @@ the modern build.
 | `UIScale` | 0.5 | HUD size, times the screen's height ratio (never smaller than retail, at most 4). Interface options: "HUD size". |
 | `RestrictCinematicsTo4x3` | 0 | 1 puts black bars beside cinematics on screens wider than 4:3. Interface options. |
 | `UseGotyMenu` | 1 | Main-menu art: 1 Game of the Year, 0 the original release's. Interface options. |
+| `MenuFont` | 1 | 1 draws the menus' text (in English) in the Bowlby One SC TrueType font from `fonts\`, at the screen's scale; and the developer console's in Noto Sans Mono; 0 uses the original bitmap fonts, scaled, for both. Read when the menus are laid out. |
 | `NoFunMenus` | 0 | 1 always shows the plain main menu. Otherwise it has a winter Cate from 15 to 31 December and a casual Cate on Fridays. |
 | `WindowMode` | 1 | Only applies when `Windowed` is 1: 2 is a borderless window at the desktop's resolution, anything else a framed window. Display options: "Window mode". |
 | `Windowed` | 0 | 1 runs in a window (retail variable; Display options now sets it). |

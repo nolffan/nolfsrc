@@ -70,7 +70,7 @@ void CFolderMultiBriefing::OnFocus(LTBOOL bFocus)
 		{
 			CLTGUIFont *pFont = (briefId ? GetMediumFont() : GetLargeFont());
 			CLTGUITextItemCtrl* pCtrl =AddTextItem(missionId,LTNULL,0,LTTRUE,pFont);
-			pCtrl->SetFixedWidth(480);
+			pCtrl->SetFixedWidth(P3_W(480));
 			pCtrl->Enable(LTFALSE);
 		}
 		if (briefId)
@@ -80,7 +80,7 @@ void CFolderMultiBriefing::OnFocus(LTBOOL bFocus)
 			CLTGUITextItemCtrl* pCtrl=AddTextItem(IDS_BRIEFING,LTNULL,0,LTTRUE,GetMediumFont());
 			pCtrl->Enable(LTFALSE);
 
-			CStaticTextCtrl *pBrief = AddStaticTextItem(briefId,LTNULL,LTNULL,480,0,LTTRUE,GetSmallFont());
+			CStaticTextCtrl *pBrief = AddStaticTextItem(briefId,LTNULL,LTNULL,P3_W(480),0,LTTRUE,GetSmallFont());
 			if (pBrief)
 			{
 				pBrief->Enable(LTFALSE);
