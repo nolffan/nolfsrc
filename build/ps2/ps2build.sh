@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# The modern build's PS2 levels (MODERN.md, P8): the three "Nine years ago"
-# flashbacks of the PlayStation 2 release, converted from the PS2 disc.
+# The modern build's PS2 levels (MODERN.md, P8): the PlayStation 2 release's
+# three "Nine years ago" flashbacks and its "A Man of Influence" third scene,
+# with the Baron's training rooms, converted from the PS2 disc.
 # Opt-in: `make modern PS2=1` sets NOLFSRC_PS2, and then the PS2 disc image
 # must be in rez/isos/ps2/ (either the USA or the European disc: they give
 # the same files).

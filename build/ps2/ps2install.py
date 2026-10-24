@@ -25,6 +25,8 @@ Written (counts are for the US disc):
   WORLDS/thiefmission1-3.dat   ps2topc (PS2 lightmaps, scale 1.0), the PS2
                                string IDs remapped (ps2strings), the door sound
                                typo Snd\\Doors\\0wood_c.wav fixed
+  WORLDS/m07s03_A, _B.dat      the same (no remap): the PS2's M07S03, with the
+                               secret basement; WORLD_FIXES
   TEX/...                      the world textures the PC archives lack
   models                       ps2model (MODELS below)
   skins                        PS2-only .dtx the levels, the patches, the
@@ -50,7 +52,25 @@ import ps2strings    # noqa: E402
 import abcmodel      # noqa: E402
 from rezextract import Rez   # noqa: E402
 
-WORLDS = ['thiefmission1', 'thiefmission2', 'thiefmission3']
+# the "Nine years ago" levels (new: their string IDs are remapped), and the
+# PS2's two halves of M07S03 with the secret basement under the Baron's
+# courtyard (its strings are the PC's own: no remap)
+WORLDS = ['thiefmission1', 'thiefmission2', 'thiefmission3', 'm07s03_A', 'm07s03_B']
+REMAP_WORLDS = ('thiefmission1', 'thiefmission2', 'thiefmission3')
+
+# PS2 commands the PC must not run: (world, object, property, PS2 value, PC value).
+# The PS2 has no loadout screen and sets the inventory in the level; on the PC
+# that would throw away the loadout the player chose. In m07s03_A, clean1
+# (after Goodman's coin toss) resets it and gives the barrette and poodle
+# back, and Trigger13 (the courtyard shaft, on the way out of the basement)
+# resets it again -- taking the basement's weapons, and everything else.
+# The PC keeps the player's inventory; the basement's crossbow and rocket
+# launcher are one-time weapons of the mission (MISSIONS.txt).
+WORLD_FIXES = [
+    ('m07s03_A', 'clean1', 'MessageName3',
+     'msg player resetinventory;msg Player (AcquireWeapon barrette);msg Player (AcquireWeapon poodle)', ''),
+    ('m07s03_A', 'Trigger13', 'MessageName3', 'msg player resetinventory', ''),
+]
 
 # (PS2 model, installed name as the game references it, PC child models)
 MODELS = [
@@ -129,7 +149,13 @@ PHOTOS = [
 KNOWN = {
     r'guns\snd\safe\deselect.wav':
         'on no PS2 bank either (the PS2 Weapons.txt names it, the PS2 plays nothing)',
+    r'chars\skins\dog_action_head.dtx':
+        'no dog has a head skin; the retail M02S01, M07S02, T06S01 dogs ask for it too',
+    r'tex\sky\snow_dn.dtx':
+        'the retail M07S03 has it in its texture list too, unused',
 }
+KNOWN.update((r'voice\%d.wav' % i,
+              "an interview question with no voice, as in the retail M07S03") for i in range(9002, 9010))
 
 DOOR_TYPO = (r'Snd\Doors\0wood_c.wav', r'Snd\Doors\01wood_c.wav')
 
@@ -408,8 +434,17 @@ def photo_pcx(data, crop, size):
 
 # ------------------------------------------------------------------ worlds
 
-def fix_world(w, remap):
-    n = ps2strings.remap_objects(w.objects, remap)
+def fix_world(w, remap, name):
+    n = ps2strings.remap_objects(w.objects, remap) if name in REMAP_WORLDS else 0
+    for world, obj, prop, old, new in WORLD_FIXES:
+        if world != name:
+            continue
+        hits = [p for o in w.objects
+                if any(q.name == 'Name' and str(q.value).lower() == obj.lower() for q in o.props)
+                for p in o.props if p.name == prop]
+        if len(hits) != 1 or hits[0].value != old:
+            raise SystemExit('%s: %s.%s is not %r' % (name, obj, prop, old))
+        hits[0].value = new
     typo = 0
     for o in w.objects:
         for p in o.props:
@@ -424,7 +459,7 @@ def install_world(ps2, game, out, name, remap):
     if src is None:
         raise SystemExit('worlds/%s.ltb not in the PS2 archive' % name)
     world = ps2world.load(src)
-    nids, typo = fix_world(world, remap)
+    nids, typo = fix_world(world, remap, name)
     dst = out.resolve(r'Worlds\%s.dat' % name)
     tmp = dst + '.ps2install.tmp'
     load = ps2topc.P.load
