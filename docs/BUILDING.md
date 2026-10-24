@@ -248,6 +248,17 @@ working directory on a drive of its own (`build/build.mk`). The modern build is 
 the retail game on purpose. When a fix lands, mark its entry in
 `RETAIL_BUGS.md` as fixed, naming the file.
 
+`make modern PS2=1` also gives the modern build the PlayStation 2 release's
+three "Nine years ago" levels and its version of "A Man of Influence", with
+the Baron's secret training rooms (`docs/MODERN.md`, P8), converted from a PS2
+disc image you put in `rez/isos/ps2/` (the USA or the European disc). Its
+text goes into CRes.dll (`build/all.sh`, step 2d), and its levels, models,
+textures, sounds and attribute edits into the game directory's `custom/`
+(`build/ps2/ps2build.sh`, after the modern data), listed in
+`custom/PS2-DATA.txt`. Such a game directory gets no public archive, since
+the PS2 data cannot be installed from the PC discs. A plain `make modern`
+afterwards takes it all out again.
+
 ### The modern build's middleware: `ext/`
 
 The release build plays its sound through RAD's Miles Sound System 6.0i and
