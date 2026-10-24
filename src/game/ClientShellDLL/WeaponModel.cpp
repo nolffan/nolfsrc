@@ -32,6 +32,9 @@
 #ifdef NOLFSRC_MODERN
 #include "cshell/p5_gameplay.h"	// M-P5-18
 #endif
+#ifdef NOLFSRC_MODERN
+#include "cshell/p8_thief.h"	// M-P8-04
+#endif
 
 extern CGameClientShell* g_pGameClientShell;
 extern LTBOOL g_bInfiniteAmmo;
@@ -1180,6 +1183,17 @@ void CWeaponModel::CreateModel()
 		}
 	}
 
+#ifdef NOLFSRC_MODERN
+	// M-P8-04: young Cate's hands in a thief level, as on the PS2
+	if (g_pGameClientShell->GetGameType() == SINGLE && P8_GetHandsSkin())
+	{
+		SAFE_STRCPY(createStruct.m_SkinNames[1], P8_GetHandsSkin());
+		if (strcmp(m_pWeapon->szPVSkin, "Hands") == 0)
+		{
+			SAFE_STRCPY(createStruct.m_SkinNames[0], P8_GetHandsSkin());
+		}
+	}
+#endif
 
 	m_hObject = CreateModelObject(m_hObject, createStruct);
 	if (!m_hObject) return;
@@ -4614,6 +4628,17 @@ void CWeaponModel::SetupModel()
 		}
 	}
 
+#ifdef NOLFSRC_MODERN
+	// M-P8-04: young Cate's hands in a thief level, as on the PS2
+	if (g_pGameClientShell->GetGameType() == SINGLE && P8_GetHandsSkin())
+	{
+		SAFE_STRCPY(createStruct.m_SkinNames[1], P8_GetHandsSkin());
+		if (strcmp(m_pWeapon->szPVSkin, "Hands") == 0)
+		{
+			SAFE_STRCPY(createStruct.m_SkinNames[0], P8_GetHandsSkin());
+		}
+	}
+#endif
 
 	// Set the filenames...
 
