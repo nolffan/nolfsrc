@@ -1,7 +1,8 @@
 // p8.h -- the modern build's P8 strings (the PS2 release's levels):
 // IDs 31700-31799 (MODERN.md). Used only by the modern build.
 //
-// The text is the PS2 disc's: build/ps2/ps2strings.py writes it (with the
+// The menu strings (31740 on) are ours, in p8.rc. The rest is the PS2
+// disc's text: build/ps2/ps2strings.py writes it (with the
 // PS2 strings that keep their own IDs: 5326, 6535-6537, 14001-14074) into a
 // generated, uncommitted .rc at build time, as build/retailextract.py does
 // for the Game of the Year strings. Map: build/ps2/ps2-string-map.txt.
@@ -38,5 +39,14 @@
 // intelligence text (PS2 20541-20547), Intelligence InfoId in the converted worlds
 #define IDS_P8_INTEL_TEXT_FIRST         31730
 #define IDS_P8_INTEL_TEXT_LAST          31736
+
+// M-P8-10: the main menu's Cate (Interface options)
+#define IDS_P8_MENU_CATE                31740
+#define IDS_P8_HELP_MENU_CATE           31741
+#define IDS_P8_MENU_CATE_SEASONAL       31742
+#define IDS_P8_MENU_CATE_ORIGINAL       31743
+#define IDS_P8_MENU_CATE_CASUAL         31744
+#define IDS_P8_MENU_CATE_WINTER         31745
+#define IDS_P8_MENU_CATE_YOUNG          31746
 
 #endif // __MODERN_CRES_P8_H__

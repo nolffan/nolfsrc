@@ -14,6 +14,8 @@
 
 #include "stdafx.h"
 #include "InterfaceMgr.h"
+#include "LayoutMgr.h"
+#include "FolderMgr.h"
 #include "ClientRes.h"
 #include "cshell/p8_thief.h"
 #include "cres/p8.h"
@@ -64,4 +66,11 @@ void P8_OnLoadWorld(const char* pWorldFile, int nLevel)
 const char* P8_GetHandsSkin()
 {
 	return s_bThiefLevel ? "guns\\skins_pv\\ThiefHands_pv.dtx" : LTNULL;
+}
+
+LTBOOL P8_HaveYoungCateMenu()
+{
+	// build/ps2/data's LAYOUT recipe adds the folder's section, beside the
+	// menu model the PS2 install makes (Chars\Models\IntHero_Thief.abc)
+	return g_pLayoutMgr && g_pLayoutMgr->HasCustomValue(FOLDER_ID_MAIN_THIEF, "Character");
 }
