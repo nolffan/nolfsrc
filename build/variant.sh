@@ -106,7 +106,13 @@ bash "$TREE/build/all.sh"
 case "$VARIANT" in modern*)
     echo
     echo "== modern data: src/modern/data/ recipes -> out/$NAME/custom/"
-    python3 "$TREE/tools/moddata.py" apply "$NOLF_GAME_OUT" "$TREE/src/modern/data" ;;
+    bash "$TREE/build/ps2/ps2build.sh" clean "$NOLF_GAME_OUT"
+    python3 "$TREE/tools/moddata.py" apply "$NOLF_GAME_OUT" "$TREE/src/modern/data"
+    if [ -n "${NOLFSRC_PS2:-}" ]; then
+        echo
+        echo "== the PS2 levels (MODERN.md, P8): the PS2 disc in rez/isos/ps2/ -> out/$NAME/custom/"
+        bash "$TREE/build/ps2/ps2build.sh" install "$NOLF_GAME_OUT"
+    fi ;;
 esac
 
 case "$VARIANT" in *debug)

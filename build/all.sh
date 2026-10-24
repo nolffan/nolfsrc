@@ -137,6 +137,12 @@ python3 build/retailextract.py lithtechres "$RETAIL" src/engine/lithtech/res
 step "2c. Game of the Year text: the retail CRES.dll in $RETAIL -> src/game/ClientRes/goty/"
 python3 build/retailextract.py goty "$RETAIL" src/game/ClientRes/goty
 
+step "2d. the PS2 levels' text (modern build, make modern PS2=1): the PS2 disc in rez/isos/ps2/ -> src/game/ClientRes/goty/ps2.rc"
+case "${NOLFSRC_CFLAGS:-}" in
+    *NOLFSRC_MODERN*) bash build/ps2/ps2build.sh strings src/game/ClientRes/goty/ps2.rc ;;
+    *)                rm -f src/game/ClientRes/goty/ps2.rc ;;
+esac
+
 step "3. compile: libraries, game DLLs, engine (build/compile.sh: build/build.mk, ${NOLFSRC_JOBS:-$(nproc)} jobs)"
 GAME_CONFIG=final bash build/compile.sh all
 for f in src/engine/ltmsg/Release/ltmsg.dll src/engine/sres/Release/sres.dll \

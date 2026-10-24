@@ -40,6 +40,7 @@ SRC_MOUNT := $(if $(NOLF_SOURCE),-v $(realpath $(NOLF_SOURCE)):/nolfsource:ro -e
 DOCKER_RUN = docker run --rm --init --name $(CONTAINER) \
 	-u $(shell id -u):$(shell id -g) -e HOME=/tmp/home $(if $(JOBS),-e NOLFSRC_JOBS=$(JOBS)) \
 	$(if $(NOLF_ARCHIVES),-e NOLF_ARCHIVES="$(NOLF_ARCHIVES)") \
+	$(if $(PS2),-e NOLFSRC_PS2=1) \
 	-v $(CURDIR):/repo -w /repo $(SRC_MOUNT) $(IMAGE)
 
 TOOLCHAIN_FILES = toolchains/msvc-6.00-9782/VC98/Bin/CL.EXE \
@@ -56,6 +57,8 @@ help:
 	@echo "make debug      the game with symbols and NOLFSRC_DEBUG logging, in out/nolf-legacy-debug/"
 	@echo "make modern     the game with NOLFSRC_MODERN (the retail bugs fixed), in out/nolf-modern-release/"
 	@echo "make modern-debug  both, in out/nolf-modern-debug/"
+	@echo "                (with PS2=1, the modern ones also get the PS2 release's three"
+	@echo "                \"Nine years ago\" levels, from the PS2 disc in rez/isos/ps2/; no public archive)"
 	@echo "                (none of these is ever scored; build/variant.sh)"
 	@echo "make test       scripted playtest of out/nolf-legacy-release/ ($(TEST_LEVELS)), under Xvfb"
 	@echo "make test-modern  the same of out/nolf-modern-release/"

@@ -1,0 +1,51 @@
+--- a/ATTRIBUTES/INTELITEMS.txt
++++ b/ATTRIBUTES/INTELITEMS.txt
+@@ -356,3 +356,48 @@
+ ScaleName0		= "PopupBackground"
+ ScaleName1		= "DimsOnlyPopup"
+ 
++/*
++**  Intel19 - HandBag (PS2 "Nine years ago" levels)
++*/
++
++[Intel19]
++
++Name			= "HandBag"
++Filename		= "Props\Models\Purses_01.abc"
++Skin			= "Props\Skins\Purses_01.dtx"
++DefaultTextId	= 8019
++Chrome			= 0
++Chromakey		= 0
++ScaleName0		= "PopupBackground"
++ScaleName1		= "HandBagPopup"
++
++/*
++**  Intel20 - Money Bag (PS2 "Nine years ago" levels)
++*/
++
++[Intel20]
++
++Name			= "MoneyBag"
++Filename		= "Props\Models\MoneyBag.abc"
++Skin			= "Props\Skins\MoneyBag.dtx"
++DefaultTextId	= 8020
++Chrome			= 0
++Chromakey		= 0
++ScaleName0		= "PopupBackground"
++ScaleName1		= "MoneyBagPopup"
++
++/*
++**  Intel21 - Paper Money (PS2 "Nine years ago" levels)
++*/
++
++[Intel21]
++
++Name			= "Paper Money"
++Filename		= "Props\Models\Change_01.abc"
++Skin			= "Props\Skins\Change_01b.dtx"
++DefaultTextId	= 8021
++Chrome			= 0
++Chromakey		= 0
++ScaleName0		= "PopupBackground"
++ScaleName1		= "PaperMoneyPopup"
++

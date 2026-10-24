@@ -45,6 +45,7 @@ def load(src, lang='en'):
         return parse_ltsr(open(src, 'rb').read())
     sys.path.insert(0, HERE)
     import ps2rez
+    import ps2install        # noqa: F401 -- ps2rez.open_rez then reads an ISO too
     f, hdr, tables = ps2rez.open_rez(src)
     for e in tables[LANG_TABLE[lang]]:
         if e[0] == LTSR_HASH and e[2]:
