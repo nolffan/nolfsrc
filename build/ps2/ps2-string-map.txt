@@ -1,0 +1,58 @@
+# PS2 string IDs used by the "Nine years ago" levels (thiefmission1-3) and
+# their attribute entries -> the CRes.dll ID the modern build gives them.
+# IDs only; the text is the PS2 disc's (English LTSR table 0x056BAF9E in
+# LITH_PS2.REZ), which build/ps2/ps2strings.py reads at build time.
+#
+# <ps2 id> <pc id> <kind> ; <where it is used>
+#
+# Kept as on the PS2 (free in the PC CRes.dll and in the PC VOICE\ files;
+# fixed by the converted level data and by VOICE\<id>.wav):
+#   5326, 6535-6537, 14001-14074
+# Moved to the P8 range 31700-31799 (the PC CRes.dll already has these IDs,
+# or only our own attribute patches reference them):
+#   239, 667-669, 4033/4034/4083/4084/4146/4346, 5047/5048/5089/5212-5216,
+#   20541-20547
+# Already on the PC with the same text (nothing to add): 6505, 10176
+# (voice only), 10252, 13316.
+
+# loading screen and intel folder (code)
+239    31700  ui         ; "Nine years ago..." load-level line for thiefmission* (PC 239 = "Movement Controls")
+667    31701  ui         ; FolderIntel name "Moneybag %d" (PC 667 = "up"); %d -> %1!d!
+668    31702  ui         ; FolderIntel name "Handbag %d" (PC 668 = "down")
+669    31703  ui         ; FolderIntel name "Money %d" (PC 669 = "Missing file %1!s!")
+
+# WEAPONS.txt (our patch writes the new IDs)
+4033   31710  weapon     ; [Weapon45] "Thief Safe Cracker" NameId (PC 4033 empty, but Scot Slam's NameId)
+4083   31711  weapon     ; [Weapon45] DescriptionId
+4034   31712  weapon     ; [Weapon46] "Thief Lock Pick" NameId
+4084   31713  weapon     ; [Weapon46] DescriptionId
+4146   31714  ammo       ; [Ammo54] "Safe Cra Gadget" NameId
+4346   31715  ammo       ; [Ammo54] DescId
+
+# objectives (level commands: objective add/completed/remove N, transmission N)
+5047   31720  objective  ; thiefmission1 (PC 5047 = "<insert mission objective here>")
+5048   31721  objective  ; thiefmission1
+5089   31722  objective  ; thiefmission2
+5212   31723  objective  ; thiefmission3
+5213   31724  objective  ; thiefmission3
+5214   31725  objective  ; thiefmission3
+5215   31726  objective  ; thiefmission3
+5216   31727  objective  ; thiefmission3
+5326   5326   objective  ; thiefmission2 (free on the PC)
+
+# mission failed (level commands: MissionFailed N)
+6535   6535   failed     ; thiefmission1-3 (free on the PC)
+6536   6536   failed     ; thiefmission1-2
+6537   6537   failed     ; thiefmission1-3
+
+# intelligence text (Intelligence InfoId; PC 20541-20550 = "<Insert Intelligence Item Text Here>")
+20541  31730  intel      ; thiefmission1 handbag
+20542  31731  intel      ; thiefmission1 handbag
+20543  31732  intel      ; thiefmission1 briefcase
+20544  31733  intel      ; unused on the PS2 ("Two Pounds")
+20545  31734  intel      ; unused on the PS2 ("Three Pounds")
+20546  31735  intel      ; thiefmission2 money bags
+20547  31736  intel      ; thiefmission1-3 paper money
+
+# dialogue (CinematicTrigger DialogueN; subtitles + VOICE\<id>.wav)
+14001-14074  =    dialogue ; thiefmission1 14001-14031, thiefmission2 14032-14045, thiefmission3 14046-14074; 14014-14017 unused (bank only)
