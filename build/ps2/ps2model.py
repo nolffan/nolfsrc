@@ -672,6 +672,79 @@ def pc_file(pc_dir, name):
     return None
 
 
+# A PS2 piece has three colours (spec-models.md): the one it is drawn in
+# (texture x colour; 0.8 grey everywhere but on a few gadget parts), one
+# unused (0.5 grey), and a glow added on top (black but on the safe
+# cracker's two LEDs). The PC model has none: the colours go into the skin.
+PS2_PLAIN = (0.8, 0.8, 0.8)
+
+
+def coloured(p):
+    return (tuple(round(x, 3) for x in p.colors[0:3]) != PS2_PLAIN or
+            any(x > 0 for x in p.colors[8:11]))
+
+
+def bake_colours(m, out, rgba, w, h, material=0):
+    """The colours of PS2Model m's pieces into its skin: returns (w, 2h, rgba),
+    the skin with a second half below it, where each coloured piece of
+    `out` (its abcmodel conversion) gets a patch of its own -- the skin
+    under the piece, times its colour, plus its glow -- and its texture
+    coordinates move there. The pieces on `material` all keep their texels
+    (their v halves). None if no piece is coloured."""
+    pieces = [(pp, q) for pp, q in zip(m.pieces, out.pieces) if q.material == material]
+    if not any(coloured(pp) for pp, q in pieces):
+        return None
+    h2 = 2 * h
+    img = bytearray(rgba) + bytearray(w * h * 4)
+    shelf_x, shelf_y, shelf_h = 0, h, 0
+    cells = {}
+    for pp, q in pieces:
+        uv = [(f[k][0], f[k][1]) for l in q.lods for f in l.faces for k in range(3)]
+        if not coloured(pp) or not uv:
+            for l in q.lods:
+                l.faces = [tuple((u, v * 0.5, vi) for u, v, vi in f) for f in l.faces]
+            continue
+        x0 = max(0, min(w - 1, int(min(u for u, v in uv) * w)))
+        y0 = max(0, min(h - 1, int(min(v for u, v in uv) * h)))
+        x1 = max(x0 + 1, min(w, int(-(-max(u for u, v in uv) * w // 1))))
+        y1 = max(y0 + 1, min(h, int(-(-max(v for u, v in uv) * h // 1))))
+        key = (x0, y0, x1, y1, tuple(round(c, 3) for c in pp.colors[0:3] + pp.colors[8:11]))
+        if key not in cells:
+            # a patch of the region's size, at least 4 texels (filtering), one
+            # texel of border; shelves along the new half
+            cw, ch = max(4, x1 - x0) + 2, max(4, y1 - y0) + 2
+            if shelf_x + cw > w:
+                shelf_x, shelf_y, shelf_h = 0, shelf_y + shelf_h, 0
+            if shelf_y + ch > h2 or cw > w:
+                raise ValueError('no room for the colour patches')
+            px, py = shelf_x, shelf_y
+            shelf_x += cw
+            shelf_h = max(shelf_h, ch)
+            dr, dg, db = (c / PS2_PLAIN[0] for c in pp.colors[0:3])
+            er, eg, eb = (255.0 * c for c in pp.colors[8:11])
+            for y in range(ch):
+                sy = y0 + min(max(y - 1, 0) * (y1 - y0) // max(4, y1 - y0), y1 - y0 - 1)
+                for x in range(cw):
+                    sx = x0 + min(max(x - 1, 0) * (x1 - x0) // max(4, x1 - x0), x1 - x0 - 1)
+                    o = 4 * (sy * w + sx)
+                    r, g, b, a = rgba[o:o + 4]
+                    d = 4 * ((py + y) * w + px + x)
+                    img[d:d + 4] = bytes((min(255, int(r * dr + er)), min(255, int(g * dg + eg)),
+                                          min(255, int(b * db + eb)), a))
+            cells[key] = (px + 1, py + 1, cw - 2, ch - 2)
+        px, py, cw, ch = cells[key]
+        su = (x1 - x0) / float(w)
+        sv = (y1 - y0) / float(h)
+        def move(u, v):
+            fu = (u - x0 / float(w)) / su if su else 0.5
+            fv = (v - y0 / float(h)) / sv if sv else 0.5
+            fu, fv = min(max(fu, 0.0), 1.0), min(max(fv, 0.0), 1.0)
+            return (px + 0.5 + fu * (cw - 1)) / w, (py + 0.5 + fv * (ch - 1)) / h2
+        for l in q.lods:
+            l.faces = [tuple(move(u, v) + (vi,) for u, v, vi in f) for f in l.faces]
+    return w, h2, bytes(img)
+
+
 def convert_thief(outdir, ps2_rez=None, pc_dir=None, names=None):
     """Every model the thief levels need, from the PS2 archive into
     outdir/<UPPER-CASE DIRS>/<NAME>.abc."""

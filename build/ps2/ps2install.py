@@ -88,6 +88,16 @@ MODELS = [
      ['basemodel.abc', 'fembase.abc', 'playerbase.abc']),
 ]
 
+# The PS2 colours some parts of a model, with a glow on the safe cracker's
+# LEDs; the PC model cannot, so those models get a skin of their own with the
+# colours in it (ps2model.bake_colours): model -> (PS2 skin, installed skin).
+# Only the first-person safe cracker has coloured parts; its in-hand model
+# keeps the plain skin.
+BAKED_SKINS = {
+    r'Guns\Models_PV\PS2SafeCracker_pv.abc':
+        ('guns/skins_pv/ps2safecracker_pv.dtx', r'Guns\Skins_PV\PS2SafeCracker_pv_leds.dtx'),
+}
+
 # the PS2 executable in the disc image's root (SLUS_200.28 on the US disc)
 PS2_EXE = re.compile(r'S[CL][EU]S_\d{3}\.\d{2}')
 PS2_ATTRIBUTES = ['AIButes', 'AnimationsHuman', 'Attachments', 'ClientButes', 'ClientSnd',
@@ -713,6 +723,16 @@ def main():
                 raise SystemExit('PC child model %s not in the retail archives' % k)
             children.append((k, cd))
         conv = ps2model.convert(m, children)
+        if rel in BAKED_SKINS:
+            skin_src, skin_rel = BAKED_SKINS[rel]
+            sd = ps2.get(skin_src)
+            if sd is None:
+                raise SystemExit('%s not in the PS2 archive' % skin_src)
+            w, h, mips, hdr = ps2dtx.ps2_read(sd)
+            baked = ps2model.bake_colours(m, conv, mips[0][2], w, h)
+            if baked:
+                out.put(skin_rel, ps2dtx.write_pc32(hdr, *baked), 'skins')
+                print('  %-44s %dx%d (its parts\' colours: LEDs, buttons)' % (skin_rel, baked[0], baked[1]))
         abc = abcmodel.write_abc(conv)
         out.put(rel, abc, 'models')
         print('  %-44s %7d bytes%s' % (rel, len(abc), ' children ' + ','.join(kids) if kids else ''))

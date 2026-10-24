@@ -93,7 +93,7 @@
 +Recoil              = <0.000000, 0.000000, 0.000000>
 +VectorsPerRound     = 1
 +PVModel	            = "Guns\Models_PV\PS2SafeCracker_pv.abc"
-+PVSkin              = "Guns\Skins_PV\PS2SafeCracker_pv.dtx"
++PVSkin              = "Guns\Skins_PV\PS2SafeCracker_pv_leds.dtx"
 +PVMuzzleFXName		= ""
 +HHModel             = "Guns\Models_HH\PS2SafeCracker_hh.abc"
 +HHSkin              = "Guns\Skins_PV\PS2SafeCracker_pv.dtx"
