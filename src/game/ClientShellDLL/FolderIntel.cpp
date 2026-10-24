@@ -8,14 +8,18 @@
 #include "ClientRes.h"
 #include "GameClientShell.h"
 #include "MsgIds.h"
+#ifdef NOLFSRC_MODERN
+#include "cres/p8.h"	// M-P8-05
+#endif
 
 extern CGameClientShell* g_pGameClientShell;
 namespace
 {
 #ifdef NOLFSRC_MODERN
 	// M-P9-05: the Thief mod's handbags, moneybags, money, wages and diamond
-	// (its FX.txt makes ScaleFX250-254 their popups)
-	const int kNumSFXTypes = 19;
+	// (its FX.txt makes ScaleFX250-254 their popups); M-P8-05: the PS2 thief
+	// levels' moneybags, handbags and money (FX.txt's ScaleFX261-263)
+	const int kNumSFXTypes = 22;
 #else
 	const int kNumSFXTypes = 14;
 #endif
@@ -41,6 +45,10 @@ namespace
 		252,
 		253,
 		254,
+		// an item's type is a byte (CIntelItemMgr::AddItem)
+		(uint8)261,
+		(uint8)262,
+		(uint8)263,
 #endif
 	};
 	int nSFXNameIDs[kNumSFXTypes] =
@@ -66,6 +74,9 @@ namespace
 		689,	// handbag
 		688,	// moneybag
 		690,	// paper money
+		IDS_P8_INTEL_MONEYBAG,
+		IDS_P8_INTEL_HANDBAG,
+		IDS_P8_INTEL_MONEY,
 #endif
 	};
 	int nSFXCounts[kNumSFXTypes];
