@@ -34,7 +34,26 @@
  
  [Mission9]
  //	H.A.R.M.'s Dire Promise
-@@ -1443,11 +1445,11 @@
+@@ -995,7 +997,7 @@
+ DefaultWeapons	= "P38,Perfume Stun Gas,Delisle"
+ AllowedWeapons	= "Revolver,Perfume Stun Gas,Sterling,Lipstick Timed Bomb,Delisle,Luger"
+ RequiredWeapons	= ""
+-OneTimeWeapons	= ""
++OneTimeWeapons	= "Crossbow,Rocket Launcher"
+ DeniedWeapons	= "Space Lasergun,Space Fists,Space Atomic Lasergun"
+ DefaultGadgets	= "Barrette,Poodle"
+ AllowedGadgets	= "Poodle"
+@@ -1028,7 +1030,8 @@
+ Rank6			= "Ar 1"
+ Level0			= "Worlds\m07s01"
+ Level1			= "Worlds\m07s02"
+-Level2			= "Worlds\m07s03"
++Level2			= "Worlds\m07s03_A"
++Level3			= "Worlds\m07s03_B"
+ 
+ [Mission13]
+ //	Further Investigation Required
+@@ -1443,11 +1446,11 @@
  DefaultGadgets	= "Coin,Lighter,Barrette,Decay Powder,Zipcord"
  AllowedGadgets	= ""
  RequiredGadgets	= ""
@@ -48,7 +67,7 @@
  DeniedAmmo		= ""
  AllowedMods		= "AK47 Scope,Dragunov Nightvision Scope,Walther SMG Silencer"
  DefaultMods		= "P38 Silencer"
-@@ -1470,9 +1472,10 @@
+@@ -1470,9 +1473,10 @@
  Rank5			= "S 1"
  Rank6			= "D 1"
  Level0			= "Worlds\m13s01"
