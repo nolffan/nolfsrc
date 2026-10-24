@@ -130,6 +130,32 @@ def model_names(ps2, pc):
     return names
 
 
+# M-P8-10: the main menu's young Cate, the model ModelButes names for the
+# menu model IntHero in the PS2 style Thief: Hero_Thief's mesh (the same 25
+# nodes as the menu model) on the retail IntHero_Action's one animation
+# (interface4) -- as the menu's casual and winter Cates are the in-game
+# outfits on the menu skeleton (MODERN.md M-P3-11). Her skins are
+# Hero_Thief's, under the menu model's names.
+YOUNG_CATE = (r'Chars\Models\Hero_Thief.abc', r'Chars\Models\IntHero_Thief.abc',
+              r'Chars\Models\IntHero_Action.abc')
+YOUNG_CATE_SKINS = [('chars/skins/hero_thief.dtx', r'Chars\Skins\IntHero_Thief.dtx'),
+                    ('chars/skins/hero_thief_head.dtx', r'Chars\Skins\IntHero_Thief_head.dtx')]
+
+
+def menu_cate(thief, pc):
+    data = pc.get(YOUNG_CATE[2])
+    if data is None:
+        raise SystemExit('%s not in the retail archives' % YOUNG_CATE[2])
+    menu = abcmodel.read_abc(data)
+    if [n.name.lower() for n in menu.nodes[1:]] != [n.name.lower() for n in thief.nodes[1:]]:
+        raise SystemExit('%s and %s have different skeletons' % (YOUNG_CATE[0], YOUNG_CATE[2]))
+    thief.children = thief.children[:1]      # no animation models: its own one
+    thief.child_bindings = []
+    thief.anims, thief.bindings = menu.anims, menu.bindings
+    thief.command = menu.command
+    return abcmodel.write_abc(thief)
+
+
 # referenced by code, not by data: the PS2 thief hands (ModelButeMgr::
 # GetHandsSkinFilename for style "Thief"), the loading-screen photo
 CODE_REFS = [r'Guns\Skins_PV\ThiefHands_pv.dtx', r'Interface\Photos\Missions\thief.pcx']
@@ -736,6 +762,10 @@ def main():
         abc = abcmodel.write_abc(conv)
         out.put(rel, abc, 'models')
         print('  %-44s %7d bytes%s' % (rel, len(abc), ' children ' + ','.join(kids) if kids else ''))
+        if rel == YOUNG_CATE[0]:
+            menu = menu_cate(conv, pc)
+            out.put(YOUNG_CATE[1], menu, 'models')
+            print('  %-44s %7d bytes (the menu\'s young Cate)' % (YOUNG_CATE[1], len(menu)))
     print('  %d models  [%.1fs]' % (out.counts.get('models', 0), time.time() - t))
 
     # skins and other .dtx: whatever is referenced, missing from the retail
@@ -757,6 +787,12 @@ def main():
             continue
         out.put(spell, ps2dtx.ps2_to_pc(data), 'skins')
         print('  ' + spell)
+    for src, rel in YOUNG_CATE_SKINS:
+        data = ps2.get(src)
+        if data is None:
+            raise SystemExit('%s not in the PS2 archive' % src)
+        out.put(rel, ps2dtx.ps2_to_pc(data), 'skins')
+        print('  ' + rel)
     print('  %d skins  [%.1fs]' % (out.counts.get('skins', 0), time.time() - t))
 
     # sounds
