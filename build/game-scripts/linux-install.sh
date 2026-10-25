@@ -64,7 +64,7 @@ check_dir() {
         shopt -s nocasematch
         case "$rel" in
         SHA256SUMS|autoexec.cfg|nolfcmds.txt|NetHost.txt|run-cmds.txt|AIReactionReset.txt) ;;
-        Save/*|cd/*|*.part|*/Thumbs.db|Thumbs.db|*/desktop.ini|desktop.ini|*/.DS_Store|.DS_Store) ;;
+        Save/*|Mods/*|mods/*|cd/*|*.part|*/Thumbs.db|Thumbs.db|*/desktop.ini|desktop.ini|*/.DS_Store|.DS_Store) ;;
         */*) extra+=("$rel") ;;
         *.log|*.bmp|*.iso|*.bin|*.cue|*.zip) ;;          # top level only
         *) extra+=("$rel") ;;

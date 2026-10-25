@@ -24,6 +24,9 @@ public:
 
 	// This is called when the folder gets or loses focus
     virtual void    OnFocus(LTBOOL bFocus);
+#ifdef NOLFSRC_MODERN
+    HSTRING GetHelpString(uint32 helpId,int controlIndex);
+#endif
 
 	void	Escape();
     LTBOOL   DoMultiplayer(LTBOOL bMinimize);
