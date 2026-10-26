@@ -157,6 +157,32 @@ LTBOOL CP4JukeboxButeMgr::Init(ILTCSBase *pInterface, const char* szAttributeFil
 			pTheme->nPieces++;
 		}
 
+		// M-P9-03: a mod packaged for the NOLF Modernizer (the Thief mod)
+		// brings its Jukebox.txt in place of ours: the pieces are not the
+		// theme's Intensity<k>/Label<k> but [Song<n>] sections, each naming
+		// its Theme (the [Theme<n>] number), IntensityLevel and Name, n = 0,
+		// 1, 2, ... to the first missing. Its WAV songs (FileName) are not
+		// DirectMusic pieces; their theme has no control file, so it is not
+		// listed.
+		LTBOOL bSongs = (pTheme->nPieces == 0);
+		for (int nSong = 0; bSongs; nSong++)
+		{
+			char szSong[32];
+			sprintf(szSong, "Song%d", nSong);
+			if (!m_buteMgr.Exist(szSong) || pTheme->nPieces >= P4_JUKEBOX_MAX_PIECES) break;
+			if (m_buteMgr.GetInt(szSong, "Theme", -1) != m_nThemes || m_buteMgr.Exist(szSong, "FileName"))
+				continue;
+
+			P4JukeboxPiece *pPiece = &pTheme->aPieces[pTheme->nPieces];
+			pPiece->nIntensity = m_buteMgr.GetInt(szSong, "IntensityLevel", 0);
+
+			char szDefault[32];
+			sprintf(szDefault, "%d", pPiece->nIntensity);
+			m_buteMgr.GetString(szSong, "Name", szDefault, pPiece->szLabel, sizeof(pPiece->szLabel));
+
+			pTheme->nPieces++;
+		}
+
 		m_nThemes++;
 	}
 
