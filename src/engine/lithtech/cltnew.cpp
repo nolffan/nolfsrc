@@ -352,6 +352,10 @@ void sub_41b880(uint32 nColor, int nUnknown, char* pMsg);
 // record, the message code, a POINTER to the caller's va_list, and a length
 // out-parameter it always writes.
 void* str_FormatMessage(void* pModule, int messageCode, va_list* pMarker, uint32* pLen);
+#ifdef NOLFSRC_MODERN
+// M-P9-02: a mod's cres.dll, resources only (clientdsi.cpp), or null
+extern void* g_pP9ModStrings;
+#endif
 
 // 0x00484850 / 0x00484840 -- clientstreams.cpp's pair: wrap a raw
 // FormatMessage buffer in an HSTRING, then LocalFree the buffer.
@@ -1175,6 +1179,24 @@ HSTRING CLTClient::FormatString(int messageCode, ...)
 		pRaw = str_FormatMessage(g_pClientMgr->m_pStringModule610, messageCode,
 		                         &marker, &nLen);
 		va_end(marker);
+#ifdef NOLFSRC_MODERN
+
+		// M-P9-02: an id ours lacks, or holds only as the retail game's
+		// placeholder ("<insert mission objective here>", "<Insert
+		// Intelligence Item Text Here>"), is a mod's to fill in
+		if (g_pP9ModStrings && (!pRaw || _strnicmp((char*)pRaw, "<insert ", 8) == 0))
+		{
+			void* pModRaw;
+			va_start(marker, messageCode);
+			pModRaw = str_FormatMessage(g_pP9ModStrings, messageCode, &marker, &nLen);
+			va_end(marker);
+			if (pModRaw)
+			{
+				if (pRaw) str_FreeMessage(pRaw);
+				pRaw = pModRaw;
+			}
+		}
+#endif
 
 		if (pRaw)
 		{

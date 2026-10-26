@@ -962,6 +962,88 @@ int   sub_100070b6(void* hTree, char* pFilename, char* pOutPath,
                    uint32 nOutLen);
 
 
+#ifdef NOLFSRC_MODERN
+// M-P9-01: the game's own DLLs are the ones in our nolfsrc.rez, whatever a
+// mod archive listed after it carries. A mod packaged for the NOLF
+// Modernizer (the Thief mod) ships its own cshell.dll, object.lto and
+// cres.dll, built for the retail lithtech.exe; loaded by this engine they
+// crash. The trees are searched newest first, so the mod's copies are found
+// before ours; this asks our tree only. Each tree on CFileMgr::m_Trees keeps
+// the name it was opened by at +0x20, after its critical section
+// (filemgr.cpp's COpenTree; the view's name is ours).
+class CP9TreeView
+{
+public:
+	int              m_nKind;                // 0x00  1: a directory
+	void*            m_pArchive;             // 0x04
+	CRITICAL_SECTION m_CS;                   // 0x08
+	char             m_szName[1];            // 0x20  the -rez argument
+};
+
+// fsstream.cpp's pair, under the names they are defined with
+class COpenFileTree;
+ILTStream* fs_OpenStreamInTree(COpenFileTree* pTree, char* pFilename,
+                               int nFlag);                      // 0x100070e3
+int        fs_CopyStreamToFile(ILTStream* pStream,
+                               const char* pszDestFile);        // 0x100074df
+
+// 1: pOutPath is our nolfsrc.rez's pFilename, copied out to pTempPath (or,
+// when that name is in use, to a unique name there), as the lookup below
+// copies the rez stack's; 0: no nolfsrc.rez, or it has no such file, or it
+// did not copy (the retail lookup decides).
+static int P9_OwnGameFile(CFileMgr* pFileMgr, char* pTempPath,
+                          char* pFilename, char* pOutPath, uint32 nOutLen)
+{
+	char       sUnique[MAX_PATH];
+	LTLink*    pHead = &pFileMgr->m_Trees;
+	LTLink*    pCur;
+	void*      pOurs = LTNULL;
+	ILTStream* pStream;
+	int        bCopied = 0;
+	int        nLen;
+
+	for (pCur = pHead->m_pNext; pCur != pHead && !pOurs; pCur = pCur->m_pNext)
+	{
+		void*       pTree = ((CFileTreeRecView*)pCur->m_pData)->m_pTree;
+		const char* pName = ((CP9TreeView*)pTree)->m_szName;
+		const char* pBase = pName;
+		const char* p;
+
+		for (p = pName; *p; p++)
+		{
+			if (*p == '\\' || *p == '/' || *p == ':')
+				pBase = p + 1;
+		}
+
+		if (_stricmp(pBase, "nolfsrc.rez") == 0)
+			pOurs = pTree;
+	}
+
+	if (!pOurs)
+		return 0;
+
+	pStream = fs_OpenStreamInTree((COpenFileTree*)pOurs, pFilename, 0);
+	if (!pStream)
+		return 0;
+
+	nLen = _snprintf(pOutPath, nOutLen, "%s%s", pTempPath, pFilename);
+	if (nLen >= 0 && (uint32)nLen < nOutLen)
+		bCopied = fs_CopyStreamToFile(pStream, pOutPath);
+
+	if (!bCopied && GetTempFileNameA(pTempPath, pFilename, 0, sUnique) &&
+	    strlen(sUnique) < nOutLen)
+	{
+		bCopied = fs_CopyStreamToFile(pStream, sUnique);
+		if (bCopied)
+			strcpy(pOutPath, sUnique);
+	}
+
+	pStream->Release();
+
+	return bCopied;
+}
+
+#endif
 // 0x1000e05b — put a named file somewhere the loader can open it by path,
 // and hand that path back. Zero means it is there.
 //
@@ -996,6 +1078,12 @@ int sub_1000e05b(CServerMgr* pMgr, char* pTempPath, char* pFilename,
 	void*     pTreeRec;
 	int       nResult;
 	int       nRetry;
+#ifdef NOLFSRC_MODERN
+
+	// M-P9-01: object.lto and sres.dll out of nolfsrc.rez first
+	if (P9_OwnGameFile(pFileMgr, pTempPath, pFilename, pOutPath, nOutLen))
+		return 0;
+#endif
 
 	if (fs_FindFileInTrees(pFileMgr, pFilename, &pTreeRec, LTNULL) &&
 	    sub_10006fa5(((CFileTreeRecView*)pTreeRec)->m_pTree) == (void*)1)
