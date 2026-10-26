@@ -932,6 +932,16 @@ LTBOOL CPlayerObj::HandleMissionFailedMessage(char* pMsg)
     g_pLTServer->WriteToMessageByte(hMessage, 0);
     g_pLTServer->WriteToMessageFloat(hMessage, (LTFLOAT)dwTextId);
     g_pLTServer->EndMessage2(hMessage, MESSAGE_GUARANTEED | MESSAGE_NAGGLE);
+#ifdef NOLFSRC_MODERN
+
+	// M-P5-21: the world runs on behind the failure screen; take the player
+	// out of it, as a spectator, so the AI's shots stop landing (a death
+	// then would replace this failure with "You were killed")
+	if (m_eState == PS_ALIVE)
+	{
+		SetSpectatorMode(LTTRUE);
+	}
+#endif
 
     return LTTRUE;
 }
