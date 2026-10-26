@@ -49,6 +49,10 @@ protected:
 	CSliderCtrl		*m_pSoundVolumeCtrl;
 	CSliderCtrl		*m_pMusicVolumeCtrl;
 	CToggleCtrl	*m_pSoundQualityCtrl;
+#ifdef NOLFSRC_MODERN
+	// M-P9-08: the PS2 soundtrack, with a mod that has it
+	LTBOOL	m_bPS2Music;
+#endif
 
 };
 
