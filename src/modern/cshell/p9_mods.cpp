@@ -289,6 +289,25 @@ void P9_OnMusicSettingsChanged()
 	}
 }
 
+// ----------------------------------------------------------------------- //
+//
+//	M-P9-09: young Cate on the main menu
+//
+// ----------------------------------------------------------------------- //
+
+LTBOOL P9_HaveThiefMenu()
+{
+	static int s_nHave = -1;
+	if (s_nHave < 0)
+	{
+		ILTStream *pStream = LTNULL;
+		char szModel[] = "Chars\\Models\\IntHero_Thief.abc";
+		s_nHave = (g_pLTClient->OpenFile(szModel, &pStream) == LT_OK && pStream) ? 1 : 0;
+		if (pStream) pStream->Release();
+	}
+	return s_nHave == 1 && g_pLayoutMgr->HasCustomValue(FOLDER_ID_MAIN_THIEF, "Character");
+}
+
 LTBOOL P9_PlayJukeboxWAV(const char* pFile)
 {
 	KillSound(s_hJukeboxWAV);
