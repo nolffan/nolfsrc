@@ -435,6 +435,68 @@ int  fs_GetFilePathQ42E(void* pTree, char* pFilename, char* pOutPath,
                         uint32 nOutLen);                        // 0x00420e80
 int  fm_CopyFileQ42E(void* pFileMgr, char* pSrc, char* pDest);  // 0x00404950
 
+#ifdef NOLFSRC_MODERN
+// M-P9-01: the game's own DLLs are the ones in the game directory's
+// custom\ folder (where the build installs them), whatever a mod archive
+// listed after it carries. A mod packaged for the NOLF Modernizer (the
+// Thief mod) ships its own cshell.dll, object.lto and cres.dll, built for
+// the retail lithtech.exe; loaded by this engine they crash. 1: pOutPath is
+// custom\<pFilename>, full path; 0: not there (the retail lookup decides).
+static int P9_OwnGameFile(const char* pFilename, char* pOutPath, uint32 nOutLen)
+{
+	char  sPath[MAX_PATH];
+	DWORD dwAttr;
+	int   nLen = _snprintf(sPath, sizeof(sPath), "custom\\%s", pFilename);
+
+	if (nLen < 0 || nLen >= (int)sizeof(sPath))
+		return 0;
+
+	dwAttr = GetFileAttributesA(sPath);
+	if (dwAttr == 0xFFFFFFFF || (dwAttr & FILE_ATTRIBUTE_DIRECTORY))
+		return 0;
+
+	nLen = (int)GetFullPathNameA(sPath, nOutLen, pOutPath, LTNULL);
+	return nLen > 0 && (uint32)nLen < nOutLen;
+}
+
+// M-P9-02: a mod's own cres.dll (the one the rez stack would have given),
+// as resources only -- LOAD_LIBRARY_AS_DATAFILE runs none of its code --
+// for the text of the string ids ours lacks or holds only as a retail
+// placeholder (CLTClient::FormatString). The first member is the module
+// handle, as the engine's resource-module records have it.
+struct P9ModStrings
+{
+	HINSTANCE m_hInst;
+};
+static P9ModStrings s_P9ModStrings;
+void*        g_pP9ModStrings = LTNULL;
+static int   s_bP9RezLookup  = 0;    // sub_42e110 as retail: the rez stack's file
+
+int sub_42e110(CClientMgrQ42D* pMgr, char* pTempPath, char* pFilename,
+               char* pOutPath, uint32 nOutLen);
+
+static void P9_LoadModStrings(CClientMgrQ42D* pMgr, char* pTempPath)
+{
+	char sOurs[MAX_PATH], sMod[MAX_PATH];
+
+	if (!P9_OwnGameFile("cres.dll", sOurs, sizeof(sOurs)))
+		return;
+
+	s_bP9RezLookup = 1;
+	int nResult = sub_42e110(pMgr, pTempPath, "cres.dll", sMod, sizeof(sMod));
+	s_bP9RezLookup = 0;
+
+	char sModFull[MAX_PATH];
+	if (nResult != 0 || !GetFullPathNameA(sMod, sizeof(sModFull), sModFull, LTNULL) ||
+	    _stricmp(sModFull, sOurs) == 0)
+		return;                                 // no mod's cres.dll above ours
+
+	s_P9ModStrings.m_hInst = LoadLibraryExA(sModFull, LTNULL, LOAD_LIBRARY_AS_DATAFILE);
+	if (s_P9ModStrings.m_hInst)
+		g_pP9ModStrings = &s_P9ModStrings;
+}
+
+#endif
 // 0x0042e110 -- 287 bytes.  The client's counterpart of counter.cpp's
 // sub_1000e05b: get a named file onto disk where the loader can open it
 // by path.  The lookup is by name (type 0, id 0) with flag 5.
@@ -450,6 +512,12 @@ int sub_42e110(CClientMgrQ42D* pMgr, char* pTempPath, char* pFilename,
 	ident.m_nID   = 0;
 	ident.m_nType = 0;
 	ident.m_pName = pFilename;
+#ifdef NOLFSRC_MODERN
+
+	// M-P9-01: cshell.dll, cres.dll, cresl.dll from custom\ first
+	if (!s_bP9RezLookup && P9_OwnGameFile(pFilename, pOutPath, nOutLen))
+		return 0;
+#endif
 
 	pRec = fm_GetFileRecQ42E(pMgr->m_pFileMgr, &ident, 5);
 	if (pRec && fs_GetTreeTypeQ42E(pRec->m_pTree) == 1)
@@ -590,6 +658,11 @@ LTRESULT InitClientShellDE(CClientMgrQC5* pMgr)
 		sub_42e110((CClientMgrQ42D*)pMgr, sTempPath, "cresl.dll", sFilename,
 		           sizeof(sFilename));
 		sub_10001583(sFilename, (CModuleRef**)&pMgr->m_hLocResModule);
+#ifdef NOLFSRC_MODERN
+
+		// M-P9-02: a mod's strings, beside ours
+		P9_LoadModStrings((CClientMgrQ42D*)pMgr, sTempPath);
+#endif
 
 		sub_10034f9b((CModuleFuncs*)pMgr->m_pShellModule, &pCreate, &pDelete);
 
