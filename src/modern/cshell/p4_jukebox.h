@@ -23,6 +23,7 @@ struct P4JukeboxPiece
 {
 	int		nIntensity;			// the control file's INTENSITY number
 	char	szLabel[48];		// what the list shows
+	char	szFile[64];			// M-P9-08: a WAV theme's file, in its directory
 };
 
 struct P4JukeboxTheme
@@ -31,6 +32,7 @@ struct P4JukeboxTheme
 	char			szDirectory[64];	// under Music\ (CMusicState::szDirectory is 64)
 	char			szControlFile[32];	// as CMusicState::szControlFile
 	LTBOOL			bAvailable;			// its control file is in the game's data
+	LTBOOL			bIsWAV;				// M-P9-08: WAV files, not DirectMusic
 	int				nPieces;
 	P4JukeboxPiece	aPieces[P4_JUKEBOX_MAX_PIECES];
 };
