@@ -17,8 +17,16 @@ Since the first public release:
   files and play, with nothing to patch. The game keeps its own DLLs when a
   mod brings the Modernizer's (which do not run on this engine), takes the
   mod's texts where the game has none, reads the Modernizer's jukebox file
-  and opens the mod's safes with its safe cracker. Without a mod nothing
-  changes.
+  and opens the mod's safes with its safe cracker. With the Thief mod:
+  "Nine years ago..." on its levels' loading screens, its intelligence items
+  in the gallery, saves in the Baron's mansion that the mod splits in two,
+  the PS2 soundtrack (Sound options: "PS2 soundtrack", and a theme in the
+  jukebox), and young Cate on the main menu from midnight to six. Without a
+  mod nothing changes.
+- **No more being shot during the mission-failed screen.** When a level
+  fails the mission by script, the guards could go on shooting behind the
+  screen, and the player's death replaced the failure's message with "You
+  were killed".
 - **No more getting stuck on Rescue Attempt's bridges.** Walking anywhere
   but down the middle, the player could stick against the railings and
   not move on. The engine's physics has only ever run at the reduced
