@@ -588,6 +588,12 @@ void CFolderMgr::AddFolder(eFolderID folderID)
 		pFolder = debug_new(CFolderController);
 		break;
 #endif
+#ifdef NOLFSRC_MODERN
+	// M-P9-09: the main menu with young Cate
+	case FOLDER_ID_MAIN_THIEF:
+		pFolder = debug_new(CFolderMain);
+		break;
+#endif
 	}
 
 	if (pFolder)

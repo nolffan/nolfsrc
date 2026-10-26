@@ -84,6 +84,10 @@ enum eFolderID
 	// M-P7-06: the Controller options folder
 	FOLDER_ID_CONTROLLER,
 #endif
+#ifdef NOLFSRC_MODERN
+	// M-P9-09: the main menu with young Cate
+	FOLDER_ID_MAIN_THIEF,
+#endif
 
 	//this must be the last id
 	FOLDER_ID_UNASSIGNED,

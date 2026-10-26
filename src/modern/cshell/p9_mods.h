@@ -30,6 +30,10 @@ LTBOOL		P9_IsPS2MusicPlaying();			// (the server's music messages are then ignor
 void		P9_StopLevelMusic();			// OnExitWorld
 void		P9_OnMusicSettingsChanged();	// Sound options: UsePS2Music or the music volume
 
+// M-P9-09: the main menu can show young Cate: a mod brings her menu model
+// (Chars\Models\IntHero_Thief.abc, the IntHero model in the "Thief" style).
+LTBOOL		P9_HaveThiefMenu();
+
 // M-P9-08: a WAV of the mod's jukebox (a Music\ path), looped at the music
 // volume; LTNULL stops the one playing.
 LTBOOL		P9_PlayJukeboxWAV(const char* pFile);
