@@ -266,6 +266,19 @@ LTBOOL CMissionMgr::IsMissionLevel(char* pWorldFile, int & nMissionId, int & nLe
 
 		pCur = m_MissionList.GetItem(TLIT_NEXT);
 	}
+#ifdef NOLFSRC_MODERN
+
+	// M-P9-07: a world a mod's mission list plays in two halves instead (the
+	// Thief mod: Worlds\m07s03 -> m07s03a, m07s03b): a save made in the whole
+	// world goes on as the last half, whose end is the whole world's end
+	int nLen = strlen(pWorldFile);
+	if (nLen + 2 <= MAX_PATH && nLen > 0 && tolower(pWorldFile[nLen - 1]) != 'b')
+	{
+		char szHalf[MAX_PATH];
+		sprintf(szHalf, "%sb", pWorldFile);
+		if (IsMissionLevel(szHalf, nMissionId, nLevel)) return LTTRUE;
+	}
+#endif
 
     return LTFALSE;
 }
