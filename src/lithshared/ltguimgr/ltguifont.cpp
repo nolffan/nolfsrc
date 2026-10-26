@@ -273,3 +273,49 @@ LTBOOL CLTGUIFont::IsChromaKeyed()
 		return LTFALSE;
 	return m_pLithFont->IsChromaKeyed();
 }
+
+#ifdef NOLFSRC_MODERN
+#include "..\lithfontmgr\lithbitmapfont.h"
+
+// M-P3-23
+void CLTGUIFont::SetScale(LTFLOAT fScale)
+{
+	if (m_pLithFont && !m_pLithFont->IsSystemFont())
+		((LithBitmapFont*)m_pLithFont)->SetScale(fScale);
+}
+
+// M-P3-24: the font drawn from a glyph sheet; the font it was before is freed
+// (retail's FreeLithFont only frees what it holds, so the object goes too)
+LTBOOL CLTGUIFont::InitFromGlyphs(ILTClient *pClientDE, HSURFACE hSheet, char *szRefName,
+								uint32 nCellHeight, const uint32 *pX, const uint32 *pY,
+								const uint32 *pWidths, uint32 nSpaceWidth)
+{
+	if (!pClientDE || !hSheet)
+		return LTFALSE;
+
+	LithBitmapFont *pFont = new LithBitmapFont;
+	if (!pFont)
+		return LTFALSE;
+	if (!pFont->InitFromGlyphs(pClientDE, hSheet, szRefName, nCellHeight, pX, pY, pWidths, nSpaceWidth))
+	{
+		delete pFont;
+		return LTFALSE;
+	}
+
+	if (m_pLithFont)
+	{
+		FreeLithFont(m_pLithFont);
+		delete m_pLithFont;
+	}
+	m_pClientDE = pClientDE;
+	m_pLithFont = pFont;
+	return LTTRUE;
+}
+
+LTFLOAT CLTGUIFont::GetScale()
+{
+	if (m_pLithFont && !m_pLithFont->IsSystemFont())
+		return ((LithBitmapFont*)m_pLithFont)->GetScale();
+	return 1.0f;
+}
+#endif

@@ -106,7 +106,7 @@ LTBOOL CFolderHost::Build()
     m_pEdit->Enable(LTFALSE);
 	m_pEdit->SetAlignment(LTF_JUSTIFY_CENTER);
 
-	m_pNameGroup = AddGroup(640,m_pLabel->GetHeight(),IDS_HELP_SESSION_NAME);
+	m_pNameGroup = AddGroup(P3_W(640),m_pLabel->GetHeight(),IDS_HELP_SESSION_NAME);
 
     LTIntPt offset(0,0);
     m_pNameGroup->AddControl(m_pLabel,offset,LTTRUE);
@@ -149,7 +149,7 @@ LTBOOL CFolderHost::Build()
     m_pPassEdit->Enable(LTFALSE);
 	m_pPassEdit->SetAlignment(LTF_JUSTIFY_CENTER);
 
-	m_pPassGroup = AddGroup(640,m_pPassLabel->GetHeight(),IDS_HELP_ENTER_PASSWORD);
+	m_pPassGroup = AddGroup(P3_W(640),m_pPassLabel->GetHeight(),IDS_HELP_ENTER_PASSWORD);
 
     offset = LTIntPt(0,0);
     m_pPassGroup->AddControl(m_pPassLabel,offset,LTTRUE);
@@ -167,7 +167,7 @@ LTBOOL CFolderHost::Build()
 	m_pPortEdit->EnableCursor();
     m_pPortEdit->SetAlignment(LTF_JUSTIFY_CENTER);
 
-	m_pPortGroup = AddGroup(640,m_pPortLabel->GetHeight(),IDS_HELP_ENTER_PORT);
+	m_pPortGroup = AddGroup(P3_W(640),m_pPortLabel->GetHeight(),IDS_HELP_ENTER_PORT);
 
     offset = LTIntPt(0,0);
     m_pPortGroup->AddControl(m_pPortLabel,offset,LTTRUE);
@@ -204,7 +204,7 @@ LTBOOL CFolderHost::Build()
 	m_pBandwidthEdit->EnableCursor();
     m_pBandwidthEdit->SetAlignment(LTF_JUSTIFY_CENTER);
 
-	m_pBandwidthGroup = AddGroup(640,m_pBandwidthLabel->GetHeight(),IDS_HELP_BANDWIDTH_EDIT);
+	m_pBandwidthGroup = AddGroup(P3_W(640),m_pBandwidthLabel->GetHeight(),IDS_HELP_BANDWIDTH_EDIT);
 
     offset = LTIntPt(0,0);
     m_pBandwidthGroup->AddControl(m_pBandwidthLabel,offset,LTTRUE);

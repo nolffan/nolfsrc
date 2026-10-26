@@ -82,6 +82,34 @@ class LithBitmapFont : public LithFont
 		int					m_nExtraLetterSpace;
 		uint32				m_nWaitLines;
 
+#ifdef NOLFSRC_MODERN
+	public:
+		// M-P3-23: drawn this many times the image's size. The widths, the
+		// average width and the height the text is measured with are the
+		// image's, scaled, so every caller lays text out in screen pixels.
+		void	SetScale(LTFLOAT fScale);
+		LTFLOAT	GetScale()		{return m_fScale;}
+
+	protected:
+		LTFLOAT				m_fScale;
+		uint32				m_nBaseWidths[LTF_NUM_TOTAL_CHARS];
+		uint32				m_nBaseAvgWidth;
+
+		int		ScaledLen(int n)	{return (int)((LTFLOAT)n * m_fScale + 0.5f);}
+		// M-P3-24: a font from a glyph sheet (white glyphs on black) and each
+		// glyph's place and width on it
+	public:
+		LTBOOL	InitFromGlyphs(ILTClient *pClient, HSURFACE hSheet, char *szRefName,
+							   uint32 nCellHeight, const uint32 *pX, const uint32 *pY,
+							   const uint32 *pWidths, uint32 nSpaceWidth);
+
+	protected:
+		void	DrawGlyphModern(int nX, int nY, uint32 nChar, LTBOOL bSolid);
+		LTBOOL				m_bGlyphSheet;
+		uint32				m_nGlyphX[LTF_NUM_TOTAL_CHARS];
+		uint32				m_nGlyphY[LTF_NUM_TOTAL_CHARS];
+#endif
+
 	private:
 		// Functions to handle the offset data of the font
 		LTBOOL	LoadOffsets();

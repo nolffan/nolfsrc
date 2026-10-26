@@ -4072,10 +4072,20 @@ void CPlayerStats::UpdateWeaponBindings()
 		}
 		if (!m_hNumberSurf[i])
 		{
+#ifdef NOLFSRC_MODERN
+			// M-P3-23: the number at the font's own size; the HUD draws it
+			// at its scale (M-P3-12)
+			CLTGUIFont* pNumFont = bLarge ? g_pInterfaceResMgr->GetMediumFont() : g_pInterfaceResMgr->GetSmallFont();
+			LTFLOAT fFontScale = pNumFont->GetScale();
+			pNumFont->SetScale(1.0f);
+			m_hNumberSurf[i] = g_pInterfaceResMgr->CreateSurfaceFromString(pNumFont,szTriggers[i],kTransBlack);
+			pNumFont->SetScale(fFontScale);
+#else
 			if (bLarge)
 				m_hNumberSurf[i] = g_pInterfaceResMgr->CreateSurfaceFromString(g_pInterfaceResMgr->GetMediumFont(),szTriggers[i],kTransBlack);
 			else
 				m_hNumberSurf[i] = g_pInterfaceResMgr->CreateSurfaceFromString(g_pInterfaceResMgr->GetSmallFont(),szTriggers[i],kTransBlack);
+#endif
 		}
 
 	}

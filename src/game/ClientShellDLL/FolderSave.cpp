@@ -236,15 +236,15 @@ void CFolderSave::BuildSavedLevelList()
 				pCtrl->SetParam1( m_controlArray.GetSize() - 1);
 				// The world name column
 
-				pCtrl->AddColumn(hWorld, kColumnWidth, LTF_JUSTIFY_LEFT);
+				pCtrl->AddColumn(hWorld, P3_W(kColumnWidth), LTF_JUSTIFY_LEFT);
 
 				// This is a spacer
-				pCtrl->AddColumn(hEmpty, kGap, LTF_JUSTIFY_LEFT);
+				pCtrl->AddColumn(hEmpty, P3_W(kGap), LTF_JUSTIFY_LEFT);
 
 				if (hTime)
 				{
 					// The column that contains the date/time
-					pCtrl->AddColumn(hTime, 230, LTF_JUSTIFY_LEFT);
+					pCtrl->AddColumn(hTime, P3_W(230), LTF_JUSTIFY_LEFT);
 					g_pLTClient->FreeString(hTime);
 				}
 				g_pLTClient->FreeString(hWorld);
@@ -265,13 +265,13 @@ void CFolderSave::BuildSavedLevelList()
 		pCtrl->SetParam1( m_controlArray.GetSize() - 1);
 		// The world name column
 
-		pCtrl->AddColumn(IDS_EMPTY, kColumnWidth, LTF_JUSTIFY_LEFT);
+		pCtrl->AddColumn(IDS_EMPTY, P3_W(kColumnWidth), LTF_JUSTIFY_LEFT);
 
 		// This is a spacer
-		pCtrl->AddColumn(hEmpty, kGap, LTF_JUSTIFY_LEFT);
+		pCtrl->AddColumn(hEmpty, P3_W(kGap), LTF_JUSTIFY_LEFT);
 
 		// The column that contains the date/time
-		pCtrl->AddColumn(hEmpty, 230, LTF_JUSTIFY_LEFT);
+		pCtrl->AddColumn(hEmpty, P3_W(230), LTF_JUSTIFY_LEFT);
 	}
 
     g_pLTClient->FreeString(hEmpty);

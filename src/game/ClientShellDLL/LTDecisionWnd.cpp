@@ -10,6 +10,13 @@
 ;
 ****************************************************************************/
 #include "StdAfx.h"
+#ifdef NOLFSRC_MODERN
+// M-P3-23: the wrapping width at the menu fonts' scale
+#include "cshell/p3_ui.h"
+#define P3_WIN_WIDTH(n)	P3_MenuLen(n)
+#else
+#define P3_WIN_WIDTH(n)	(n)
+#endif
 #include "LTDecisionWnd.h"
 #include "LTGuiMgr.h"
 #include "LTWndMessages.h"
@@ -290,7 +297,7 @@ BOOL CLTDecisionWnd::DisplayText(CStringArray *pcollDecisions, CLTWnd* pWnd, BOO
 			return FALSE;
 
 		// Set the window position
-		ptCur = m_DecisionWnds[i].SetText(pcollDecisions->GetAt(i),DECISIONWND_MAX_WIDTH);
+		ptCur = m_DecisionWnds[i].SetText(pcollDecisions->GetAt(i),P3_WIN_WIDTH(DECISIONWND_MAX_WIDTH));
 		m_DecisionWnds[i].SetSelectable(TRUE);
 		m_DecisionWnds[i].MoveWindow(ptPos.x,ptPos.y+ptMax.y);
 		ptMax.x = Max(ptMax.x,ptCur.x);

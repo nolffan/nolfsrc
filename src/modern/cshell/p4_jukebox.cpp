@@ -214,7 +214,10 @@ LTBOOL CP4FolderJukebox::Build()
 	CLTGUIFont *pHeaderFont = GetLargeFont();
 	CLTGUIFont *pItemFont = GetMediumFont();
 
-	LTIntPt pos(GetPageLeft(), GetPageTop() - pHeaderFont->GetHeight() - 4);
+	// M-P3-23: the fonts' sizes are screen pixels, the layout's page units:
+	// heights become page units for positions (P3_LayoutLen), page widths
+	// screen pixels for the controls (P3_MenuLen)
+	LTIntPt pos(GetPageLeft(), GetPageTop() - P3_LayoutLen(pHeaderFont->GetHeight()) - 4);
 	CStaticTextCtrl *pCtrl = CreateStaticTextItem(IDS_P4_JUKEBOX_THEMES, LTNULL, LTNULL, 0, 0, LTTRUE, pHeaderFont);
 	if (pCtrl)
 	{
@@ -229,7 +232,7 @@ LTBOOL CP4FolderJukebox::Build()
 		AddTextItem((char *)pTheme->szName, CMD_P4_THEME + i, IDS_P4_HELP_JUKEBOX_THEME);
 	}
 
-	m_nPieceWidth = (rcPieces.right - rcPieces.left) - nArrowWidth;
+	m_nPieceWidth = P3_MenuLen((rcPieces.right - rcPieces.left) - nArrowWidth);
 	pos = LTIntPt(rcPieces.left + nIndent, rcPieces.top);
 	m_pPieceHeader = CreateStaticTextItem(" ", LTNULL, LTNULL, m_nPieceWidth, pHeaderFont->GetHeight(), LTTRUE, pHeaderFont);
 	if (m_pPieceHeader)
@@ -238,8 +241,8 @@ LTBOOL CP4FolderJukebox::Build()
 		m_pPieceHeader->Enable(LTFALSE);
 	}
 
-	pos.y += pHeaderFont->GetHeight() + 4;
-	int nListHeight = (rcPieces.bottom - pos.y);
+	pos.y += P3_LayoutLen(pHeaderFont->GetHeight()) + 4;
+	int nListHeight = P3_MenuLen(rcPieces.bottom - pos.y);
 	m_pPieceList = debug_new(CListCtrl);
 	m_pPieceList->Create(nListHeight, LTTRUE, m_nPieceWidth);
 	m_pPieceList->SetParam1(m_nPieceWidth);
@@ -248,7 +251,7 @@ LTBOOL CP4FolderJukebox::Build()
 	m_pPieceList->SetHelpID(IDS_P4_HELP_JUKEBOX_PIECE);
 	AddFixedControl(m_pPieceList, pos, LTTRUE);
 
-	m_pNowPlaying = CreateStaticTextItem(IDS_P4_JUKEBOX_NOTHING, LTNULL, LTNULL, nNowWidth, 0, LTTRUE, pItemFont);
+	m_pNowPlaying = CreateStaticTextItem(IDS_P4_JUKEBOX_NOTHING, LTNULL, LTNULL, P3_MenuLen(nNowWidth), 0, LTTRUE, pItemFont);
 	if (m_pNowPlaying)
 	{
 		AddFixedControl(m_pNowPlaying, ptNow, LTFALSE);

@@ -120,7 +120,7 @@ LTBOOL CFolderHostLevels::Build()
 	//Add Avail Levels List
     LTIntPt pos(rcAvailRect.left + nIndent,rcAvailRect.top);
 	CLTGUIFont *pFont = GetLargeFont();
-	nBarHeight = pFont->GetHeight();
+	nBarHeight = P3_L(pFont->GetHeight());
 
     CStaticTextCtrl *pCtrl = CreateStaticTextItem(IDS_HOST_AVAIL_LEVELS, LTNULL, LTNULL,0,0, LTTRUE, pFont);
     AddFixedControl(pCtrl,pos,LTFALSE);
@@ -188,21 +188,21 @@ LTBOOL CFolderHostLevels::Build()
 	pFont = GetLargeFont();
 
 
-	m_pAddAll = CreateStaticTextItem(IDS_HOST_ADD_ALL, CMD_ADD_ALL, IDS_HELP_ADD_ALL, nListWidth);
+	m_pAddAll = CreateStaticTextItem(IDS_HOST_ADD_ALL, CMD_ADD_ALL, IDS_HELP_ADD_ALL, P3_W(nListWidth));
     AddFixedControl(m_pAddAll,pos,LTTRUE);
-	pos.y += (m_nItemSpacing + pFont->GetHeight());
+	pos.y += (m_nItemSpacing + P3_L(pFont->GetHeight()));
 
-	m_pAddLevel = CreateStaticTextItem(IDS_HOST_ADD_LEVEL, CMD_ADD_LEVEL, IDS_HELP_ADD_LEVEL, nListWidth);
+	m_pAddLevel = CreateStaticTextItem(IDS_HOST_ADD_LEVEL, CMD_ADD_LEVEL, IDS_HELP_ADD_LEVEL, P3_W(nListWidth));
     AddFixedControl(m_pAddLevel,pos,LTTRUE);
-	pos.y += (m_nItemSpacing + pFont->GetHeight());
+	pos.y += (m_nItemSpacing + P3_L(pFont->GetHeight()));
 
-	m_pRemoveLevel = CreateStaticTextItem(IDS_HOST_REMOVE_LEVEL, CMD_REMOVE_LEVEL, IDS_HELP_REM_LEVEL, nListWidth);
+	m_pRemoveLevel = CreateStaticTextItem(IDS_HOST_REMOVE_LEVEL, CMD_REMOVE_LEVEL, IDS_HELP_REM_LEVEL, P3_W(nListWidth));
     AddFixedControl(m_pRemoveLevel,pos,LTTRUE);
-	pos.y += (m_nItemSpacing + pFont->GetHeight());
+	pos.y += (m_nItemSpacing + P3_L(pFont->GetHeight()));
 
-	m_pRemoveAll = CreateStaticTextItem(IDS_HOST_REMOVE_ALL, CMD_REMOVE_ALL, IDS_HELP_REM_ALL, nListWidth);
+	m_pRemoveAll = CreateStaticTextItem(IDS_HOST_REMOVE_ALL, CMD_REMOVE_ALL, IDS_HELP_REM_ALL, P3_W(nListWidth));
     AddFixedControl(m_pRemoveAll,pos,LTTRUE);
-	pos.y += (m_nItemSpacing + pFont->GetHeight());
+	pos.y += (m_nItemSpacing + P3_L(pFont->GetHeight()));
 
 	// GOTY: reconstructed from the Game of the Year CShell.dll
 	m_hUserLevelNote = g_pLTClient->FormatString(IDS_HOST_USER_LEVEL_NOTE);
@@ -562,9 +562,19 @@ LTBOOL CFolderHostLevels::Render(HSURFACE hDestSurf)
 	CLTGUIFont *pFont = g_pInterfaceResMgr->GetHelpFont();
 	int xo = g_pInterfaceResMgr->GetXOffset();
 	int yo = g_pInterfaceResMgr->GetYOffset();
+#ifdef NOLFSRC_MODERN
+	// M-P3-23: in the 4:3 area, under the list, as the page is scaled
+	int nNoteX = P3_MenuX(rcAvailRect.left+2);
+	int nNoteH = P3_L(pFont->GetHeight());
+	pFont->Draw(m_hUserLevelNote, hDestSurf, nNoteX, P3_MenuY(rcAvailRect.bottom+4), LTF_JUSTIFY_LEFT);
+	pFont->Draw(m_hGOTYNote1, hDestSurf, nNoteX, P3_MenuY(rcAvailRect.bottom+nNoteH+6), LTF_JUSTIFY_LEFT);
+	pFont->Draw(m_hGOTYNote2, hDestSurf, nNoteX, P3_MenuY(rcAvailRect.bottom+2*nNoteH+8), LTF_JUSTIFY_LEFT);
+	(void)xo; (void)yo;
+#else
 	pFont->Draw(m_hUserLevelNote, hDestSurf, xo+rcAvailRect.left+2, yo+rcAvailRect.bottom+4, LTF_JUSTIFY_LEFT);
 	pFont->Draw(m_hGOTYNote1, hDestSurf, xo+rcAvailRect.left+2, yo+rcAvailRect.bottom+pFont->GetHeight()+6, LTF_JUSTIFY_LEFT);
 	pFont->Draw(m_hGOTYNote2, hDestSurf, xo+rcAvailRect.left+2, yo+rcAvailRect.bottom+2*pFont->GetHeight()+8, LTF_JUSTIFY_LEFT);
+#endif
 
 	return CBaseFolder::Render(hDestSurf);
 }

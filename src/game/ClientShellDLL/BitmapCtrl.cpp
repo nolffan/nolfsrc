@@ -5,6 +5,9 @@
 #include "stdafx.h"
 #include "BitmapCtrl.h"
 #include "InterfaceResMgr.h"
+#ifdef NOLFSRC_MODERN
+#include "cshell/p3_ui.h"
+#endif
 
 namespace
 {
@@ -20,6 +23,9 @@ CBitmapCtrl::CBitmapCtrl()
     m_sSelectedSurface[0] = LTNULL;
     m_sDisabledSurface[0] = LTNULL;
     m_bFreeSurfaces = LTFALSE;
+#ifdef NOLFSRC_MODERN
+	m_fScale = 1.0f;
+#endif
 }
 
 CBitmapCtrl::~CBitmapCtrl()
@@ -119,6 +125,34 @@ void CBitmapCtrl::Destroy()
 // Render the control
 void CBitmapCtrl::Render ( HSURFACE hDestSurf )
 {
+#ifdef NOLFSRC_MODERN
+	if (m_fScale != 1.0f)
+	{
+		// M-P3-23: as below, at the control's scale
+		int nState = GetState();
+		if ((nState == LGCS_DISABLED || !m_bEnabled) && m_sDisabledSurface[0])
+			DrawState(hDestSurf, m_sDisabledSurface);
+		else if (nState == LGCS_SELECTED && m_sSelectedSurface[0])
+			DrawState(hDestSurf, m_sSelectedSurface);
+		else
+		{
+			DrawState(hDestSurf, m_sNormalSurface);
+			if (nState == LGCS_SELECTED)
+			{
+				int nW = Scaled(m_nNormalWidth), nH = Scaled(m_nNormalHeight);
+				LTRect rectL(m_pos.x,m_pos.y,m_pos.x+kHighlightWidth,m_pos.y+nH);
+				LTRect rectT(m_pos.x,m_pos.y,m_pos.x+nW,m_pos.y+kHighlightWidth);
+				LTRect rectR(m_pos.x+nW-kHighlightWidth,m_pos.y,m_pos.x+nW,m_pos.y+nH);
+				LTRect rectB(m_pos.x,m_pos.y+nH-kHighlightWidth,m_pos.x+nW,m_pos.y+nH);
+				g_pLTClient->FillRect(hDestSurf,&rectL,kWhite);
+				g_pLTClient->FillRect(hDestSurf,&rectT,kWhite);
+				g_pLTClient->FillRect(hDestSurf,&rectR,kWhite);
+				g_pLTClient->FillRect(hDestSurf,&rectB,kWhite);
+			}
+		}
+		return;
+	}
+#endif
 	int state = GetState();
 	if ((state == LGCS_DISABLED || !m_bEnabled) && m_sDisabledSurface[0])
 	{
@@ -161,7 +195,33 @@ void CBitmapCtrl::Render ( HSURFACE hDestSurf )
 
 }
 
+#ifdef NOLFSRC_MODERN
+void CBitmapCtrl::DrawState(HSURFACE hDestSurf, char *szSurface)
+{
+	P3_DrawScaled(hDestSurf, g_pInterfaceResMgr->GetSharedSurface(szSurface), m_pos.x, m_pos.y, m_fScale, m_hTrans);
+}
+#endif
+
 // Width/Height calculations
+#ifdef NOLFSRC_MODERN
+int CBitmapCtrl::GetWidth ( )
+{
+	int state = GetState();
+	if (state == LGCS_SELECTED && m_sSelectedSurface[0])
+	{
+		return Scaled(m_nSelectedWidth);
+	}
+	else if (state == LGCS_DISABLED && m_sDisabledSurface[0])
+	{
+		return Scaled(m_nDisabledWidth);
+	}
+	else
+	{
+		return Scaled(m_nNormalWidth);
+	}
+
+}
+#else
 int CBitmapCtrl::GetWidth ( )
 {
 	int state = GetState();
@@ -179,7 +239,27 @@ int CBitmapCtrl::GetWidth ( )
 	}
 
 }
+#endif
 
+#ifdef NOLFSRC_MODERN
+int CBitmapCtrl::GetHeight ( )
+{
+	int state = GetState();
+	if (state == LGCS_SELECTED && m_sSelectedSurface[0])
+	{
+		return Scaled(m_nSelectedHeight);
+	}
+	else if (state == LGCS_DISABLED && m_sDisabledSurface[0])
+	{
+		return Scaled(m_nDisabledHeight);
+	}
+	else
+	{
+		return Scaled(m_nNormalHeight);
+	}
+
+}
+#else
 int CBitmapCtrl::GetHeight ( )
 {
 	int state = GetState();
@@ -197,6 +277,7 @@ int CBitmapCtrl::GetHeight ( )
 	}
 
 }
+#endif
 
 
 // Enter was pressed

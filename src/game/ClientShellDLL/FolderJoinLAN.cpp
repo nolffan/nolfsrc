@@ -77,7 +77,7 @@ LTBOOL CFolderJoinLAN::Build()
 	m_pPortEdit->EnableCursor();
     m_pPortEdit->SetAlignment(LTF_JUSTIFY_LEFT);
 
-	m_pPortGroup = CreateGroup(640,m_pPortLabel->GetHeight(),IDS_HELP_ENTER_PORT);
+	m_pPortGroup = CreateGroup(P3_W(640),m_pPortLabel->GetHeight(),IDS_HELP_ENTER_PORT);
 
     LTIntPt offset = LTIntPt(0,0);
     m_pPortGroup->AddControl(m_pPortLabel,offset,LTTRUE);
@@ -94,15 +94,15 @@ LTBOOL CFolderJoinLAN::Build()
 	m_pP6PassEdit = CreateEditCtrl(" ", CMD_P6_EDIT_PASS, IDS_P6_HELP_JOIN_PASSWORD, m_szP6Password, sizeof(m_szP6Password), 25, LTTRUE, GetMediumFont());
 	m_pP6PassEdit->EnableCursor();
 	m_pP6PassEdit->SetAlignment(LTF_JUSTIFY_LEFT);
-	m_pP6PassGroup = CreateGroup(640,m_pP6PassLabel->GetHeight(),IDS_P6_HELP_JOIN_PASSWORD);
+	m_pP6PassGroup = CreateGroup(P3_W(640),m_pP6PassLabel->GetHeight(),IDS_P6_HELP_JOIN_PASSWORD);
 	offset = LTIntPt(0,0);
 	m_pP6PassGroup->AddControl(m_pP6PassLabel,offset,LTTRUE);
 	offset.x = kColumnWidth-25;
 	m_pP6PassGroup->AddControl(m_pP6PassEdit,offset,LTFALSE);
-	pos.y += m_pPortLabel->GetHeight() + 4;
+	pos.y += P3_L(m_pPortLabel->GetHeight()) + 4;
 	AddFixedControl(m_pP6PassGroup,pos);
 	// and the server list a line lower, to clear it
-	m_PageRect.top += m_pPortLabel->GetHeight() + 4;
+	m_PageRect.top += P3_L(m_pPortLabel->GetHeight()) + 4;
 #endif
 
 	SAFE_STRCPY(m_szPort,"27888");
@@ -304,7 +304,7 @@ LTBOOL CFolderJoinLAN::InitSessions()
 			char szPlayers[16] ="";
 			sprintf(szPlayers,"%d/%d",pSession->m_dwCurPlayers,pSession->m_dwMaxPlayers);
 			hString = g_pLTClient->CreateString(szPlayers);
-			pCtrl->AddColumn(hString, 50, LTF_JUSTIFY_LEFT);
+			pCtrl->AddColumn(hString, P3_W(50), LTF_JUSTIFY_LEFT);
 			TERMSTRING(hString);
 */			
 			

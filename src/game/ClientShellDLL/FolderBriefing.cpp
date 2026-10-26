@@ -41,7 +41,7 @@ LTBOOL CFolderBriefing::Build()
 
 
     m_pMissionCtrl=AddTextItem(IDS_SPACER,LTNULL,0,LTTRUE,GetMediumFont());
-	m_pMissionCtrl->SetFixedWidth(480);
+	m_pMissionCtrl->SetFixedWidth(P3_W(480));
     m_pMissionCtrl->Enable(LTFALSE);
 
 	AddBlankLine();
@@ -49,7 +49,7 @@ LTBOOL CFolderBriefing::Build()
     CLTGUITextItemCtrl* pCtrl=AddTextItem(IDS_BRIEFING,LTNULL,0,LTTRUE,GetMediumFont());
     pCtrl->Enable(LTFALSE);
 
-    m_pBriefTextCtrl = AddStaticTextItem(IDS_SPACER,LTNULL,LTNULL,480,0,LTTRUE,GetSmallFont());
+    m_pBriefTextCtrl = AddStaticTextItem(IDS_SPACER,LTNULL,LTNULL,P3_W(480),0,LTTRUE,GetSmallFont());
 	if (m_pBriefTextCtrl)
 	{
         m_pBriefTextCtrl->Enable(LTFALSE);

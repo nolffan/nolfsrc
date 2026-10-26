@@ -69,6 +69,9 @@ public:
 	HSURFACE			CreateSurfaceBlank();
 
 	void				ScreenDimsChanged();
+#ifdef NOLFSRC_MODERN
+	void				ScaleMenuFonts();		// M-P3-23
+#endif
 
 
     LTBOOL               IsEnglish()                         { return m_bEnglish; }

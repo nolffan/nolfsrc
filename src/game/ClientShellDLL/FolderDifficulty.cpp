@@ -52,7 +52,7 @@ LTBOOL CFolderDifficulty::Build()
 	if (g_pLayoutMgr->HasCustomValue(FOLDER_ID_DIFFICULTY,"TextWidth"))
 		nTextWidth = g_pLayoutMgr->GetFolderCustomInt(FOLDER_ID_DIFFICULTY,"TextWidth");
 
-	CStaticTextCtrl *pCtrl = CreateStaticTextItem(IDS_DIFF_REMINDER, LTNULL, LTNULL, nTextWidth, 0, LTTRUE, GetMediumFont());
+	CStaticTextCtrl *pCtrl = CreateStaticTextItem(IDS_DIFF_REMINDER, LTNULL, LTNULL, P3_W(nTextWidth), 0, LTTRUE, GetMediumFont());
 	pCtrl->Enable(LTFALSE);
 	AddFixedControl(pCtrl,textPos,LTFALSE);
 
