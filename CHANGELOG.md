@@ -24,7 +24,15 @@ Since the first public release:
   in `nolfsrc.rez`, when a mod brings the Modernizer's (which do not run on
   this engine), takes the mod's texts where the game has none, reads the
   Modernizer's jukebox file and opens the mod's safes with its safe
-  cracker. Without a mod nothing changes.
+  cracker. With the Thief mod: "Nine years ago..." on its levels' loading
+  screens, its intelligence items in the gallery, saves in the Baron's
+  mansion that the mod splits in two, the PS2 soundtrack (Sound options:
+  "PS2 soundtrack", and a theme in the jukebox), and young Cate on the main
+  menu from midnight to six. Without a mod nothing changes.
+- **No more being shot during the mission-failed screen.** When a level
+  fails the mission by script, the guards could go on shooting behind the
+  screen, and the player's death replaced the failure's message with "You
+  were killed".
 - **Other players move smoothly online.** Positions went to the server 7
   times a second and back 6 times a second (2001's modem settings), so other
   players skipped about; both are 30 now, and an existing config is raised
