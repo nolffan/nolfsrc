@@ -85,6 +85,9 @@
 #                         autoexec.cfg (lines like "UIScale" "1.000000")
 #   PLAYTEST_SAVES=<dir>  start a scripted run with a copy of these saved
 #                         games as its Save/ (instead of none)
+#   PLAYTEST_REZ="<rez>..."  more archives after the game's own, as the
+#                         launcher's custom list adds a mod's (linked into
+#                         the run, `-rez <name>` each, last one searched first)
 # The default keys (defctrls.cfg): WASD move, arrows turn, Space jump,
 # C duck, F / mouse 1 fire, R reload, Shift_L next weapon, 1-0 weapons,
 # E activate, F6 quicksave, F9 quickload, Escape menu.
@@ -163,6 +166,10 @@ if [ -n "${PLAYTEST_RES:-}" ]; then
     CMDS="$(echo "$CMDS" | sed -E "s/\+\+screenwidth [0-9]+/++screenwidth $RW/; s/\+\+screenheight [0-9]+/++screenheight $RH/; s/\+\+bitdepth [0-9]+/++bitdepth 32/")"
     SCREEN="$(( RW + 200 > 1024 ? RW + 200 : 1024 ))x$(( RH + 200 > 768 ? RH + 200 : 768 ))"
 fi
+for r in ${PLAYTEST_REZ:-}; do
+    ln -s "$(abs "$r")" "$RUN/$(basename "$r")" || exit 2
+    CMDS="$CMDS -rez $(basename "$r")"
+done
 if [ "$WORLD" = - ]; then printf '%s\n' "$CMDS" > "$RUN/nolfcmds.txt"
 else printf '%s +runworld %s\n' "$CMDS" "$WORLD" > "$RUN/nolfcmds.txt"; fi
 [ -n "${PLAYTEST_CFG:-}" ] && { cat "$(abs "$PLAYTEST_CFG")" >> "$RUN/autoexec.cfg" || exit 2; }
