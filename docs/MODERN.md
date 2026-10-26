@@ -129,9 +129,9 @@ typed as `+Name value`; see `VARIABLES.md`.
 
 ## Work packages
 
-Eight packages. Each is meant for one worker in its own worktree
+The packages below. Each is meant for one worker in its own worktree
 (`tools/agentwt.sh add p<N>`, branch `wt/p<N>`), merged in the order P0, P1,
-P2, ..., P7.
+P2, and so on.
 
 | Package | Theme | Items | Owns (files nobody else edits) |
 |---|---|---|---|
@@ -143,6 +143,7 @@ P2, ..., P7.
 | P5 | gameplay, AI, physics and crash fixes | 16 | `CMoveMgr.*`, `AIMovement.cpp`, `AIPathMgr.cpp`, `Door.cpp`, `PlayerObj.cpp`, `CharacterFX.cpp`, `ModelButeMgr.cpp`, `WeaponModel.*`, `WeaponChooser.cpp`, `FolderSummary.cpp`, `FolderPlayer.cpp` (crash part), `src/lithshared/ButeMgr/butemgr.cpp` |
 | P6 | multiplayer, the dedicated server | 14 | `FolderJoin.*`, `FolderHost.cpp`, `CommonUtilities.*`, `src/lithshared/gamespy/**`, `ClientServerShared.h`, `VersionMgr.*`, `src/modern/nolfserv/**` and the `NOLFSRC_MODERN` blocks of `src/engine/nolfserv/` |
 | P7 | controller support | 8 | `src/engine/lithtech/clientinput.cpp`, `src/modern/engine/**`, `VehicleMgr.cpp`, `FolderControls.cpp`, `FolderCustomControls.cpp` (capture), `cshell/p7_*` |
+| P9 | mods built for the Modernizer | 4 | `src/modern/cshell/p4_jukebox.cpp` (its Song schema), the `NOLFSRC_MODERN` blocks of `clientdsi.cpp`, `cltnew.cpp` and `server/counter.cpp` that M-P9 marks, `KeyPad.*` |
 
 ### Hot-spot files and how to share them
 
@@ -193,6 +194,7 @@ Year strings of M-P4-08, whose IDs are fixed by the retail level data):
 | P5 | 31400-31499 |
 | P6 | 31500-31599 |
 | P7 | 31600-31699 |
+| P9 | 31800-31899 |
 
 String text is ours: write new wording rather than copying the Modernizer's.
 
@@ -372,6 +374,31 @@ command, `NOLFSRC_PADTEST`); not yet on real hardware.
 | M-P7-07 | Rumble | feature | Vibration on firing, damage and nearby explosions (nothing in the game asks for it: `PlayJoystickEffect` is never called). | -- (ours) | | | M-P7-01 | not started |
 | M-P7-08 | Button prompts | feature | Hints that name a key ("Press [key]") name the pad's button when the pad was used last. | -- (ours) | | | M-P7-01 | not started |
 | M-P7-09 | No DirectInput device enumeration | fix | `input_Init` asks DirectInput to enumerate every attached device (`EnumDevices`), which walks every HID device on the machine; a Windows 11 crash report shows an access violation in `RtlAllocateHeap` inside `dinput.dll` there, at startup. The modern build reads no DirectInput joystick (M-P7-01), so it needs only the keyboard and the mouse. | -- (ours) | `src/engine/lithtech/clientinput.cpp` (`input_Init`) | -- | M-P7-01 | done: the system keyboard and mouse are created by their GUIDs and described by their own `GetDeviceInfo`; `EnumDevices` is not called. Bindings find them by type (`##keyboard`, `##mouse`), as before. Checked under Wine (the scripted playtest walks, turns and fires); not yet confirmed on the Windows machine that crashed, whose later reports point at heap damage from elsewhere |
+---
+
+## P9 -- mods built for the Modernizer
+
+Mods are made for the Modernizer (`StenApp/nolf1-modernizer`), and some
+ship that fork's own `CShell.dll`, `CRes.dll` and `Object.lto` inside their
+`.rez`. Those DLLs are built against the Modernizer's own runtime (SDL2, and
+patches it applies to the retail `lithtech.exe` at fixed addresses), so on
+our engine they crash or show nothing. The first such mod is the Thief mod
+(`ThiefV1.0.rez`, ModDB "Thief Mod", for "Modernizer 1.006 patch 4"): the
+three PS2 thief missions and the Baron's training rooms, rebuilt for the PC,
+in the retail missions. This package lets such a mod's `.rez` be added as
+it is (`-rez ThiefV1.0.rez` after the game's own, as the launcher's custom
+rez list does), with no patching by the player, and changes nothing when no
+mod is loaded. Not from the Modernizer: the mod's data was read to learn
+the conventions it relies on, and the fork's code only to learn what they
+mean.
+
+| ID | Title | Kind | What and why | Modernizer source | Our files | Data / strings | Depends | Status |
+|---|---|---|---|---|---|---|---|---|
+| M-P9-01 | Our game DLLs ahead of a mod's | feature | The engine finds `cshell.dll`, `cres.dll`, `cresl.dll` (client) and `object.lto`, `sres.dll` (server) in the `.rez` stack, the last archive first, so a mod's copies win over ours, and the Modernizer's crash on our engine. The modern build installs its DLLs in `custom/`; take them from there first. | -- | `src/engine/lithtech/clientdsi.cpp` (`sub_42e110`), `src/engine/server/counter.cpp` (`sub_1000e05b`) | -- | -- | done: when `custom\<name>` exists on disk it is used as it is, before the `.rez` lookup; the release build has no `custom\` DLLs and the code is modern only. Tested: with `ThiefV1.0.rez` our CShell runs (`modern.log` written, our menus) and `Worlds\ThiefMission1` to `3` load |
+| M-P9-02 | A mod's strings | feature | With our CRes the mod's texts (its objectives, intel, weapon names: string IDs the retail table does not have) are missing, and the game shows a placeholder. Load the mod's `CRes.dll` as data, beside ours, and look a string up there when ours has none. | -- | `src/engine/lithtech/clientdsi.cpp` (`P9_LoadModStrings`), `src/engine/lithtech/cltnew.cpp` (`CLTClient::FormatString`) | -- | M-P9-01 | done: the `.rez` lookup of `cres.dll` (with M-P9-01 bypassed) names the mod's copy when one is in a later archive; it is loaded with `LOAD_LIBRARY_AS_DATAFILE` (no code runs). A string is taken from it when ours is missing or is the retail placeholder ("<insert ...>"); every string ours has stays ours. Tested: ThiefMission1's objective reads the mod's text |
+| M-P9-03 | The Modernizer's jukebox file | fix | A mod may bring its own `ATTRIBUTES/Jukebox.txt` in the Modernizer's layout: `[Song<n>]` sections naming their theme and intensity (`Theme`, `IntensityLevel`, `Name`) where ours has `Intensity<k>` keys in the theme's section; with it the jukebox listed themes with no pieces. Read both. | -- | `src/modern/cshell/p4_jukebox.cpp` | -- | M-P4-02 | done: a theme with no `Intensity<k>` keys takes its pieces from the `[Song<n>]` sections whose `Theme` is its number; songs that are WAV files (`FileName`) are skipped, and a theme whose control file is not in the data (the mod's WAV theme) is not listed, as before. Tested: `tools/p4-jukebox.txt` with and without the mod |
+| M-P9-04 | Thief safes | feature | The mod's levels mark the safes opened with its "Thief Safe Cracker" with a new `KeyPad` property, `ThiefCodeBreaker`; our KeyPad ignored it, so the code breaker's model went on the dial and the wrong gadget came back. | -- | `src/game/ObjectDLL/KeyPad.cpp`, `KeyPad.h` | -- | -- | done: `ThiefCodeBreaker` (bool, default off) is read; such a safe shows the PS2 safe cracker (`Guns\Models_HH\PS2SafeCracker_hh.abc`, the mod's own model) while it works, and gives back "Thief Safe Cracker". Saved in bit 1 of the byte that holds the space code breaker flag, so the save layout is unchanged and older saves load. Tested in ThiefMission2: the safe opens on time, the money bag is inside, the gadget is picked up again; quicksave and quickload |
+
 ---
 
 ## Not ported

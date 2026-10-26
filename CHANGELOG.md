@@ -12,6 +12,13 @@ covers each change in detail, under its item number (M-P1-01 and so on).
 
 Since the first public release:
 
+- **Mods made for the Modernizer**, such as the Thief mod
+  (`ThiefV1.0.rez`): add the mod's `.rez` to the launcher's custom rez
+  files and play, with nothing to patch. The game keeps its own DLLs when a
+  mod brings the Modernizer's (which do not run on this engine), takes the
+  mod's texts where the game has none, reads the Modernizer's jukebox file
+  and opens the mod's safes with its safe cracker. Without a mod nothing
+  changes.
 - **No more getting stuck on Rescue Attempt's bridges.** Walking anywhere
   but down the middle, the player could stick against the railings and
   not move on. The engine's physics has only ever run at the reduced
