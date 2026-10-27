@@ -22,6 +22,7 @@ protected:
 	LTBOOL	m_bShowFramerate;	// ShowFramerate
 	LTBOOL	m_bCinematics4x3;	// RestrictCinematicsTo4x3
 	LTBOOL	m_bGotyMenu;		// UseGotyMenu
+	int		m_nMenuCate;		// MainMenuCate (M-P8-10)
 };
 
 #endif // P3_FOLDERINTERFACE_H

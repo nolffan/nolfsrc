@@ -14,6 +14,8 @@
 #include "cshell/p3_folderinterface.h"
 #include "cres/p3.h"
 #include "cres/p1.h"
+#include "cres/p8.h"
+#include "cshell/p9_mods.h"
 
 namespace
 {
@@ -32,6 +34,7 @@ CFolderInterface::CFolderInterface()
 	m_bShowFramerate = LTFALSE;
 	m_bCinematics4x3 = LTFALSE;
 	m_bGotyMenu = LTTRUE;
+	m_nMenuCate = 0;
 }
 
 CFolderInterface::~CFolderInterface()
@@ -76,6 +79,15 @@ LTBOOL CFolderInterface::Build()
 	pToggle->SetOnString(IDS_P3_MENU_GOTY);
 	pToggle->SetOffString(IDS_P3_MENU_ORIGINAL);
 
+	// M-P8-10: the main menu's Cate (young Cate with the PS2 levels)
+	CCycleCtrl *pCate = AddCycleItem(IDS_P8_MENU_CATE, IDS_P8_HELP_MENU_CATE, kGap, 25, &m_nMenuCate);
+	pCate->AddString(IDS_P8_MENU_CATE_SEASONAL);
+	pCate->AddString(IDS_P8_MENU_CATE_ORIGINAL);
+	pCate->AddString(IDS_P8_MENU_CATE_CASUAL);
+	pCate->AddString(IDS_P8_MENU_CATE_WINTER);
+	if (P9_HaveThiefMenu())
+		pCate->AddString(IDS_P8_MENU_CATE_YOUNG);
+
 	// Make sure to call the base class
 	if (!CBaseFolder::Build()) return LTFALSE;
 
@@ -99,6 +111,10 @@ void CFolderInterface::OnFocus(LTBOOL bFocus)
 		m_bShowFramerate = (g_vtP3ShowFramerate.GetFloat() != 0.0f);
 		m_bCinematics4x3 = (g_vtP3Cinematics4x3.GetFloat() != 0.0f);
 		m_bGotyMenu = (g_vtP3UseGotyMenu.GetFloat(1.0f) != 0.0f);
+		m_nMenuCate = (int)g_vtP3MainMenuCate.GetFloat();
+		if (m_nMenuCate < 0 || m_nMenuCate >= P3_MENUCATE_COUNT ||
+			(m_nMenuCate == P3_MENUCATE_YOUNG && !P9_HaveThiefMenu()))
+			m_nMenuCate = P3_MENUCATE_SEASONAL;
 
 		UpdateData(LTFALSE);
 	}
@@ -111,6 +127,7 @@ void CFolderInterface::OnFocus(LTBOOL bFocus)
 		WriteConsoleInt("ShowFramerate", m_bShowFramerate ? 1 : 0);
 		WriteConsoleInt("RestrictCinematicsTo4x3", m_bCinematics4x3 ? 1 : 0);
 		WriteConsoleInt("UseGotyMenu", m_bGotyMenu ? 1 : 0);
+		WriteConsoleInt("MainMenuCate", m_nMenuCate);
 
 		g_pLTClient->WriteConfigFile("autoexec.cfg");
 	}

@@ -1,0 +1,195 @@
+--- a/ATTRIBUTES/WEAPONS.txt
++++ b/ATTRIBUTES/WEAPONS.txt
+@@ -102,19 +102,21 @@
+ Weapon33			= "Space Fists"
+ Weapon34			= "Space Atomic Lasergun"
+ Weapon35			= "Space Code Breaker"
+-LastPlayerWeapon	= 35
++Weapon36			= "Thief Lock Pick"
++Weapon37			= "Thief Safe Cracker"
++LastPlayerWeapon	= 37
+ 
+ // Non player weapons (must come after the player weapons)... 
+ //
+-Weapon36			= "Heli_Machinegun"
+-Weapon37			= "Helicopter RL"
+-Weapon38			= "Scot Punch"
+-Weapon39			= "Scot Slam"
+-Weapon40			= "German Sword"
+-Weapon41			= "Shark Bite"
+-Weapon42			= "Hand Grenade"
+-Weapon43			= "Dynamite"
+-Weapon44			= "Super Shark Bite"
++Weapon38			= "Heli_Machinegun"
++Weapon39			= "Helicopter RL"
++Weapon40			= "Scot Punch"
++Weapon41			= "Scot Slam"
++Weapon42			= "German Sword"
++Weapon43			= "Shark Bite"
++Weapon44			= "Hand Grenade"
++Weapon45			= "Dynamite"
++Weapon46			= "Super Shark Bite"
+ 
+ /************************************************************************
+ **
+@@ -2111,6 +2113,34 @@
+ FireFXName          = ""
+ TracerFXName        = ""
+ WeaponAniOverride	= ""
++
++/*
++** Ammo54 - Thief Safe Cracker gadget ammo (PS2 Ammo55)
++*/
++
++[Ammo54]
++
++Name				= "Safe Cra Gadget"
++NameId              = 31714
++DescId              = 31715
++Type                = 3
++Priority			= 54
++Icon                = "Interface\Photos\Ammo\Func_Cracker.pcx"
++SmallIcon           = "Interface\Photos\Ammo\Func_Cracker_SM.pcx"
++MaxAmount           = 1
++SelectionAmount		= 1
++SpawnedAmount       = 1
++InstDamage          = 0
++InstDamageType      = 22
++AreaDamage			= 0
++AreaDamageType		= 0
++AreaDamageRadius    = 0
++ProgDamage          = 0.000000
++ProgDamageType      = 0
++ProgDamageDuration  = 0.000000
++ProgDamageRadius	= 0.000000
++ProgDamageLifetime  = 0.000000
++FireRecoilMult		= 1.000000
+ 
+ 
+ /************************************************************************
+@@ -5208,6 +5238,125 @@
+ HideWhenEmpty		= 0
+ 
+ 
++/*
++** Thief Safe Cracker (PS2 "Nine years ago" levels; PS2 Weapon45)
++*/
++
++[Weapon45]
++
++Name				= "Thief Safe Cracker"
++NameId              = 31710
++DescriptionId		= 31711
++Gadget				= 1
++AniType				= 2
++Icon                = "Interface\Photos\Weapons\PS2SC.pcx"
++SmallIcon           = "Interface\Photos\Weapons\PS2SC_SM.pcx"
++Photo               = "Interface\Photos\Weapons\PS2SC.pcx"
++Pos                 = <0.100000, -0.800000, 3.000000>
++MuzzlePos           = <2.100000, 1.700000, 17.400000>
++MinPerturb          = 0
++MaxPerturb          = 0
++Range               = 100
++Recoil              = <0.000000, 0.000000, 0.000000>
++VectorsPerRound     = 1
++PVModel	            = "Guns\Models_PV\PS2SafeCracker_pv.abc"
++PVSkin              = "Guns\Skins_PV\PS2SafeCracker_pv_leds.dtx"
++PVMuzzleFXName		= ""
++HHModel             = "Guns\Models_HH\PS2SafeCracker_hh.abc"
++HHSkin              = "Guns\Skins_PV\PS2SafeCracker_pv.dtx"
++HHModelScale        = <1.000000, 1.000000, 1.000000>
++HHBreachOffset		= -10.000000
++HHMuzzleFXName		= ""
++InterfaceModel      = "Guns\Models_HH\PS2SafeCracker_hh.abc"
++InterfaceSkin       = "Guns\Skins_PV\PS2SafeCracker_pv.dtx"
++InterfaceModelScale = 1.000000
++InterfaceOffset		= <0.000000, 0.000000, 0.000000>
++SilencedFireSnd     = ""
++AltFireSnd          = ""
++FireSnd	            = "Guns\Snd\safe\fire.wav"
++DryFireSnd          = ""
++ReloadSnd1          = ""
++SelectSnd           = "Guns\Snd\safe\select.wav"
++DeselectSnd         = ""
++FireSndRadius       = 128
++AIFireSndRadius		= 64
++EnvironmentMap      = 1
++InfiniteAmmo        = 0
++ShotsPerClip        = 1
++AmmoMultiplier		= 1
++FireRecoilPitch		= 0.000000
++FireRecoilDecay		= 0.000000
++AmmoName0           = "Safe Cra Gadget"
++AIMinBurstInterval	= 0.500000
++AIMaxBurstInterval	= 1.500000
++AIMinBurstShots		= 1
++AIMaxBurstShots		= 5
++LooksDangerous		= 0
++CanBeDefault		= 0
++CanBeMapped			= 1
++FireDelay			= 810
++HideWhenEmpty		= 1
++
++
++/*
++** Thief Lock Pick (PS2 "Nine years ago" levels; PS2 Weapon47)
++*/
++
++[Weapon46]
++
++Name				= "Thief Lock Pick"
++NameId              = 31712
++DescriptionId		= 31713
++Gadget				= 1
++AniType				= 2
++Icon                = "Interface\Photos\Weapons\PS2lp.pcx"
++SmallIcon           = "Interface\Photos\Weapons\PS2lp_SM.pcx"
++Photo               = "Interface\Photos\Weapons\PS2lp.pcx"
++Pos                 = <0.100000, -0.300000, 1.750000>
++MuzzlePos           = <1.000000, -1.100000, 13.800000>
++MinPerturb          = 0
++MaxPerturb          = 5
++Range               = 100
++Recoil              = <0.000000, 0.000000, 0.000000>
++VectorsPerRound     = 1
++PVModel	            = "Guns\Models_PV\PS2lockpick_pv.abc"
++PVSkin              = "Guns\Skins_PV\PS2lockpick_pv.dtx"
++PVMuzzleFXName		= ""
++HHModel             = "Guns\Models_HH\PS2lockpick_hh.abc"
++HHSkin              = "Guns\Skins_PV\PS2lockpick_pv.dtx"
++HHModelScale        = <1.000000, 1.000000, 1.000000>
++HHBreachOffset		= 0.000000
++HHMuzzleFXName		= ""
++InterfaceModel      = "Guns\Models_HH\barret_hh.abc"
++InterfaceSkin       = "Guns\Skins_PV\PS2lockpick_pv.dtx"
++InterfaceModelScale = 3.500000
++InterfaceOffset		= <0.000000, 0.000000, 0.000000>
++SilencedFireSnd     = ""
++FireSnd	            = "Guns\Snd\lipstick\reload1.wav"
++DryFireSnd          = ""
++ReloadSnd1          = ""
++SelectSnd           = "Guns\Snd\barrette\select.wav"
++DeselectSnd         = "Guns\Snd\barrette\deselect.wav"
++FireSndRadius       = 128
++AIFireSndRadius		= 0
++EnvironmentMap      = 1
++InfiniteAmmo        = 1
++ShotsPerClip        = 1
++AmmoMultiplier		= 1
++FireRecoilPitch		= 0.100000
++FireRecoilDecay		= 0.175000
++AmmoName0           = "BarretteLockpick"
++AIMinBurstInterval	= 0.500000
++AIMaxBurstInterval	= 1.500000
++AIMinBurstShots		= 1
++AIMaxBurstShots		= 5
++LooksDangerous		= 0
++CanBeDefault		= 0
++CanBeMapped			= 1
++FireDelay			= 800
++HideWhenEmpty		= 0
++
++
+ /************************************************************************
+ **
+ ** MOD

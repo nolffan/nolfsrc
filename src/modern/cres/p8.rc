@@ -1,0 +1,16 @@
+// p8.rc -- strings of package P8 (MODERN.md) that are ours, added to
+// CRes.dll by the modern build only. IDs in p8.h. (The PS2 levels' own text
+// is generated from the PS2 disc at build time: build/ps2/ps2strings.py.)
+
+#include "p8.h"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_P8_MENU_CATE            "Main menu Cate"
+    IDS_P8_HELP_MENU_CATE       "Which Cate greets you on the main menu. Seasonal: in her winter coat from 15 to 31 December, casual on Fridays, young Cate at night when she is installed, otherwise as on the box."
+    IDS_P8_MENU_CATE_SEASONAL   "Seasonal"
+    IDS_P8_MENU_CATE_ORIGINAL   "Original"
+    IDS_P8_MENU_CATE_CASUAL     "Casual"
+    IDS_P8_MENU_CATE_WINTER     "Winter"
+    IDS_P8_MENU_CATE_YOUNG      "Young Cate"
+END

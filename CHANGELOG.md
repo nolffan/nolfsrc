@@ -34,6 +34,16 @@ Since the first public release:
   modern renderers left the processor at full precision, and the
   collision tests came out differently. They now set it as the original
   did. (issue #43)
+- **The PlayStation 2 release's extra levels**, for a build from source
+  with your own PS2 disc image (`make modern PS2=1`; no public archive
+  yet). Young Cate's three "Nine years ago" flashbacks, as a thief in
+  London and Scotland, play inside missions 3, 5 and 13 as on the PS2,
+  with the lock pick and safe cracker; "A Man of Influence" gets the
+  Baron's secret training rooms under his courtyard. Interface options
+  can also put young Cate on the main menu, or any of the menu's other
+  Cates. The levels draw with the PS2's own textures. With the Thief mod
+  installed as well, the mod's versions of the same levels take their
+  place. ([`docs/MODERN.md`](docs/MODERN.md), P8)
 - **Sound effects at retail loudness.** OpenMiles played most sounds
   1.5-3 dB louder than Miles 6.0i (its volume curve was approximated, and
   it did not round as Miles does); its volume, master volume and pan now

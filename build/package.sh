@@ -66,6 +66,13 @@ if [[ $ARCHIVES == *" private "* ]]; then
     echo "   $PKG: $(du -h "$PKG" | cut -f1) (unpacks to $NAME/)"
 fi
 [[ $ARCHIVES == *" public "* ]] || exit 0
+# Nor of a game directory with the PS2 levels (make modern PS2=1): they are
+# made from the PS2 disc, which the install scripts do not read.
+if [ -f "$OUT/custom/PS2-DATA.txt" ]; then
+    echo "   $PARENT/$NAME-public.tar.gz: skipped (the game directory has the PS2 levels, custom/PS2-DATA.txt)"
+    rm -f "$PARENT/$NAME-public.tar.gz"
+    exit 0
+fi
 
 # The public archive: the scripts beside the rest, the disc files left out.
 PUB="$PARENT/$NAME-public.tar.gz"

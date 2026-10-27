@@ -67,6 +67,10 @@
 // M-P9: mods made for the Modernizer (the Thief mod)
 #include "cshell/p9_mods.h"
 #endif
+#ifdef NOLFSRC_MODERN
+// M-P8: the PS2 "Nine years ago" levels
+#include "cshell/p8_thief.h"
+#endif
 
 #ifdef STRICT
 	WNDPROC g_pfnMainWndProc = NULL;
@@ -6268,8 +6272,11 @@ LTBOOL CGameClientShell::DoLoadWorld(char* pWorldFile, char* pCurWorldSaveFile,
 	}
 #ifdef NOLFSRC_MODERN
 
-	// M-P9-06, M-P9-08: a mod's thief level's loading screen; the world's
-	// PS2 track
+	// M-P8-04: a thief level's hands
+	P8_OnLoadWorld(pWorldFile, m_bIsCustomLevel ? -1 : m_nCurrentLevel);
+
+	// M-P9-06, M-P9-08: a thief level's loading screen (the mod's text, or
+	// the PS2 build's); the world's PS2 track
 	P9_OnLoadWorld(pWorldFile, m_bIsCustomLevel ? -1 : m_nCurrentLevel);
 #endif
 
