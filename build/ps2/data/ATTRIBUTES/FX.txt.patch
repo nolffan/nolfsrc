@@ -1,13 +1,59 @@
 --- a/ATTRIBUTES/FX.txt
 +++ b/ATTRIBUTES/FX.txt
-@@ -12575,6 +12575,111 @@
+@@ -12252,10 +12252,10 @@
+ MaxRotVel		= 1.0
+ 
+ /*
+-** ScaleFX252 - Yellowflash for Grenade impact.
+-*/
+-
+-[ScaleFX252]
++** ScaleFX261 (was 252: the intel popups take 252-254, as in the Thief mod) - Yellowflash for Grenade impact.
++*/
++
++[ScaleFX261]
+ 
+ Name			= "Grenadeflash"
+ Type			= 1
+@@ -12288,10 +12288,10 @@
+ MaxRotVel		= 0.0
+ 
+ /*
+-** ScaleFX253 - ForceFieldRing(red)
+-*/
+-
+-[ScaleFX253]
++** ScaleFX262 (was 253) - ForceFieldRing(red)
++*/
++
++[ScaleFX262]
+ 
+ Name			= "ForceFieldScaleFX"
+ Type			= 1
+@@ -12325,10 +12325,10 @@
+ 
+ 
+ /*
+-** ScaleFX254 - Interface Green Text Box Model 15
+-*/
+-
+-[ScaleFX254]
++** ScaleFX263 (was 254) - Interface Green Text Box Model 15
++*/
++
++[ScaleFX263]
+ 
+ Name			= "GreenSelectTextBoxMod15"
+ Type			= 0
+@@ -12574,6 +12574,111 @@
+ RotationAxis	= 0
  MinRotVel		= 0
  MaxRotVel		= 0
- 
++
 +/*
-+** ScaleFX261 - Popup MoneyBag model (PS2 ScaleFX262)
++** ScaleFX253 - Popup MoneyBag model (PS2 ScaleFX262; an intel item's type is a byte, so not past 254)
 +*/
-+[ScaleFX261]
++[ScaleFX253]
 +
 +Name			= "MoneyBagPopup"
 +Type			= 0
@@ -40,9 +86,9 @@
 +MaxRotVel		= 1.0
 +
 +/*
-+** ScaleFX262 - Popup HandBag model (PS2 ScaleFX263)
++** ScaleFX252 - Popup HandBag model (PS2 ScaleFX263)
 +*/
-+[ScaleFX262]
++[ScaleFX252]
 +
 +Name			= "HandBagPopup"
 +Type			= 0
@@ -75,9 +121,9 @@
 +MaxRotVel		= 1.0
 +
 +/*
-+** ScaleFX263 - Popup Paper Money model (PS2 ScaleFX264)
++** ScaleFX254 - Popup Paper Money model (PS2 ScaleFX264)
 +*/
-+[ScaleFX263]
++[ScaleFX254]
 +
 +Name			= "PaperMoneyPopup"
 +Type			= 0
@@ -108,7 +154,6 @@
 +RotationAxis	= 1
 +MinRotVel		= 1.0
 +MaxRotVel		= 1.0
-+
+ 
  /************************************************************************
  **
- ** PSHOWERFX
