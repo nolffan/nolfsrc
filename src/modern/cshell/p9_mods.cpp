@@ -25,12 +25,14 @@
 #include "FolderMgr.h"
 #include "cshell/p9_mods.h"
 #include "cshell/p2_log.h"
+#include "cres/p8.h"
 
 extern CGameClientShell* g_pGameClientShell;
 
 namespace
 {
-	// The Thief mod's own string, from its CRes.dll (M-P9-02)
+	// "Nine years ago...": the Thief mod's own string, from its CRes.dll
+	// (M-P9-02), else the PS2 build's (M-P8-06)
 	const int kP9NineYearsAgo = 959;
 
 	VarTrack	s_vtUsePS2Music;
@@ -176,6 +178,11 @@ void P9_OnLoadWorld(const char* pWorldFile, int nLevel)
 	if (_strnicmp(s_szWorld, "thiefmission", 12) != 0) return;
 
 	HSTRING hTxt = g_pLTClient->FormatString(kP9NineYearsAgo);
+	if (!hTxt || !g_pLTClient->GetStringData(hTxt)[0])
+	{
+		if (hTxt) g_pLTClient->FreeString(hTxt);
+		hTxt = g_pLTClient->FormatString(IDS_P8_NINE_YEARS_AGO);
+	}
 	if (!hTxt) return;
 
 	char* pTxt = g_pLTClient->GetStringData(hTxt);
