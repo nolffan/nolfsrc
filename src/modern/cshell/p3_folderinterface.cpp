@@ -15,7 +15,7 @@
 #include "cres/p3.h"
 #include "cres/p1.h"
 #include "cres/p8.h"
-#include "cshell/p8_thief.h"
+#include "cshell/p9_mods.h"
 
 namespace
 {
@@ -85,7 +85,7 @@ LTBOOL CFolderInterface::Build()
 	pCate->AddString(IDS_P8_MENU_CATE_ORIGINAL);
 	pCate->AddString(IDS_P8_MENU_CATE_CASUAL);
 	pCate->AddString(IDS_P8_MENU_CATE_WINTER);
-	if (P8_HaveYoungCateMenu())
+	if (P9_HaveThiefMenu())
 		pCate->AddString(IDS_P8_MENU_CATE_YOUNG);
 
 	// Make sure to call the base class
@@ -113,7 +113,7 @@ void CFolderInterface::OnFocus(LTBOOL bFocus)
 		m_bGotyMenu = (g_vtP3UseGotyMenu.GetFloat(1.0f) != 0.0f);
 		m_nMenuCate = (int)g_vtP3MainMenuCate.GetFloat();
 		if (m_nMenuCate < 0 || m_nMenuCate >= P3_MENUCATE_COUNT ||
-			(m_nMenuCate == P3_MENUCATE_YOUNG && !P8_HaveYoungCateMenu()))
+			(m_nMenuCate == P3_MENUCATE_YOUNG && !P9_HaveThiefMenu()))
 			m_nMenuCate = P3_MENUCATE_SEASONAL;
 
 		UpdateData(LTFALSE);

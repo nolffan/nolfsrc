@@ -9,7 +9,6 @@
 #include "FolderMgr.h"
 #include "FXStructs.h"
 #include "cshell/p3_ui.h"
-#include "cshell/p8_thief.h"
 #include "cshell/p9_mods.h"
 
 VarTrack g_vtP3UIScale;
@@ -266,7 +265,7 @@ int P3_MainFolder(int nFolderID)
 		case P3_MENUCATE_CASUAL:	return FOLDER_ID_MAIN_CASUAL;
 		case P3_MENUCATE_WINTER:	return FOLDER_ID_MAIN_WINTER;
 		case P3_MENUCATE_YOUNG:
-			if (P8_HaveYoungCateMenu()) return FOLDER_ID_MAIN_THIEF;
+			if (P9_HaveThiefMenu()) return FOLDER_ID_MAIN_THIEF;
 			break;
 	}
 
