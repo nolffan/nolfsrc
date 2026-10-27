@@ -6272,11 +6272,11 @@ LTBOOL CGameClientShell::DoLoadWorld(char* pWorldFile, char* pCurWorldSaveFile,
 	}
 #ifdef NOLFSRC_MODERN
 
-	// M-P8-04: a thief level's loading screen and hands
+	// M-P8-04: a thief level's hands
 	P8_OnLoadWorld(pWorldFile, m_bIsCustomLevel ? -1 : m_nCurrentLevel);
 
-	// M-P9-06, M-P9-08: a mod's thief level's loading screen (over the
-	// PS2 one, when the mod is there); the world's PS2 track
+	// M-P9-06, M-P9-08: a thief level's loading screen (the mod's text, or
+	// the PS2 build's); the world's PS2 track
 	P9_OnLoadWorld(pWorldFile, m_bIsCustomLevel ? -1 : m_nCurrentLevel);
 #endif
 

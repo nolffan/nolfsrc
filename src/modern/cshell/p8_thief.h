@@ -11,8 +11,8 @@
 #define __P8_THIEF_H__
 
 // LoadWorld, once the mission and level are known (nLevel: -1 for a custom
-// level). In a thief level (Worlds\thiefmission*) the loading screen shows
-// "Nine years ago..." and the thief photo instead of the mission's (M-P8-04).
+// level): notes whether it is a thief level (Worlds\thiefmission*), for its
+// hands (M-P8-04). Its loading screen is P9_OnLoadWorld's (M-P9-06).
 void P8_OnLoadWorld(const char* pWorldFile, int nLevel);
 
 // The first-person hands skin of a thief level (M-P8-04), or LTNULL.
