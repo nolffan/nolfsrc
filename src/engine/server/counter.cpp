@@ -988,6 +988,31 @@ int   sub_100070b6(void* hTree, char* pFilename, char* pOutPath,
 // rule: every test an explicit `else`, every arm ending in its own return.
 // Written as a run of guarded early returns instead, VC6 hosts the zero at
 // the last one (the strncpy arm) -- same size, one block out.
+#ifdef NOLFSRC_MODERN
+// M-P9-01: the game's own DLLs are the ones in the game directory's
+// custom\ folder (where the build installs them), whatever a mod archive
+// listed after it carries. A mod packaged for the NOLF Modernizer (the
+// Thief mod) ships its own cshell.dll, object.lto and cres.dll, built for
+// the retail lithtech.exe; loaded by this engine they crash. 1: pOutPath is
+// custom\<pFilename>, full path; 0: not there (the retail lookup decides).
+static int P9_OwnGameFile(const char* pFilename, char* pOutPath, uint32 nOutLen)
+{
+	char  sPath[MAX_PATH];
+	DWORD dwAttr;
+	int   nLen = _snprintf(sPath, sizeof(sPath), "custom\\%s", pFilename);
+
+	if (nLen < 0 || nLen >= (int)sizeof(sPath))
+		return 0;
+
+	dwAttr = GetFileAttributesA(sPath);
+	if (dwAttr == 0xFFFFFFFF || (dwAttr & FILE_ATTRIBUTE_DIRECTORY))
+		return 0;
+
+	nLen = (int)GetFullPathNameA(sPath, nOutLen, pOutPath, LTNULL);
+	return nLen > 0 && (uint32)nLen < nOutLen;
+}
+
+#endif
 int sub_1000e05b(CServerMgr* pMgr, char* pTempPath, char* pFilename,
                  char* pOutPath, uint32 nOutLen)
 {
@@ -996,6 +1021,12 @@ int sub_1000e05b(CServerMgr* pMgr, char* pTempPath, char* pFilename,
 	void*     pTreeRec;
 	int       nResult;
 	int       nRetry;
+#ifdef NOLFSRC_MODERN
+
+	// M-P9-01: object.lto and sres.dll from custom\ first
+	if (P9_OwnGameFile(pFilename, pOutPath, nOutLen))
+		return 0;
+#endif
 
 	if (fs_FindFileInTrees(pFileMgr, pFilename, &pTreeRec, LTNULL) &&
 	    sub_10006fa5(((CFileTreeRecView*)pTreeRec)->m_pTree) == (void*)1)

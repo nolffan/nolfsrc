@@ -48,6 +48,11 @@ class KeyPad : public Prop
         LTFLOAT     m_fPickSoundRadius;
 
 		LTBOOL		m_bSpaceCodeBreaker;
+#ifdef NOLFSRC_MODERN
+		// M-P9-04: a PS2 thief level's safe (ThiefCodeBreaker), opened with
+		// the Thief Safe Cracker
+		LTBOOL		m_bThiefSafe;
+#endif
 
 		CTimer		m_DecipherTimer;
 

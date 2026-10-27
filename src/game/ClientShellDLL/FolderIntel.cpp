@@ -12,7 +12,13 @@
 extern CGameClientShell* g_pGameClientShell;
 namespace
 {
+#ifdef NOLFSRC_MODERN
+	// M-P9-05: the Thief mod's handbags, moneybags, money, wages and diamond
+	// (its FX.txt makes ScaleFX250-254 their popups)
+	const int kNumSFXTypes = 19;
+#else
 	const int kNumSFXTypes = 14;
+#endif
 	int nSFXIDs[kNumSFXTypes] =
 	{
 		171,
@@ -29,6 +35,13 @@ namespace
 		196,
 		197,
 		198,
+#ifdef NOLFSRC_MODERN
+		250,
+		251,
+		252,
+		253,
+		254,
+#endif
 	};
 	int nSFXNameIDs[kNumSFXTypes] =
 	{
@@ -46,6 +59,14 @@ namespace
 		IDS_INTEL_MANIFEST,
 		IDS_INTEL_LOG,
 		IDS_INTEL_ROSTER,
+#ifdef NOLFSRC_MODERN
+		// the mod's own string IDs, from its CRes.dll (M-P9-02)
+		692,	// diamond
+		691,	// employees' wages
+		689,	// handbag
+		688,	// moneybag
+		690,	// paper money
+#endif
 	};
 	int nSFXCounts[kNumSFXTypes];
 }

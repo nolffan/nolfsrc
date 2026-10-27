@@ -47,7 +47,7 @@ the modern build.
 | `UIScale` | 0.5 | HUD size, times the screen's height ratio (never smaller than retail, at most 4). Interface options: "HUD size". |
 | `RestrictCinematicsTo4x3` | 0 | 1 puts black bars beside cinematics on screens wider than 4:3. Interface options. |
 | `UseGotyMenu` | 1 | Main-menu art: 1 Game of the Year, 0 the original release's. Interface options. |
-| `NoFunMenus` | 0 | 1 always shows the plain main menu. Otherwise it has a winter Cate from 15 to 31 December and a casual Cate on Fridays. |
+| `NoFunMenus` | 0 | 1 always shows the plain main menu. Otherwise it has a winter Cate from 15 to 31 December and a casual Cate on Fridays, and, with the Thief mod installed, young Cate from midnight to six in the morning. |
 | `WindowMode` | 1 | Only applies when `Windowed` is 1: 2 is a borderless window at the desktop's resolution, anything else a framed window. Display options: "Window mode". |
 | `Windowed` | 0 | 1 runs in a window (retail variable; Display options now sets it). |
 | `OldMouseLook` | 0 | 1 uses retail's mouse look (DirectInput, re-centring the cursor) instead of raw mouse input. Mouse options: "Legacy mouse look". |
@@ -127,6 +127,7 @@ the modern build.
 | `SoundVolume` | 70 | Effects volume, 0-100. Sound options. |
 | `MusicVolume` | -1100 | Music volume. Sound options. |
 | `Sound16Bit` | 1 | Sound quality. Sound options. |
+| `UsePS2Music` | 0 | Modern build, with a mod that brings the PS2 soundtrack (the Thief mod): 1 plays each level's PS2 track instead of its own music. Sound options: "PS2 soundtrack". |
 | `SoundFilters` | 0 | Reverb and filters by area. Performance options. |
 | `Max3DVoices`, `MaxSWVoices` | 16, 32 | Sound voices. |
 | `ReverbLevel` | | Reverb level (the launcher passes it). |
