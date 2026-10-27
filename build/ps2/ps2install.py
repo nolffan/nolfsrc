@@ -481,6 +481,14 @@ def fix_world(w, remap, name):
         if len(hits) != 1 or hits[0].value != old:
             raise SystemExit('%s: %s.%s is not %r' % (name, obj, prop, old))
         hits[0].value = new
+    # The PS2 marks its thief safes' keypads with CanDamage, which no PC
+    # keypad sets; the PC game (M-P9-04) knows them by ThiefCodeBreaker, as
+    # the Thief mod's levels mark them
+    for o in w.objects:
+        if (o.cls == 'KeyPad' and
+                any(p.name == 'CanDamage' and p.value for p in o.props) and
+                not any(p.name == 'ThiefCodeBreaker' for p in o.props)):
+            o.props.append(ps2world.Obj(name='ThiefCodeBreaker', type=ps2world.PROP_BOOL, value=1))
     typo = 0
     for o in w.objects:
         for p in o.props:
