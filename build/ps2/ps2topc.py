@@ -17,6 +17,10 @@ import ps2world as P   # noqa: E402
 
 SURF_INVISIBLE, SURF_TRANSLUCENT, SURF_LIGHTMAP = 0x4, 0x8, 0x80
 
+# A world texture under this root is the PS2 disc's texture of the name that
+# follows (ps2install.py installs it there), never the PC's
+PS2_TEX_ROOT = 'PS2\\'
+
 # ------------------------------------------------------------------ texture sizes
 
 class TexSizes:
@@ -44,6 +48,8 @@ class TexSizes:
 
     def head(self, name):
         key = name.replace('/', '\\').lower()
+        if key.startswith(PS2_TEX_ROOT.lower()):
+            name, key = name[len(PS2_TEX_ROOT):], None
         if key in self.pc:
             path, pos = self.pc[key]
             with open(path, 'rb') as fh:
