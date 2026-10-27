@@ -25,7 +25,7 @@ Written (counts are for the US disc):
   WORLDS/thiefmission1-3.dat   ps2topc (PS2 lightmaps, scale 1.0), the PS2
                                string IDs remapped (ps2strings), the door sound
                                typo Snd\\Doors\\0wood_c.wav fixed
-  WORLDS/m07s03_A, _B.dat      the same (no remap): the PS2's M07S03, with the
+  WORLDS/m07s03a, b.dat        the same (no remap): the PS2's M07S03, with the
                                secret basement; WORLD_FIXES
   TEX/...                      the world textures the PC archives lack
   models                       ps2model (MODELS below)
@@ -57,6 +57,13 @@ from rezextract import Rez   # noqa: E402
 # courtyard (its strings are the PC's own: no remap)
 WORLDS = ['thiefmission1', 'thiefmission2', 'thiefmission3', 'm07s03_A', 'm07s03_B']
 REMAP_WORLDS = ('thiefmission1', 'thiefmission2', 'thiefmission3')
+
+
+def pc_world(name):
+    """The name a PS2 world is installed under: the PS2's halves of M07S03
+    under the names the Thief mod gives them (m07s03a, m07s03b), so that the
+    mod's versions take their place when it is installed too."""
+    return {'m07s03_A': 'm07s03a', 'm07s03_B': 'm07s03b'}.get(name, name)
 
 # PS2 commands the PC must not run: (world, object, property, PS2 value, PC value).
 # The PS2 has no loadout screen and sets the inventory in the level; on the PC
@@ -504,7 +511,7 @@ def install_world(ps2, game, out, name, remap):
         raise SystemExit('worlds/%s.ltb not in the PS2 archive' % name)
     world = ps2world.load(src)
     nids, typo = fix_world(world, remap, name)
-    dst = out.resolve(r'Worlds\%s.dat' % name)
+    dst = out.resolve(r'Worlds\%s.dat' % pc_world(name))
     tmp = dst + '.ps2install.tmp'
     load = ps2topc.P.load
     ps2topc.P.load = lambda s: world
@@ -638,12 +645,12 @@ def custom_index(root):
 def check(ps2, pc, out_root, verbose=False):
     refs = Refs()
     for name in WORLDS:
-        p = Out(out_root).resolve(r'Worlds\%s.dat' % name, create=False)
+        p = Out(out_root).resolve(r'Worlds\%s.dat' % pc_world(name), create=False)
         if not os.path.isfile(p):
-            refs.add(r'Worlds\%s.dat' % name, 'MISSIONS.txt.patch')
+            refs.add(r'Worlds\%s.dat' % pc_world(name), 'MISSIONS.txt.patch')
             print('  (%s.dat not installed: its objects are not checked)' % name)
             continue
-        refs.add(r'Worlds\%s.dat' % name, 'MISSIONS.txt.patch')
+        refs.add(r'Worlds\%s.dat' % pc_world(name), 'MISSIONS.txt.patch')
         world_refs(refs, name, pc_world_objects(open(p, 'rb').read()))
         w = ps2world.load(ps2.get('worlds/%s.ltb' % name))
         for t in w.textures:
@@ -782,7 +789,7 @@ def main():
     print('skins:')
     refs, missing, _ = Refs(), None, None
     for name in WORLDS:
-        world_refs(refs, name, pc_world_objects(open(out.resolve(r'Worlds\%s.dat' % name), 'rb').read()))
+        world_refs(refs, name, pc_world_objects(open(out.resolve(r'Worlds\%s.dat' % pc_world(name)), 'rb').read()))
     patch_refs(refs)
     for r in CODE_REFS + ATTACHMENT_FILES:
         refs.add(r, 'code')
