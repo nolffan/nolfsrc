@@ -45,6 +45,7 @@ clean() {
         [ -n "$f" ] && rm -f "$custom/$f"
     done < "$list"
     rm -f "$list"
+    find "$custom" -mindepth 1 -depth -type d -empty -delete   # (the folders they leave)
     echo "   removed the PS2 levels' files from $1/custom/"
 }
 
