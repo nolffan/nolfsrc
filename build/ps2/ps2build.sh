@@ -24,6 +24,7 @@
 # public archive of a game directory that has it, since that data comes from
 # the PS2 disc, which the public archive's install scripts cannot read.
 set -e
+set -o pipefail    # (a failed step before a tee fails the build)
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
 
