@@ -18,8 +18,4 @@ void P8_OnLoadWorld(const char* pWorldFile, int nLevel);
 // The first-person hands skin of a thief level (M-P8-04), or LTNULL.
 const char* P8_GetHandsSkin();
 
-// LTTRUE: the main menu can show young Cate (M-P8-10): the PS2 levels are
-// installed, with her menu model and the layout of her main menu.
-LTBOOL P8_HaveYoungCateMenu();
-
 #endif // __P8_THIEF_H__
