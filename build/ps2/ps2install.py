@@ -27,7 +27,8 @@ Written (counts are for the US disc):
                                typo Snd\\Doors\\0wood_c.wav fixed
   WORLDS/m07s03a, b.dat        the same (no remap): the PS2's M07S03, with the
                                secret basement; WORLD_FIXES
-  TEX/...                      the world textures the PC archives lack
+  PS2/TEX/...                  the worlds' textures, the PS2's own: every one the
+                               disc has (ps2_textures); the PC levels keep theirs
   models                       ps2model (MODELS below)
   skins                        PS2-only .dtx the levels, the patches, the
                                model styles and the code reference (ps2dtx)
@@ -505,12 +506,27 @@ def fix_world(w, remap, name):
     return n, typo
 
 
+def ps2_textures(ps2, world):
+    """The world's textures as the PS2 draws them: each one the PS2 disc has
+    is installed from it under ps2topc.PS2_TEX_ROOT (the PC's own textures of
+    the same names stay the PC levels'); the rest keep their names (the PC's,
+    or missing on both). Returns the new names."""
+    names = set()
+    for i, t in enumerate(world.textures):
+        t = ps2topc.strip(t)
+        if t and ps2.get(t) is not None:
+            world.textures[i] = ps2topc.PS2_TEX_ROOT + t
+            names.add(world.textures[i])
+    return names
+
+
 def install_world(ps2, game, out, name, remap):
     src = ps2.get('worlds/%s.ltb' % name)
     if src is None:
         raise SystemExit('worlds/%s.ltb not in the PS2 archive' % name)
     world = ps2world.load(src)
     nids, typo = fix_world(world, remap, name)
+    ps2tex = ps2_textures(ps2, world)
     dst = out.resolve(r'Worlds\%s.dat' % pc_world(name))
     tmp = dst + '.ps2install.tmp'
     load = ps2topc.P.load
@@ -520,10 +536,11 @@ def install_world(ps2, game, out, name, remap):
     finally:
         ps2topc.P.load = load
     os.replace(tmp, dst)
+    missing = sorted(set(missing) | ps2tex)    # (with those only invisible surfaces use)
     out.counts['worlds'] = out.counts.get('worlds', 0) + 1
     out.files.append(dst)
     print('  %-14s %8d bytes, %d BSPs, %d objects, %d string IDs remapped, %d door-sound fix; '
-          'lightmaps %d polys; %d textures not in the PC archives'
+          'lightmaps %d polys; %d textures from the PS2 disc'
           % (name, size, len(world.models), len(world.objects), nids, typo,
              stats['lm_polys'], len(missing)))
     return missing
@@ -653,6 +670,7 @@ def check(ps2, pc, out_root, verbose=False):
         refs.add(r'Worlds\%s.dat' % pc_world(name), 'MISSIONS.txt.patch')
         world_refs(refs, name, pc_world_objects(open(p, 'rb').read()))
         w = ps2world.load(ps2.get('worlds/%s.ltb' % name))
+        ps2_textures(ps2, w)
         for t in w.textures:
             t = ps2topc.strip(t)
             if t:
@@ -741,7 +759,7 @@ def main():
     for w in WORLDS:
         tex.update(install_world(ps2, a.game, out, w, remap))
     for n in sorted(tex):
-        data = ps2.get(n)
+        data = ps2.get(n[len(ps2topc.PS2_TEX_ROOT):] if n.upper().startswith(ps2topc.PS2_TEX_ROOT) else n)
         if not data:
             print('  texture not on the PS2 either:', n)
             continue
