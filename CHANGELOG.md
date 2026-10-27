@@ -41,7 +41,9 @@ Since the first public release:
   with the lock pick and safe cracker; "A Man of Influence" gets the
   Baron's secret training rooms under his courtyard. Interface options
   can also put young Cate on the main menu, or any of the menu's other
-  Cates. ([`docs/MODERN.md`](docs/MODERN.md), P8)
+  Cates. The levels draw with the PS2's own textures. With the Thief mod
+  installed as well, the mod's versions of the same levels take their
+  place. ([`docs/MODERN.md`](docs/MODERN.md), P8)
 - **Sound effects at retail loudness.** OpenMiles played most sounds
   1.5-3 dB louder than Miles 6.0i (its volume curve was approximated, and
   it did not round as Miles does); its volume, master volume and pan now
