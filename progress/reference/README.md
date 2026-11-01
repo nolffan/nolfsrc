@@ -7,7 +7,7 @@ RegMgr, MFCStub, ButeMgr (`ButeMgrNoMFC`), the GUI and font managers
 (`ltguimgr_LT2`, `LithFontMgr_LT2`) and the two GameSpy managers -- each in
 its Release and its Debug build. Monolith shipped them as binaries only; the
 source in `src/lithshared/` is ours, reconstructed or adapted
-(`docs/LICENSE-NOTES.md`). Taken from a public copy of the release
+(`docs/LICENSE_NOTES.md`). Taken from a public copy of the release
 (github.com/osgcc/no-one-lives-forever); `SHA256SUMS` lists every file.
 They are under the release's licence, as `src/game/` is
 (`src/MONOLITH-README.txt`, section IV).
