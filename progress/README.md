@@ -222,12 +222,25 @@ purpose, could never pass this test.
 * a target's identical byte count went down,
 * `README.md`'s table is not the one `summary.json` renders, or
 * the data check finds a text difference `data-known.txt` does not list
-  (below), or
+  (below),
 * `tools/fpconst.py` finds a float or double that one of our placed
   functions loads (through an address the byte match masks) differing
   from the one retail loads there: a masked match is identical only up to
   the constants it reads, and two of `wm_SetObjectDims`' thresholds were
-  once wrong behind an `identical`.
+  once wrong behind an `identical`, or
+* `tools/vtabcheck.py --targets` finds a contradiction
+  `progress/vtab-known.txt` does not list: a vtable slot of ours, or a call
+  or global one of our functions reaches, that is another one than retail's
+  -- judged only where the evidence is unambiguous (the function's body fits
+  exactly one retail address; same code under another name agrees), and
+  everything else counted as unverified, not passed.
+
+Each run also writes `out/progress/evidence.json` (`tools/evidence.py`):
+the source and submodule revisions, every retail image's hash, the
+configuration and exclusion files, our images, maps and link commands, and
+the toolchain trees the build used with their digests checked against
+`toolchains/fetch.sh`'s pins (a mismatch fails the run).
+`make progress-update` keeps a copy as `progress/evidence.json`.
 
 Before anything is scored, the retail images cached in `out/reference/`
 are checked against `progress/reference.sha256` (and extracted again from
@@ -277,6 +290,8 @@ and the libraries are skipped with a note; `make progress-update` needs them.
 | `data-known.txt` | the text in our images' data known to differ from the retail images', each entry under its reason: the data check's list (`tools/datacheck.py`). `make progress` fails on a difference not in it; `make progress-update` drops the entries that no longer differ |
 | `shipped-libs.sha256` | the source release's `.lib`s that are scored (paths relative to `libs/Release/`) |
 | `reference.sha256` | the retail images `out/reference/` must hold to be scored |
+| `vtab-known.txt` | the vtable and wiring differences `tools/vtabcheck.py` finds that are known, each with its reason |
+| `evidence.json` | what the recorded run rested on (`tools/evidence.py`) |
 | `corrections.txt` | the functions taken out of `identical.txt` when the scoring was corrected (2026-11-02), each with why: matches inside another identical function (the same bytes counted twice), and matches outside the image's own code |
 | `*-screen-exclude.csv` | per image (`lithtech`, `server`, `d3d`, `nolfserv`, and for the game DLLs `cshell`, `object`): enumerated addresses examined by hand. A reason that starts `NOT A FUNCTION` or `NOT GAME CODE` removes the row from the count (an operand byte, a jump target inside another function, padding); any other reason only marks the address as `attempted` (not in the game DLLs, where only the removal applies) |
 | `extent-splits.csv` | function starts the enumeration misses (a function hidden behind a thunk), with the evidence |

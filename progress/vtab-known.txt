@@ -1,0 +1,38 @@
+## Known vtable and wiring problems: tools/vtabcheck.py --targets.
+## <target><TAB><table, calling function, or callee:<symbol>><TAB><reason>
+
+# The engine's allocator front ends (src/engine/lithtech/stdlithalloc.cpp):
+# our dalloc/dfree are the allocator bodies (retail's 0x428fd0/0x429080),
+# while retail's callers go through the one-line forwarders 0x4290b0 and
+# 0x4290c0 in front of them. Same behaviour, different wiring: the callers
+# should call the forwarders.
+lithtech.exe	callee:?dfree@@YAXPAX@Z	callers skip retail's dfree forwarder 0x4290c0
+lithtech.exe	callee:?dfree_directQ43C@@YAXPAX@Z	callers skip retail's dfree forwarder 0x4290c0
+lithtech.exe	callee:?dallocQ488@@YAPAXK@Z	callers skip retail's dalloc forwarder 0x4290b0
+lithtech.exe	callee:?dsi_Alloc@@YAPAXK@Z	callers skip retail's dalloc forwarder 0x4290b0
+
+# d3d.ren's console variables: wC1_r5c.cpp's stand-in CVarR5C::sub_10021f40
+# is linked (link/aliases.rsp) onto CConVar's constructor, where retail
+# has a function of its own at 0x10021f40 still to be written
+d3d.ren	callee:?sub_10021f40@CVarR5C@@QAEPAU1@PBDMKK@Z	the stand-in for 0x10021f40 is aliased onto CConVar's constructor
+
+# UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+lithtech.exe	??_7?$CMoArray@PAVCWorldAnimFrameQ@@VDefaultCache@@@@6B@	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+lithtech.exe	??_7?$CMoArray@PAXVDefaultCache@@@@6B@	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+lithtech.exe	??_7CAbstractIOQ11@@6B@	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+lithtech.exe	?r_InitRender@@YAKPAVCClientMgrView@@PAURMode@@@Z	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+server.dll	??_7?$CMoArray@KVDefaultCache@@@@6B@	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+server.dll	??_7?$CMoArray@PAVCWorldAnimFrameQ@@VDefaultCache@@@@6B@	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+server.dll	??_7?$CMoArray@PAXVDefaultCache@@@@6B@	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+server.dll	??_7CGlobalBankBase@@6B@	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+d3d.ren	??_GCModelVBBank@@UAEPAXI@Z	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+d3d.ren	?GenGetAt@?$CMoArray@KVDefaultCache@@@@UBEKAAVGenListPos@@@Z	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+d3d.ren	?GenGetNext@?$CMoArray@KVDefaultCache@@@@UBEKAAVGenListPos@@@Z	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+d3d.ren	?Insert2@?$CMoArray@USavedVert589c4@@VDefaultCache@@@@QAEHKABUSavedVert589c4@@PAVLAlloc@@@Z	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+d3d.ren	?Remove2@?$CMoArray@USavedVert589c4@@VDefaultCache@@@@QAEXKPAVLAlloc@@@Z	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+d3d.ren	?sub_1001c4c0@Arr1001c@@QAEKABUGenList1001c@@@Z	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+d3d.ren	?sub_1001c5a0@Arr1001c@@QAEKABUGenList1001c@@@Z	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+d3d.ren	___sti__w57_10009860_cpp_6dd82287	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+NOLF.exe	?GetDisplayName@CCard@@QAE?AVCString@@XZ	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+NOLF.exe	?GetListName@CRenderer@@QAE?AVCString@@XZ	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own
+Object.lto	??_7CAIHelicopterState@@6B@	UNREVIEWED, recorded when the check came in (2026-11-02): stand-in tables and aliases of the reconstruction (one symbol for a template family, Q-suffixed views), each to be resolved or given a reason of its own

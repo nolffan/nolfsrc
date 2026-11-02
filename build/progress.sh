@@ -25,7 +25,10 @@
 #           does not list (update also drops the entries no longer needed);
 #           and tools/fpconst.py --targets: the float constants our placed
 #           functions load through a (masked) relocation against retail's;
-#           fails on any that differs
+#           fails on any that differs; and tools/vtabcheck.py --targets: our
+#           vtables slot by slot, and the callees and globals our uniquely
+#           placed functions reach, against retail's; fails on a
+#           contradiction progress/vtab-known.txt does not list
 #
 # Before anything is scored, the cached retail images in out/reference/ are
 # checked against progress/reference.sha256 (extracted again once if they
@@ -83,4 +86,14 @@ python3 tools/datacheck.py "$mode" || rc=1
 echo
 echo "float constants (tools/fpconst.py):"
 python3 tools/fpconst.py --targets || rc=1
+# ... and every vtable slot and every call and global our identically placed
+# functions reach, against the shipped ones (progress/vtab-known.txt)
+echo
+echo "vtables and wiring (tools/vtabcheck.py):"
+python3 tools/vtabcheck.py --targets || rc=1
+# ... and what all of it rested on (the toolchains' digests checked), kept
+# with the baseline when one is recorded
+echo
+python3 tools/evidence.py || rc=1
+[ "$mode" = update ] && cp out/progress/evidence.json progress/evidence.json
 exit $rc
