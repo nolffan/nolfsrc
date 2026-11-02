@@ -606,6 +606,10 @@ static inline void obj_MaybeRetransformWorldModelInline(LTObject* pObj, int bFla
 // Byte-identical on both images. The facts that closed it, each read off
 // the frame:
 //
+//   * the two thresholds are retail's .rdata floats, which the masked
+//     byte match cannot see: the early-out compares against 0.0001f
+//     (0x1004dcf8, 0x004a2a38) and the final miss against 0.001f
+//     (0x1004d1f0, 0x004a1a54); tools/fpconst.py checks them.
 //   * the wanted dims the miss is measured against are a BLOCK-SCOPED copy
 //     (vNew), not vDims: lithtech.exe's 0x18 frame then folds the
 //     MagSqr temporary onto it (0x10(%esp), 0x00453ff7); with vDims at
@@ -652,7 +656,7 @@ int wm_SetObjectDims(WMMoveState* pState, LTVector* pDims, int bFlag, int bUnkno
 		                                 pObjDims->z - vNew.z)).MagSqr();
 	}
 
-	if (bUnknown && fDiffSqr < 0.001f)
+	if (bUnknown && fDiffSqr < 0.0001f)
 		return 1;
 
 	if (bFlag && (pObj->m_Flags & (FLAG_SOLID | FLAG_TOUCH_NOTIFY | FLAG_CONTAINER)))
@@ -691,7 +695,7 @@ int wm_SetObjectDims(WMMoveState* pState, LTVector* pDims, int bFlag, int bUnkno
 
 		vMiss = vWanted - pObj->m_Dims;
 
-		if (vMiss.MagSqr() < 1.0f)
+		if (vMiss.MagSqr() < 0.001f)
 			bResult = 1;
 		else
 			bResult = 0;
