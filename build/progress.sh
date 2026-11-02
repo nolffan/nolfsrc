@@ -22,7 +22,15 @@
 #           record a run that lost functions)
 #   both    then tools/datacheck.py: the text in our images' data against the
 #           retail images'; fails on a difference progress/data-known.txt
-#           does not list (update also drops the entries no longer needed)
+#           does not list (update also drops the entries no longer needed);
+#           and tools/fpconst.py --targets: the float constants our placed
+#           functions load through a (masked) relocation against retail's;
+#           fails on any that differs
+#
+# Before anything is scored, the cached retail images in out/reference/ are
+# checked against progress/reference.sha256 (extracted again once if they
+# differ, or if the tables' stamp does): a stale or altered cache would be
+# scored as if it were retail.
 set -e
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
@@ -39,11 +47,24 @@ for f in lithtech.exe server.dll d3d.ren NOLF.exe NolfServ.exe ltmsg.dll sres.dl
          nolf-functions.csv nolfserv-functions.csv cshell-functions.csv object-functions.csv \
          server-vtables.csv lithtech-vtables.csv d3d-vtables.csv; do
     if [ ! -f "out/reference/$f" ]; then
-        echo "== retail images -> out/reference/ (for scoring only)"
-        bash build/reference.sh
+        need=1
         break
     fi
 done
+
+# The cached retail images in out/reference/ are what is scored: they have
+# to be the retail images progress/reference.sha256 names, every run, not
+# merely present. The tables derived from them are stamped with what made
+# them (that list and tools/enumfuncs.py, by content): a different stamp
+# extracts everything again.
+refcheck() { (cd out/reference && sha256sum --quiet -c ../../progress/reference.sha256); }
+stamp=$(cat progress/reference.sha256 tools/enumfuncs.py | sha256sum | cut -d' ' -f1)
+if [ -n "${need:-}" ] || ! refcheck 2>/dev/null || [ "$(cat out/reference/.stamp 2>/dev/null)" != "$stamp" ]; then
+    echo "== retail images -> out/reference/ (for scoring only; missing, stale, or not the ones progress/reference.sha256 names)"
+    bash build/reference.sh
+    refcheck || { echo "error: out/reference/ still differs from progress/reference.sha256" >&2; exit 1; }
+    echo "$stamp" > out/reference/.stamp
+fi
 
 python3 tools/progress.py
 echo
@@ -58,4 +79,8 @@ fi
 # gone)
 echo
 python3 tools/datacheck.py "$mode" || rc=1
+# ... and the float constants behind the masked relocations
+echo
+echo "float constants (tools/fpconst.py):"
+python3 tools/fpconst.py --targets || rc=1
 exit $rc

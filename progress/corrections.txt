@@ -1,0 +1,51 @@
+## The functions an audit of the scoring (2026-11-02) took out of
+## progress/identical.txt, one per line: <target><TAB><function><TAB><why>.
+## They were not lost by the source: the scorer had credited them wrongly
+## (tools/ at adfdafa: "Scoring: no byte counted twice, regions first").
+## Kept as the record of what the baseline gave up and why.
+##
+## Not identical rows, but the same correction: server.dll's four 5-byte
+## jmp thunks at 0x1000de9b, 0x10025ac4, 0x10025ac9 and 0x1003a9f0 were
+## "small", placed by shape for the `_$E` thunks of sdkforce.obj, the
+## scoring driver no shipped image contains. They are unwritten now.
+CShell.dll	sub_10005745	inside sub_10005720 (identical, 45 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+CShell.dll	sub_10005781	inside sub_10005770 (identical, 25 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+CShell.dll	sub_1000c9dd	inside sub_1000c9c0 (identical, 55 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+CShell.dll	sub_1000ca1b	inside sub_1000ca00 (identical, 45 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+CShell.dll	sub_1000ca4d	inside sub_1000ca30 (identical, 55 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+CShell.dll	sub_1002445a	inside sub_10024430 (identical, 69 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+CShell.dll	sub_1002d07e	inside sub_1002d060 (identical, 38 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+CShell.dll	sub_100364ee	inside sub_100364d0 (identical, 128 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+CShell.dll	sub_10060f08	inside sub_10060ec0 (identical, 85 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+CShell.dll	sub_1008f6fa	inside sub_1008f6f0 (identical, 23 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_10004d8b	inside sub_10004d10 (identical, 136 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_1000a9d7	inside sub_1000a9d0 (identical, 20 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_1000d357	inside sub_1000d350 (identical, 15 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_1000e044	inside sub_1000e020 (identical, 44 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_1000e447	inside sub_1000e440 (identical, 20 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_100661b7	inside sub_100661b0 (identical, 20 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_100b7140	inside sub_100b70e0 (identical, 104 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_100b84ed	inside sub_100b84c0 (identical, 212 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_100b8509	inside sub_100b84c0 (identical, 212 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_100b852c	inside sub_100b84c0 (identical, 212 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_100b854f	inside sub_100b84c0 (identical, 212 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_100b856b	inside sub_100b84c0 (identical, 212 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_100bc538	inside sub_100bc510 (identical, 64 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_100bc56a	inside sub_100bc550 (identical, 60 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+Object.lto	sub_1010109b	inside sub_10101020 (identical, 131 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_402856	inside sub_402840 (identical, 30 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_407973	inside sub_407950 (identical, 48 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_407aa2	inside sub_407a80 (identical, 42 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_416dc4	inside sub_416da0 (identical, 49 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_41d578	inside sub_41d550 (identical, 71 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_41d58f	inside sub_41d550 (identical, 71 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_434a1a	inside sub_434a10 (identical, 18 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_445361	inside sub_445350 (identical, 25 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_458be7	inside sub_458bd0 (identical, 36 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_45a37d	inside sub_45a370 (identical, 21 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_45d18a	inside sub_45d130 (identical, 161 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_45d194	inside sub_45d130 (identical, 161 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+lithtech.exe	sub_473889	inside sub_473880 (identical, 28 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+server.dll	sub_10015af4	inside sub_10015ad0 (identical, 48 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+server.dll	sub_10029efb	inside sub_10029ee7 (identical, 91 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape
+server.dll	sub_10029f05	inside sub_10029ee7 (identical, 91 bytes), so the same bytes were credited twice: a coincidence of a shorter body's masked shape

@@ -222,7 +222,17 @@ purpose, could never pass this test.
 * a target's identical byte count went down,
 * `README.md`'s table is not the one `summary.json` renders, or
 * the data check finds a text difference `data-known.txt` does not list
-  (below).
+  (below), or
+* `tools/fpconst.py` finds a float or double that one of our placed
+  functions loads (through an address the byte match masks) differing
+  from the one retail loads there: a masked match is identical only up to
+  the constants it reads, and two of `wm_SetObjectDims`' thresholds were
+  once wrong behind an `identical`.
+
+Before anything is scored, the retail images cached in `out/reference/`
+are checked against `progress/reference.sha256` (and extracted again from
+the installed game if they differ): what is scored is always the retail
+release, not whatever the cache holds.
 
 Newly identical functions pass, with a reminder to record them:
 `make progress-update` rewrites `identical.txt`, `summary.json` and the
@@ -232,7 +242,9 @@ change rightly gives one up -- say, a function was matched by coincidence),
 and a run without the libraries, since the record must cover every target.
 
 `make progress COMPLETE=1` also fails unless every function of every target
-is identical: the finish line.
+is identical, and nothing is unwritten or unplaced (`COVERED=1` alone): the
+finish line for the code. It is not whole-image identity, which
+`tools/buildcmp.py` against the retail image is.
 
 The scoring compiles nothing; it reads what the last `make` left in the
 tree. Run `make` after changing the source, then `make progress`. It needs
@@ -264,6 +276,8 @@ and the libraries are skipped with a note; `make progress-update` needs them.
 | `summary.json` | per-target counts and bytes of the recorded run; the README table is rendered from it |
 | `data-known.txt` | the text in our images' data known to differ from the retail images', each entry under its reason: the data check's list (`tools/datacheck.py`). `make progress` fails on a difference not in it; `make progress-update` drops the entries that no longer differ |
 | `shipped-libs.sha256` | the source release's `.lib`s that are scored (paths relative to `libs/Release/`) |
+| `reference.sha256` | the retail images `out/reference/` must hold to be scored |
+| `corrections.txt` | the functions taken out of `identical.txt` when the scoring was corrected (2026-11-02), each with why: matches inside another identical function (the same bytes counted twice), and matches outside the image's own code |
 | `*-screen-exclude.csv` | per image (`lithtech`, `server`, `d3d`, `nolfserv`, and for the game DLLs `cshell`, `object`): enumerated addresses examined by hand. A reason that starts `NOT A FUNCTION` or `NOT GAME CODE` removes the row from the count (an operand byte, a jump target inside another function, padding); any other reason only marks the address as `attempted` (not in the game DLLs, where only the removal applies) |
 | `extent-splits.csv` | function starts the enumeration misses (a function hidden behind a thunk), with the evidence |
 | `lithtech-decoded-map.csv` | `lithtech.exe` addresses a function of ours has been mapped to, marking them `attempted` |
