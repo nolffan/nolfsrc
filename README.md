@@ -279,5 +279,5 @@ the two seasonal menu models.
 | `docker/` | the build image (Ubuntu 24.04 + Wine) |
 | `toolchains/` | the compilers (a submodule) |
 | `rez/` | the retail game the build takes its data from: fetches the disc images and installs the game from them (a submodule) |
-| `ext/` | upstream open-source projects the modern build uses, one submodule each: `openmiles/` (OpenMiles, for Miles) and `ffmpeg/` (FFmpeg, for Bink), built by `build/ext.sh` with our fixes from `ext/patches/`; and `nolf1-modernizer/` (the NOLF Modernizer, for two menu models) |
+| `ext/` | upstream open-source projects the modern build uses, one submodule each: `openmiles/` (OpenMiles, for Miles) and `ffmpeg/` (FFmpeg, for Bink), built by `build/ext.sh` (OpenMiles from our fork, with our fixes as commits); and `nolf1-modernizer/` (the NOLF Modernizer, for two menu models) |
 | `out/` | everything the build produces |

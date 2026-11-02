@@ -6,7 +6,8 @@
 	url = git@github.com:nolffan/rez.git
 [submodule "ext/openmiles"]
 	path = ext/openmiles
-	url = git@github.com:maci0/openmiles.git
+	url = git@github.com:nolffan/openmiles.git
+	branch = miles6-fixes
 [submodule "ext/ffmpeg"]
 	path = ext/ffmpeg
 	url = git@github.com:FFmpeg/FFmpeg.git

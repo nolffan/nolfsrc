@@ -62,9 +62,10 @@ fresh()  { local s="$OUT/.$1.stamp"; shift
 stamp()  { local s="$OUT/.$1.stamp"; shift; inputs "$@" | sha256sum > "$s"; }
 
 # --- OpenMiles -> out/ext/mss32.dll ------------------------------------------
-# Built from a copy (out/ext/openmiles-src/) with our fixes applied:
-# ext/patches/openmiles/*.patch, in order, each saying what it fixes and why.
-# The submodule itself stays exactly upstream's.
+# Built from a copy (out/ext/openmiles-src/). ext/openmiles is our fork's
+# miles6-fixes branch, upstream's release with our fixes as commits; any
+# ext/patches/openmiles/*.patch would be applied to the copy, in order (none
+# today).
 PATCHES=$(ls ext/patches/openmiles/*.patch 2>/dev/null || true)
 if fresh openmiles ext/openmiles build/ext.sh $PATCHES; then
     echo "== OpenMiles: up to date ($OUT/mss32.dll)"

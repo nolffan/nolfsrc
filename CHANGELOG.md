@@ -42,7 +42,7 @@ Since the first public release:
 - **Sound effects at retail loudness.** OpenMiles played most sounds
   1.5-3 dB louder than Miles 6.0i (its volume curve was approximated, and
   it did not round as Miles does); its volume, master volume and pan now
-  match the retail DLL within 0.01 dB, measured. (OpenMiles patch 0002,
+  match the retail DLL within 0.01 dB, measured. (an OpenMiles fix,
   issue #31)
 - **An installer for the Mac**, `mac-install.command`, to play the game
   with CrossOver or another Wine. Double-click it with the disc images in
@@ -55,12 +55,12 @@ Since the first public release:
 - **The crane in A Tenuous Lead no longer drills.** OpenMiles put the loop
   of a compressed (IMA ADPCM) sound in the wrong place, so the crane outside
   the warehouse repeated a 66 ms scrap of its sound while it moved; it now
-  loops where Miles does. (OpenMiles patch 0005, issue #31)
+  loops where Miles does. (an OpenMiles fix, issue #31)
 - **Cleaner sound effects, brighter dialogue than retail.** OpenMiles
   resampled each sound without a low-pass filter, which added a faint
   mirror image of most effects at 11-22 kHz; it now filters it out. Retail
   Miles avoided it by mixing at 22050 Hz, which also cut the dialogue off
-  at 10 kHz; the modern build keeps it to 14 kHz. (OpenMiles patch 0004)
+  at 10 kHz; the modern build keeps it to 14 kHz. (an OpenMiles fix)
 - **Left and right move between the buttons along a menu page's bottom**
   (Back, Start mission, ...), with a controller's d-pad or stick and with
   the arrow keys; before, only up and down reached them. (M-P7-05, issue #27)
