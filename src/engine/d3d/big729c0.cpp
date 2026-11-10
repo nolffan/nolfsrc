@@ -732,6 +732,10 @@ L_MakeRec:
 }
 
 // ======================================================================= //
+//  NEAR, now the shipped 1916 bytes: (b) below is closed -- the second
+//  draw loop assigns the list head to pElem and walks a copy of it,
+//  which is the shipped store to -0x20 and `mov %eax,%ebx`.  (a) and
+//  (c) are what is left.  Before that:
 //  NEAR, 557 bytes differing (was 1774), 1911 bytes against
 //  the shipped 1916.  Three changes:
 //    * built /Os (build/engine.sh D3D_OS_TUS), not /O2: the prologue and
@@ -1173,19 +1177,28 @@ L_BucketPhase:
 			//  texture's +0x1c was already cleared in region 3, which is
 			//  why this bucket's free block does NOT clear it again.
 			// ---------------------------------------------------------- //
+			//  The list head is assigned to pElem -- whose home is
+			//  -0x20, and the shipped code stores it there (0x10072eb2)
+			//  and never reloads it -- and the walk runs over a second
+			//  pointer copied from it (`mov %eax,%ebx`).
 			pElem = pBucket->m_pElements;               // 0x10072eaf/b2
-			while (pElem)                               // 0x10072eb5/0x10072ee3
 			{
-				pNextElem   = pElem->m_pNext;           // 0x10072ebe
-				g_n1008b874 = pElem->m_nClipFlags10;    // 0x10072ebb/c1
+				Elem729c0* pWalkElem = pElem;           // 0x10072eb9
 
-				sub_1006f540(pElem->m_pOwner);          // 0x10072ec6/ca
+				while (pWalkElem)                       // 0x10072eb5/0x10072ee3
+				{
+					pNextElem   = pWalkElem->m_pNext;   // 0x10072ebe
+					g_n1008b874 = pWalkElem->m_nClipFlags10;
+					                                    // 0x10072ebb/c1
 
-				pElem->m_pOwner = (Obj729c0*)g_pFreeElems1008d4fc;
-				                                        // 0x10072ecf/d7
-				g_pFreeElems1008d4fc = pElem;           // 0x10072ed9
+					sub_1006f540(pWalkElem->m_pOwner);  // 0x10072ec6/ca
 
-				pElem = pNextElem;                      // 0x10072ee1
+					pWalkElem->m_pOwner = (Obj729c0*)g_pFreeElems1008d4fc;
+					                                    // 0x10072ecf/d7
+					g_pFreeElems1008d4fc = pWalkElem;   // 0x10072ed9
+
+					pWalkElem = pNextElem;              // 0x10072ee1
+				}
 			}
 
 L_FreeBucket2:
