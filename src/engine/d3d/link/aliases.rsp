@@ -17,9 +17,6 @@
 /ALTERNATENAME:?sub_1007ee60@Arr100158d0@@QBEKXZ=?sub_1005f780@C1005f780@@QAEKXZ
 # 0x1007ee60
 /ALTERNATENAME:?sub_1007ee60@Arr1001c@@QBEKXZ=?sub_1005f780@C1005f780@@QAEKXZ
-# 0x10023230  ltmatrix.h's MatVMul_H, out of line (w30_1000f020_osqipni.obj, near); big2b1b0/big40e10
-# call it as `sub_10023230` (the shipped calls at 0x1002b1d4, 0x1002b206, 0x10040eda, 0x10040f63)
-/ALTERNATENAME:_sub_10023230=?MatVMul_H@@YAMPAV?$_CVector@M@@PAVLTMatrix@@0@Z
 # 0x1000a680 / 0x1000a690  DefaultCache::SetCacheSize / GetCacheSize (dynarray.h, out of line in the
 # /Qip TUs: w64_10009f10_qip, d3dr5b, w7_100500a0_qip), which d3dbatcha.cpp spells CValue1000a680
 # and d3dbatchc.cpp C1000a690

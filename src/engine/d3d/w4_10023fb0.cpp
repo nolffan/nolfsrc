@@ -111,19 +111,37 @@ extern "C" void sub_100256a0(Elem24024* pChain)
 
 // ======================================================================= //
 //  0x10023230 -- transform a point by a 4x4 and divide through by w,
-//  answering 1/w: ltmatrix.h's inline MatVMul_H, the out-of-line copy
-//  (`?MatVMul_H@@YAMPAV?$_CVector@M@@PAVLTMatrix@@0@Z`) that
-//  w30_1000f020_osqipni.cpp emits.  It was ALSO
-//  written here, as `extern "C" sub_10023230`, a hand spelling for the two
-//  callers that name the address (big2b1b0.cpp, big40e10.cpp; the shipped
-//  calls are 0x1002b1d4, 0x1002b206, 0x10040eda, 0x10040f63): one shipped
-//  function, two of ours, and this one was left unplaced.  It is gone; the
-//  callers' spelling is aliased onto the header's function in
-//  link/aliases.rsp.  Measured at the shipped address: the header's own
-//  body as w30 builds it is 12 bytes off, this spelling was 16 (its notes:
-//  every one of 144 spellings of the z row stays last-first, the order
-//  moving with the functions compiled ahead of it -- icl's sum order
-//  follows TU history, as at 0x1005a550, w7_1005a550.cpp).
+//  answering 1/w: ltmatrix.h's inline MatVMul_H, out of line (128 bytes).
+//  The callers that name the address are big2b1b0.cpp and big40e10.cpp
+//  (the shipped calls are 0x1002b1d4, 0x1002b206, 0x10040eda,
+//  0x10040f63).
+//
+//  IDENTICAL, written here under its address.  History: a hand spelling
+//  here was 16 bytes off and left unplaced, then removed in favour of
+//  the out-of-line copy of the header's function that
+//  w30_1000f020_osqipni.cpp emitted (12 bytes off, reached through an
+//  alias).  That file now expands its own spelling of the transform, so
+//  the function is back here.  What was off was the z row's product
+//  order, and it is the operands' address forms that move it
+//  (w2_1000a8a0_os.cpp): the z row's first two matrix terms and its x
+//  component are read through float pointers.  Found by a greedy walk
+//  over the 28 m[r][c] / f[k] and member / v[c] choices (two spellings
+//  identical among those visited).
+// ======================================================================= //
+extern "C" float sub_10023230(LTVector *pDest, LTMatrix *pMat, LTVector *pSrc)
+{
+	const float* f = &pMat->m[0][0];
+	const float* v = &pSrc->x;
+	float one_over_w = 1.0f / (pMat->m[3][0]*pSrc->x + pMat->m[3][1]*pSrc->y + pMat->m[3][2]*pSrc->z + pMat->m[3][3]);
+
+	pDest->x = one_over_w * (pMat->m[0][0]*pSrc->x + pMat->m[0][1]*pSrc->y + pMat->m[0][2]*pSrc->z + pMat->m[0][3]);
+	pDest->y = one_over_w * (pMat->m[1][0]*pSrc->x + pMat->m[1][1]*pSrc->y + pMat->m[1][2]*pSrc->z + pMat->m[1][3]);
+	pDest->z = one_over_w * (f[8]*v[0] + f[9]*pSrc->y + pMat->m[2][2]*pSrc->z + pMat->m[2][3]);
+
+	return one_over_w;
+}
+
+
 // ======================================================================= //
 
 

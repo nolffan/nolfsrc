@@ -927,7 +927,14 @@ void sub_100123a0()
 //      old longhand blocks) -> 0.891 (blocks over the driver's locals,
 //      w23_10050e60_os.cpp's old CLIP_BLOCK) -> 0.964 (these), and the
 //      driver's flag word and vertex pointer land in the shipped slots.
-//  Now 8347 bytes against 8353, 2043 of 2044 instructions matched: the
+//  IDENTICAL (8353 bytes).  The last four differences, each one
+//  statement: the done-latch's false arm jumps past the whole
+//  `if (bDraw)` block (bTransform set ahead of it); the bind and the
+//  draw are the body of `if (!g_1008ae20)` and the bind failure returns
+//  from inside it; the fan reads pVerts into a local ahead of its count
+//  test; and the unclipped transform's y row goes through
+//  MatVMulH_124a4.  Before that:
+//  8347 bytes against 8353, 2043 of 2044 instructions matched: the
 //  prologue's flags set b80, bMoved, b88 in that order; the done-latch's
 //  false arm skips the draw test (`goto L_NoDraw`, the shipped threaded
 //  `je 0x100126a9`); ClipPoly124 loads pOut through a temporary and
@@ -1545,6 +1552,24 @@ static inline LTBOOL ClipPoly124(uint32 nClipFlags, RVert** ppVerts, int32* pnVe
 // 0x1000a8a0's body (w2_1000a8a0_os.cpp), inlined: project the fan whole
 // when nothing needs clipping, else to camera space, clip, and project
 // what survives.
+// ltmatrix.h's MatVMul_H with the y row's second and third matrix terms
+// read through a float pointer to the matrix: icl sorts a sum's products
+// by their operands' address forms (w2_1000a8a0_os.cpp), and the header's
+// text gives y*m11 before z*m12 where the shipped row has z*m12 first.
+// Swept: m[1][c] / f[4+c] per column x member / v[c] per component, 128
+// spellings, 8 identical (all with f[5] and f[6]).
+inline float MatVMulH_124a4(LTVector *pDest, LTMatrix *pMat, LTVector *pSrc)
+{
+	const float* f = &pMat->m[0][0];
+	float one_over_w = 1.0f / (pMat->m[3][0]*pSrc->x + pMat->m[3][1]*pSrc->y + pMat->m[3][2]*pSrc->z + pMat->m[3][3]);
+
+	pDest->x = one_over_w * (pMat->m[0][0]*pSrc->x + pMat->m[0][1]*pSrc->y + pMat->m[0][2]*pSrc->z + pMat->m[0][3]);
+	pDest->y = one_over_w * (pMat->m[1][0]*pSrc->x + f[5]*pSrc->y + f[6]*pSrc->z + pMat->m[1][3]);
+	pDest->z = one_over_w * (pMat->m[2][0]*pSrc->x + pMat->m[2][1]*pSrc->y + pMat->m[2][2]*pSrc->z + pMat->m[2][3]);
+
+	return one_over_w;
+}
+
 static inline LTBOOL XFormClip124a4(RVert** ppVerts, int32* pnVerts, XForm124a4* pM)
 {
 	LTVector      vScreen;           // -0xa14
@@ -1566,7 +1591,7 @@ static inline LTBOOL XFormClip124a4(RVert** ppVerts, int32* pnVerts, XForm124a4*
 
 		while (nLeft--)
 		{
-			fOOW = MatVMul_H(&vScreen, (LTMatrix*)&pM->m_f1dc, (LTVector*)&pWalk->m_vPos);
+			fOOW = MatVMulH_124a4(&vScreen, (LTMatrix*)&pM->m_f1dc, (LTVector*)&pWalk->m_vPos);
 
 			*(LTVector*)&pWalk->m_vPos = vScreen;
 			pWalk->m_fRHW = fOOW;
@@ -1638,10 +1663,14 @@ static inline void DrawFan124a4(RVert* pVerts, int32 nVerts, void* pXForm, uint3
 	//  handed to the out-of-line clipper.  nVerts itself is the counter:
 	//  it is decremented and stored back at 0x1001423f.
 	// ------------------------------------------------------------------ //
+	// pVerts is read into a local AHEAD of the test: the shipped code
+	// loads it (`mov -0x1f30(%ebp),%eax`) before `cmpl $0x2 ; jle`.
+	RVert* pV0 = pVerts;
+
 	if (nVerts > 2)
 	{
-		pB = pVerts + 1;
-		pC = pVerts + 2;
+		pB = pV0 + 1;
+		pC = pV0 + 2;
 
 		do
 		{
@@ -1756,6 +1785,13 @@ void sub_100124a0(Obj124a4* pObj)
 	// what makes it one variable and not two tests.
 	bDraw = (pObj->m_pTexture44->m_nDone20 == 0);
 
+	// bTransform is set first and the done-latch's false arm jumps PAST
+	// the whole `if (bDraw)` block: the shipped `je 0x100126a9` is the
+	// six-byte jump to the transform test, not one to the bDraw test
+	// (which is what a label in front of `if (bDraw)` gives -- four bytes
+	// short, and the threaded jump lost).
+	bTransform = b80;
+
 	if (bDraw)
 		pObj->m_pTexture44->m_nDone20 = 1;
 	else if (!pObj->m_p2c)
@@ -1763,9 +1799,6 @@ void sub_100124a0(Obj124a4* pObj)
 
 	if (pObj->m_p2c)
 		bDraw = sub_10039d70(pObj, bDraw);
-
-L_NoDraw:
-	bTransform = b80;
 
 	if (bDraw)
 	{
@@ -1792,6 +1825,7 @@ L_NoDraw:
 		}
 	}
 
+L_NoDraw:
 	// 0x100126a9 / 0x100126b0 / 0x100126cb.
 	if (bTransform && !bEnvMap)
 	{
@@ -1905,41 +1939,42 @@ L_NoDraw:
 		}
 	}
 
-	// 0x100129d0 -- LMFullBright: nothing to modulate with.
-	if (g_1008ae20)
-		goto L_Done;
-
-	// 0x100129dd -- bind the lightmap to the current stage; a failed
-	// bind goes straight to the epilogue (0x10014289), NOT through the
-	// tail.
-	if (b88)
+	// 0x100129d0 -- LMFullBright: nothing to modulate with.  The bind and
+	// the draw are the BODY of this test, not code after a `goto`: that is
+	// what leaves the bind-failure block at 0x10014289, straight after the
+	// else arm's draw and ahead of the tail.  Written with gotos (or with
+	// any if/else over the bind alone) icl sinks that block to the end of
+	// the function, behind the tail.
+	if (!g_1008ae20)
 	{
-		if (!sub_1000efa0(pObj, g_1008d7cc))
-			goto L_BindFailed;
+		// 0x100129dd -- bind the lightmap to the current stage; a failed
+		// bind goes straight to the epilogue (0x10014289), NOT through
+		// the tail.
+		if (b88)
+		{
+			if (!sub_1000efa0(pObj, g_1008d7cc))
+			{
+				sub_10024020(pObj);
+				return;
+			}
+		}
+
+		// 0x10012a01.
+		if (bEnvMap)
+		{
+			// 0x10012a0c -- the four values the fan drawer works from.
+			DrawFan124a4(pVertBuf, nVerts, g_1008b880, D3DFVF_CLIPVERTEX);
+		}
+		else
+		{
+			// 0x1001424d -- no env-map gate, so nothing was transformed:
+			// the reserved buffer goes straight out with the literal FVF.
+			g_pD3DDevice->lpVtbl->DrawPrimitive(g_pD3DDevice, D3DPT_TRIANGLEFAN,
+			                                    D3DFVF_CLIPVERTEX, pVertBuf,
+			                                    nVerts, 0);
+		}
 	}
 
-	// 0x10012a01.
-	if (bEnvMap)
-	{
-		// 0x10012a0c -- the four values the fan drawer works from.
-		DrawFan124a4(pVertBuf, nVerts, g_1008b880, D3DFVF_CLIPVERTEX);
-	}
-	else
-	{
-		// 0x1001424d -- no env-map gate, so nothing was transformed: the
-		// reserved buffer goes straight out with the literal FVF.
-		g_pD3DDevice->lpVtbl->DrawPrimitive(g_pD3DDevice, D3DPT_TRIANGLEFAN,
-		                                    D3DFVF_CLIPVERTEX, pVertBuf,
-		                                    nVerts, 0);
-	}
-	goto L_Done;
-
-L_BindFailed:
-	// 0x10014289 -- straight to the epilogue, NOT through the tail.
-	sub_10024020(pObj);
-	return;
-
-L_Done:
 	// ------------------------------------------------------------------ //
 	//  0x1001429b -- THE TAIL.
 	// ------------------------------------------------------------------ //

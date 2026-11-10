@@ -292,6 +292,9 @@ uint32 D3DRenderInfo::sub_1007cab4()
 //      realign the stack (`and $0xfffffff0,%esp`), which 0x1007d624 does
 //      not.
 //
+//  IDENTICAL, with the product through quat_Mul_1007d624 below (the
+//  header's quat_Mul with two operands of its first row addressed
+//  through the vector part).  Before that:
 //  NEAR, 23 bytes (184 -> 23 with the real LTRotation/LTVector;
 //  re-measured).  The residual is x87 scheduling inside the inlined
 //  quat_Mul of `m_Rot188 * rot`: in the out[QX] row shipped loads a[QW]
@@ -316,6 +319,33 @@ uint32 D3DRenderInfo::sub_1007cab4()
 //  vPos / rOld scoped to their arms (554), the two accumulate statements
 //  swapped (262), `m_Vec198 += vPos` (149).
 // ======================================================================= //
+// ltquatbase.h's quat_Mul with the two x components of the out[QX] row
+// read through pointers to the quaternions' VECTOR parts (the header's own
+// note writes a quaternion as [s, v]).  icl sorts each product's operands
+// by their address forms, and with the header's text the shipped
+// `flds a[QW] ; fmuls b[QX]` comes out the other way round.  Found by
+// spelling a[QW], b[QX], a[QX], b[QW] of that row five ways each (625
+// spellings, 10 identical -- every one with b[QX] and a[QX] through a
+// pointer formed as `&q[QX]` / `q + QX`; a plain copy of the pointer does
+// nothing).
+inline void quat_Mul_1007d624(float *out, const float *a, const float *b)
+{
+	const float* av = &a[QX];
+	const float* bv = &b[QX];
+
+	out[QX] = a[QW]*bv[0] + av[0]*b[QW] + a[QY]*b[QZ] - a[QZ]*b[QY];
+	out[QY] = a[QW]*b[QY] - a[QX]*b[QZ] + a[QY]*b[QW] + a[QZ]*b[QX];
+	out[QZ] = a[QW]*b[QZ] + a[QX]*b[QY] - a[QY]*b[QX] + a[QZ]*b[QW];
+	out[QW] = a[QW]*b[QW] - a[QX]*b[QX] - a[QY]*b[QY] - a[QZ]*b[QZ];
+}
+
+inline LTRotation RotMul_1007d624(const LTRotation& a, const LTRotation& b)
+{
+	LTRotation qTemp;
+	quat_Mul_1007d624(qTemp.m_Quat, a.m_Quat, b.m_Quat);
+	return qTemp;
+}
+
 void D3DRenderInfo::sub_1007d624(uint32 iAnim, uint32 iNode)
 {
 	float      fWeight;
@@ -330,7 +360,7 @@ void D3DRenderInfo::sub_1007d624(uint32 iAnim, uint32 iNode)
 	{
 		sub_1007d880(iAnim, iNode, &rot, &vPos);
 
-		m_Rot188 = m_Rot188 * rot;
+		m_Rot188 = RotMul_1007d624(m_Rot188, rot);
 		m_Vec198 = m_Vec198 + vPos;
 	}
 	else
