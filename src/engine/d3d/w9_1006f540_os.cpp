@@ -791,53 +791,23 @@ static inline LTBOOL sub_1000f4b0(uint32 nClipFlags, ClipVert** ppVerts, int32* 
 
 
 // ======================================================================= //
-//  0x1006f540 .. 0x10070d0e   (6,096 bytes)   1 caller
+//  THE TRANSFORM AND CLIP, as ONE inline: 0x1000a8a0's body
+//  (w2_1000a8a0_os.cpp) over this file's vertex -- straight to the screen
+//  when nothing is to be clipped, else to camera space, through the
+//  clipper and to the screen.  Written out in the function with gotos the
+//  clip failure's `return 0` sank to the end of the function behind the
+//  draw; as the result of this inline, held in a local by the caller, it
+//  stays where the shipped code has it (0x10070bdd, between the clip arm
+//  and the draw, with the epilogue the `return 1` jumps back to).  Tested
+//  directly (`if (!XFormClip6f540(...)) return 0;`) the block sinks again.
 // ======================================================================= //
-extern "C" int32 sub_1006f540(Obj6f540* pObj)
+inline LTBOOL XFormClip6f540(ClipVert** ppVerts, int32* pnVerts, uint8* pXF)
 {
-	ClipVert		aVerts[64];                         // -0xe0c
-	ClipVert*		pVerts;                             // -0x60c
-	int32			nVerts;                             // -0x608
-
-	ClipVert*		pWalk;
-	SrcVert6f540*	pSrc;
-	uint32			nLeft;
-
-	Vec6f540		vScreen;
-	float			fOOW;
-	XForm6f540*		pM;
-
-	// -- 0x1006f54d: THE FILL.  Every position float moves as an integer
-	//    `mov`; the texture pair is scaled here, source operand first.
-	Vec6f540*		pPos;
-
-	pWalk = aVerts;
-	pSrc  = pObj->m_aSrc54;
-	for (nLeft = pObj->m_nCount50; nLeft > 0; nLeft--)
-	{
-		pPos = pSrc->m_pPos00;
-		pWalk->m_vPos.x = pPos->x;
-		pWalk->m_vPos.y = pPos->y;
-		pWalk->m_vPos.z = pPos->z;
-
-		pWalk->m_Diffuse10.m_n = 0xffffffff;
-
-		// Both products before either store (the shipped loop keeps them
-		// on the x87 stack and stores them at the top of the next pass).
-		{
-			float fU = pSrc->m_fU04 * g_f1008e664;
-			float fV = pSrc->m_fV08 * g_f1008e668;
-
-			pWalk->m_fU = fU;
-			pWalk->m_fV = fV;
-		}
-
-		pSrc++;
-		pWalk++;
-	}
-
-	pVerts = aVerts;
-	nVerts = pObj->m_nCount50;
+	ClipVert*   pWalk;
+	uint32      nLeft;
+	Vec6f540    vScreen;
+	float       fOOW;
+	XForm6f540* pM;
 
 	if (!g_1008b874)
 	{
@@ -845,10 +815,9 @@ extern "C" int32 sub_1006f540(Obj6f540* pObj)
 		//  0x1006f5cf -- NO CLIPPING WANTED.  big6d910.cpp's inline
 		//  projective transform, verbatim.
 		// -------------------------------------------------------------- //
-		pM = (XForm6f540*)g_1008b880;
-
-		pWalk = pVerts;
-		nLeft = nVerts;
+		pM = (XForm6f540*)pXF;
+		pWalk = *ppVerts;
+		nLeft = *pnVerts;
 
 		while (nLeft--)
 		{
@@ -884,37 +853,93 @@ extern "C" int32 sub_1006f540(Obj6f540* pObj)
 			pWalk++;
 		}
 
-		goto L_Draw;
+	}
+	else
+	{
+		// -- 0x1006f6c7: camera-space pre-transform, then the mask is
+		//    RE-READ (0x1006f6ee), as in big6d910.cpp and 0x1000a8a0.
+		pWalk = *ppVerts;
+		nLeft = *pnVerts;
+
+		while (nLeft--)
+		{
+			sub_1000d9b0(pWalk, pXF);
+			pWalk++;
+		}
+
+		if (!sub_1000f4b0(g_1008b874, ppVerts, pnVerts))
+			return LTFALSE;
+
+		// -- 0x10070bb4: camera space -> screen, one call per vertex.
+		pWalk = *ppVerts;
+		nLeft = *pnVerts;
+
+		while (nLeft--)
+		{
+			sub_10014580(pWalk, pXF);
+			pWalk++;
+		}
 	}
 
-	// -- 0x1006f6c7: camera-space pre-transform, then the mask is RE-READ
-	//    (0x1006f6ee), as in big6d910.cpp and 0x1000a8a0.
-	pWalk = pVerts;
-	nLeft = nVerts;
+	return LTTRUE;
+}
 
-	while (nLeft--)
+
+// ======================================================================= //
+//  0x1006f540 .. 0x10070d0e   (6,096 bytes)   1 caller
+// ======================================================================= //
+extern "C" int32 sub_1006f540(Obj6f540* pObj)
+{
+	ClipVert		aVerts[64];                         // -0xe0c
+	ClipVert*		pVerts;                             // -0x60c
+	int32			nVerts;                             // -0x608
+
+	ClipVert*		pWalk;
+	SrcVert6f540*	pSrc;
+	uint32			nLeft;
+
+
+	// -- 0x1006f54d: THE FILL.  Every position float moves as an integer
+	//    `mov`; the texture pair is scaled here, source operand first.
+	Vec6f540*		pPos;
+
+	pWalk = aVerts;
+	pSrc  = pObj->m_aSrc54;
+	for (nLeft = pObj->m_nCount50; nLeft > 0; nLeft--)
 	{
-		sub_1000d9b0(pWalk, g_1008b880);
+		pPos = pSrc->m_pPos00;
+		pWalk->m_vPos.x = pPos->x;
+		pWalk->m_vPos.y = pPos->y;
+		pWalk->m_vPos.z = pPos->z;
+
+		pWalk->m_Diffuse10.m_n = 0xffffffff;
+
+		// Both products before either store (the shipped loop keeps them
+		// on the x87 stack and stores them at the top of the next pass).
+		{
+			float fU = pSrc->m_fU04 * g_f1008e664;
+			float fV = pSrc->m_fV08 * g_f1008e668;
+
+			pWalk->m_fU = fU;
+			pWalk->m_fV = fV;
+		}
+
+		pSrc++;
 		pWalk++;
 	}
 
-	if (!sub_1000f4b0(g_1008b874, &pVerts, &nVerts))
-		return 0;
+	pVerts = aVerts;
+	nVerts = pObj->m_nCount50;
 
-
-	// -- 0x10070bb4: camera space -> screen, one call per vertex.
-	pWalk = pVerts;
-	nLeft = nVerts;
-
-	while (nLeft--)
+	// -- 0x1006f5c7 .. 0x10070bdc: the inline above.  Its answer goes
+	//    through a local: that is what keeps the `return 0` block here.
 	{
-		sub_10014580(pWalk, g_1008b880);
-		pWalk++;
+		LTBOOL bOk = XFormClip6f540(&pVerts, &nVerts, g_1008b880);
+
+		if (!bOk)
+			return 0;
 	}
 
-	goto L_Draw;
-
-L_Draw:
 	// -- 0x10070be6: vtable +0x64.  6 = D3DPT_TRIANGLEFAN, 0x1c4 =
 	//    XYZRHW | DIFFUSE | SPECULAR | TEX1.
 	g_pD3DDevice->lpVtbl->DrawPrimitive(g_pD3DDevice, 6, 0x1c4, pVerts,
