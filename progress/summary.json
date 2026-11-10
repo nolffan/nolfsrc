@@ -24,6 +24,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -50,6 +52,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -76,6 +80,8 @@
       "unlinked_bytes": 35856,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -102,6 +108,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -128,6 +136,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -154,6 +164,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -180,6 +192,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -206,6 +220,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -232,6 +248,8 @@
       "unlinked_bytes": 13330,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -258,6 +276,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -284,6 +304,8 @@
       "unlinked_bytes": 18570,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -310,6 +332,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -336,6 +360,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -362,12 +388,14 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
     "d3d.ren": {
       "attempted": 0,
-      "bytes_identical": 145934,
+      "bytes_identical": 146887,
       "bytes_total": 515162,
       "crt": 236,
       "crt_bytes": 32676,
@@ -376,11 +404,11 @@
       "encrypted": 0,
       "encrypted_bytes": 0,
       "funcs": 944,
-      "identical": 767,
+      "identical": 770,
       "kind": "image",
       "middleware": 0,
       "middleware_bytes": 0,
-      "near": 147,
+      "near": 144,
       "small": 30,
       "started": true,
       "todo": 0,
@@ -388,6 +416,8 @@
       "unlinked_bytes": 60090,
       "unplaced": 15,
       "unplaced_bytes": 60,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -414,6 +444,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -440,6 +472,8 @@
       "unlinked_bytes": 105174,
       "unplaced": 9,
       "unplaced_bytes": 1269,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -466,6 +500,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -492,6 +528,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -518,6 +556,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -544,6 +584,8 @@
       "unlinked_bytes": 13500,
       "unplaced": 3,
       "unplaced_bytes": 3,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 4,
       "unwritten_bytes": 20
     },
@@ -570,6 +612,8 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     },
@@ -596,17 +640,19 @@
       "unlinked_bytes": 0,
       "unplaced": 0,
       "unplaced_bytes": 0,
+      "unreferenced": 0,
+      "unreferenced_bytes": 0,
       "unwritten": 0,
       "unwritten_bytes": 0
     }
   },
   "total": {
     "attempted": 1,
-    "bytes_identical": 3162166,
+    "bytes_identical": 3163119,
     "bytes_total": 3721856,
     "funcs": 19855,
-    "identical": 17699,
-    "near": 345,
+    "identical": 17702,
+    "near": 342,
     "small": 1807,
     "todo": 3,
     "unplaced": 27,
