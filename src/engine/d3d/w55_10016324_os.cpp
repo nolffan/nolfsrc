@@ -42,6 +42,20 @@
 //    "Model::SetupTransforms failed for %s.", so `this` is a model
 //    renderer.
 //
+//  Three differences left of 1780 instructions (was 12 blocks).  Closed:
+//  the transform, clip and projection as ONE inline over the
+//  stored flag (XFormClip16324 -- the dead `mov $0x3f,%eax` is the
+//  folded read of g_1008b874 by the inline's own test), and planes
+//  1..5 setting pV before pFlag (the shipped `mov %eax,%esi ; cmp ;
+//  lea`).  Left: (a) the blue ramp lookup indexes through %eax in the
+//  shipped code and %edx here; (b) the shipped stores run pVerts,
+//  g_1008b874, nVerts and then the `lea` of the walk pointer, ours
+//  g_1008b874, `lea`, nVerts, pVerts (all six statement orders
+//  measured); (c) plane 1's pOutStart is stored with the driver's pOut,
+//  ahead of the plane-1 flag test, where ours copies it from pOut's
+//  slot inside the plane (a driver pOutStart, a pOut temporary and the
+//  assignment at three places in plane 1 measured: all worse).
+//
 //  Coin-flip (5) below settled -- the four-vertex
 //  transform is the pointer walk with a `while (n--)` count, which gives
 //  the shipped `lea aVerts,%ebx ; mov $4,%esi ; mov $0x1008b880,%edi ;
@@ -543,8 +557,8 @@ static inline LTBOOL sub_10001000(uint32* pUnused, RVert** ppVerts, int32* pnVer
 	++g_1008be44;
 
 	nInside = 0;
-	pFlag   = anInside;
 	pV      = *ppVerts;
+	pFlag   = anInside;
 	pEnd    = pV + *pnVerts;
 
 	for (; pV != pEnd; ++pV)
@@ -609,8 +623,8 @@ static inline LTBOOL sub_10001330(uint32* pUnused, RVert** ppVerts, int32* pnVer
 	++g_1008be44;
 
 	nInside = 0;
-	pFlag   = anInside;
 	pV      = *ppVerts;
+	pFlag   = anInside;
 	pEnd    = pV + *pnVerts;
 
 	for (; pV != pEnd; ++pV)
@@ -676,8 +690,8 @@ static inline LTBOOL sub_10001670(uint32* pUnused, RVert** ppVerts, int32* pnVer
 	++g_1008be44;
 
 	nInside = 0;
-	pFlag   = anInside;
 	pV      = *ppVerts;
+	pFlag   = anInside;
 	pEnd    = pV + *pnVerts;
 
 	for (; pV != pEnd; ++pV)
@@ -743,8 +757,8 @@ static inline LTBOOL sub_10001990(uint32* pUnused, RVert** ppVerts, int32* pnVer
 	++g_1008be44;
 
 	nInside = 0;
-	pFlag   = anInside;
 	pV      = *ppVerts;
+	pFlag   = anInside;
 	pEnd    = pV + *pnVerts;
 
 	for (; pV != pEnd; ++pV)
@@ -810,8 +824,8 @@ static inline LTBOOL sub_10001cb0(uint32* pUnused, RVert** ppVerts, int32* pnVer
 	++g_1008be44;
 
 	nInside = 0;
-	pFlag   = anInside;
 	pV      = *ppVerts;
+	pFlag   = anInside;
 	pEnd    = pV + *pnVerts;
 
 	for (; pV != pEnd; ++pV)
@@ -988,6 +1002,60 @@ static inline LTBOOL sub_1000f4b0(uint32 nClipFlags, RVert** ppVerts, int32* pnV
 }
 
 
+// 0x1000a8a0's body (w2_1000a8a0_os.cpp) over this file's vertex, inline:
+// transform straight to the screen when nothing is to be clipped, else
+// to camera space, through the clipper and then to the screen.  The
+// caller stores 0x3f into g_1008b874 just before, so the first arm folds
+// away -- but its test of the flag is what the shipped code still shows
+// (see the call).
+inline LTBOOL XFormClip16324(RVert** ppVerts, int32* pnVerts, uint8* pM)
+{
+	RVert*   pWalk;
+	int32    nLeft;
+	float    fOOW;
+	LTVector vScreen;
+
+	if (!g_1008b874)
+	{
+		nLeft = *pnVerts;
+		pWalk = *ppVerts;
+		while (nLeft--)
+		{
+			fOOW = MatVMul_H(&vScreen, (LTMatrix*)(pM + 0x1dc), (LTVector*)&pWalk->m_vPos);
+			*(LTVector*)&pWalk->m_vPos = vScreen;
+			*(float*)((uint8*)pWalk + 0x0c) = fOOW;
+			pWalk++;
+		}
+	}
+	else
+	{
+		// 0x10016a0f -- four iterations, stride 0x20.
+		pWalk = *ppVerts;
+		nLeft = *pnVerts;
+		while (nLeft--)
+		{
+			sub_1000d9b0(&pWalk->m_vPos, pM);
+			pWalk++;
+		}
+
+		// 0x10016a2f .. 0x10017aba -- the driver and its six planes.
+		if (!sub_1000f4b0(g_1008b874, ppVerts, pnVerts))
+			return LTFALSE;
+
+		// 0x10017abb -- sub_1005fa80 (d3dr2a.cpp) inlined.
+		pWalk = *ppVerts;
+		nLeft = *pnVerts;
+		while (nLeft--)
+		{
+			sub_10014580(pWalk, pM);
+			pWalk++;
+		}
+	}
+
+	return LTTRUE;
+}
+
+
 class CModelDraw
 {
 public:
@@ -1096,43 +1164,18 @@ void CModelDraw::sub_10016324(SModel* pModel, uint8 nAlpha)
 	*(uint32*)&aVerts[0].m_sb = *(uint32*)&aVerts[3].m_sb =
 	*(uint32*)&aVerts[2].m_sb = *(uint32*)&aVerts[1].m_sb = m_n480;
 
-	// 0x100169f0 .. 0x10016a09.
+	// 0x100169f0 .. 0x10017ae1 -- the four vertices through the inline
+	// transform-and-clip (XFormClip16324 above) with every clip bit set.
+	// The flag is stored and then read back by the inline's own test,
+	// which icl folds: that folded read is the dead `mov $0x3f,%eax` at
+	// 0x10016a0a, and the reload after the camera-space loop is why the
+	// driver's flag word starts in %eax and is copied to %ebx.
 	pVerts      = aVerts;
 	g_1008b874  = 0x3f;
 	nVerts      = 4;
 
-	// 0x10016a0f -- four iterations, stride 0x20, no guard because the
-	// count is a literal.
-	pWalk = aVerts;
-	n     = 4;
-
-	while (n--)
-	{
-		sub_1000d9b0(&pWalk->m_vPos, g_1008b880);
-		pWalk++;
-	}
-
-
-	// =================================================================== //
-	//  0x10016a2f .. 0x10017aba -- 0x1000f4b0 INLINED, with all six of its
-	//  plane bodies inlined too.  Call-free; see the header note on what
-	//  pins it.  The shape of each block is d3dr3a.cpp's 0x10002d40 /
-	//  0x100030a0 with the 32-byte vertex.
-	// =================================================================== //
-
-	if (!sub_1000f4b0(g_1008b874, &pVerts, &nVerts))
+	if (!XFormClip16324(&pVerts, &nVerts, g_1008b880))
 		return;
-
-	// 0x10017abb -- sub_1005fa80 (d3dr2a.cpp) inlined: guard, `dec`/`jne`,
-	// stride 0x20, the same 0x1008b880.
-	pWalk = pVerts;
-	nLeft = nVerts;
-
-	while (nLeft--)
-	{
-		sub_10014580(pWalk, g_1008b880);
-		pWalk++;
-	}
 
 	// 0x10017ae2 -- +0x64 of the device vtable, six arguments, nothing
 	// unwound afterwards, straight into the shared epilogue.
