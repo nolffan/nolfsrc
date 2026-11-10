@@ -73,7 +73,7 @@ of each binary's code, by size, those functions make up.
 |---|---|--:|--:|---|--:|--:|
 | `lithtech.exe` | the engine | 3,175 / 3,421 | 444,112 / 570,846 bytes | `███████████████░░░░░` 77.7% | 0 | 9 |
 | `server.dll` | the server | 2,109 / 2,271 | 213,456 / 249,554 bytes | `█████████████████░░░` 85.5% | 4 | 3 |
-| `d3d.ren` | the Direct3D renderer | 770 / 944 | 146,887 / 515,162 bytes | `█████░░░░░░░░░░░░░░░` 28.5% | 0 | 15 |
+| `d3d.ren` | the Direct3D renderer | 773 / 944 | 155,959 / 515,162 bytes | `██████░░░░░░░░░░░░░░` 30.2% | 0 | 15 |
 | `NOLF.exe` | the launcher | 201 / 221 | 34,353 / 35,033 bytes | `███████████████████░` 98.0% | 0 | 0 |
 | `NolfServ.exe` | the dedicated server | 338 / 356 | 58,647 / 59,112 bytes | `███████████████████░` 99.2% | 0 | 0 |
 | `CShell.dll` | the game: client | 4,377 / 4,924 | 921,830 / 933,023 bytes | `███████████████████░` 98.8% | 0 | 0 |
@@ -87,7 +87,7 @@ of each binary's code, by size, those functions make up.
 | `NolfServ.exe:rsrc` | the dedicated server's resources, not in the total | 39 / 39 resources | 48,906 / 48,906 bytes | `████████████████████` 100.0% | 0 | -- |
 | `ltmsg.dll:rsrc` | the engine's messages, not in the total | 8 / 8 resources | 3,322 / 3,322 bytes | `████████████████████` 100.0% | 0 | -- |
 | `sres.dll:rsrc` | the server's resource DLL, not in the total | no resources | -- | -- | -- | -- |
-| **All** | | **17,702 / 19,855** | **3,163,119 / 3,721,856 bytes** | `████████████████░░░░` **84.9%** | **4** | **27** |
+| **All** | | **17,705 / 19,855** | **3,172,191 / 3,721,856 bytes** | `█████████████████░░░` **85.2%** | **4** | **27** |
 <!-- progress:end -->
 
 Every function in that table is recorded in `progress/identical.txt`, and

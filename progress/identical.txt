@@ -11867,6 +11867,7 @@ d3d.ren	sub_100115b0
 d3d.ren	sub_10011620
 d3d.ren	sub_10012380
 d3d.ren	sub_100123a0
+d3d.ren	sub_100124a4
 d3d.ren	sub_10014550
 d3d.ren	sub_10014580
 d3d.ren	sub_10014600
@@ -12044,6 +12045,7 @@ d3d.ren	sub_10022e90
 d3d.ren	sub_100230d4
 d3d.ren	sub_10023130
 d3d.ren	sub_10023200
+d3d.ren	sub_10023230
 d3d.ren	sub_100232b0
 d3d.ren	sub_10023300
 d3d.ren	sub_10023330
@@ -12479,6 +12481,7 @@ d3d.ren	sub_1007ca00
 d3d.ren	sub_1007ca30
 d3d.ren	sub_1007ca60
 d3d.ren	sub_1007cab4
+d3d.ren	sub_1007d624
 d3d.ren	sub_1007da80
 d3d.ren	sub_1007dbd0
 d3d.ren	sub_1007dc00
