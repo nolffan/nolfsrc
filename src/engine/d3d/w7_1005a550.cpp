@@ -42,6 +42,14 @@
 //  source file's name (a 55-character name changed a test TU's row order
 //  where 5..12 did not), so icl's sum order is keyed by heap state:
 //  measured on this file, stems of 12..43 characters all give 16.
+//
+//  IDENTICAL.  The lever inside this body is the operands' ADDRESS
+//  FORMS (w2_1000a8a0_os.cpp's finding): with each w-row matrix term
+//  spelled pMat->m[3][c] or f[12+c] through a float pointer, and each
+//  vertex component as the member or v[c], 3 of 256 spellings are
+//  identical; the one kept reads only m[3][0] through the pointer, in
+//  the natural x, y, z term order.  The pointer is declared in the
+//  loop body: declared ahead of the loop the same row is 12 bytes off.
 // ======================================================================= //
 struct Mat1005a550
 {
@@ -61,8 +69,9 @@ extern "C" void sub_1005a550(Vert1005a550* pVerts, uint32 nCount,
 
 	for (; nCount; --nCount, ++pV)
 	{
-		float oow = 1.0f / (pMat->m[3][1]*pV->y + pMat->m[3][2]*pV->z +
-		                    pMat->m[3][0]*pV->x + pMat->m[3][3]);
+		const float* f = &pMat->m[0][0];
+		float oow = 1.0f / (f[12]*pV->x + pMat->m[3][1]*pV->y +
+		                    pMat->m[3][2]*pV->z + pMat->m[3][3]);
 
 		float fX = (pMat->m[0][0]*pV->x + pMat->m[0][1]*pV->y +
 		            pMat->m[0][2]*pV->z + pMat->m[0][3]) * oow;

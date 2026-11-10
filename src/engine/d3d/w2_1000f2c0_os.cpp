@@ -22,17 +22,18 @@
 //  swapped; and the function in a TU with its shipped neighbours
 //  (0x1000a8a0 with 0x1000a7d0 and d3dr3b.cpp's 0x1000aa90 around it;
 //  0x1000f2c0 with d3dr3c_os.cpp's 0x1000f4b0, and inside the /Os /Qip
-//  lightmap TU w30_1000f020_osqipni.cpp).  The same class as 0x10023230
-//  (w4_10023fb0.cpp): icl's sum order follows TU history.
+//  lightmap TU w30_1000f020_osqipni.cpp).  (It was filed with 0x10023230,
+//  w4_10023fb0.cpp, as "icl's sum order follows TU history"; it is the
+//  operands' address forms, below.)
 //
-//  NEAR (483 = 483 bytes, 3 instructions differ, 0 mnemonic blocks): only
-//  the z row's first two products swap (shipped y*m200 then z*m204, ours
-//  z then y); five more term orders/groupings of that row, re-measured
-//  after the loop change below, all give the same bytes.  The last loop
-//  is 0x1000a8a0's `for (nLeft = *pnVerts; nLeft; nLeft--, pWalk++)`:
-//  as `while (nLeft--)` (and as a `for` without pWalk++ in its step, an
-//  if/do-while, a fresh counter, int32) the count was loaded into %edx
-//  and copied to %ecx, 485 bytes.
+//  IDENTICAL.  The first loop is w2_1000a8a0_os.cpp's: the +0x1dc block
+//  as an LTMatrix through a copy of ltmatrix.h's MatVMul_H, and the z
+//  row's product order (shipped y*m[2][1], z*m[2][2], x*m[2][0]) from
+//  that helper's address forms -- see MatVMulH_f2c0 below.  The hand-
+//  written float fields this file had gave z, y, x (4 bytes), and none
+//  of the term orders, groupings or TU neighbours measured above moved
+//  it.  The last loop is 0x1000a8a0's
+//  `for (nLeft = *pnVerts; nLeft; nLeft--, pWalk++)`.
 //
 // *********************************************************************** //
 
@@ -42,7 +43,7 @@
 extern unsigned long g_1008b874;                            // 0x1008b874
 
 // 0x1000f4b0 -- the 32-byte-vertex twin of d3dr3b.cpp's clipper
-// 0x1000aa90 (not written yet; the same (flags, &verts, &count) call).
+// 0x1000aa90 (d3dr3c_os.cpp; the same (flags, &verts, &count) call).
 LTBOOL sub_1000f4b0(uint32 nFlags, void** ppVerts, uint32* pnVerts);
 // w2_1000a770.cpp: a vector through a row-major 3x4.
 void sub_1000a770(LTVector* pVec, const float* pMat34);
@@ -63,22 +64,7 @@ struct XForm1000f2c0
 	uint8   m_pad_000[0x15c];                               // +0x000
 	float   m_Mat15c[12];                                   // +0x15c
 	uint8   m_pad_18c[0x1dc - 0x18c];                       // +0x18c
-	float   m_f1dc;                                         // +0x1dc
-	float   m_f1e0;                                         // +0x1e0
-	float   m_f1e4;                                         // +0x1e4
-	float   m_f1e8;                                         // +0x1e8
-	float   m_f1ec;                                         // +0x1ec
-	float   m_f1f0;                                         // +0x1f0
-	float   m_f1f4;                                         // +0x1f4
-	float   m_f1f8;                                         // +0x1f8
-	float   m_f1fc;                                         // +0x1fc
-	float   m_f200;                                         // +0x200
-	float   m_f204;                                         // +0x204
-	float   m_f208;                                         // +0x208
-	float   m_f20c;                                         // +0x20c
-	float   m_f210;                                         // +0x210
-	float   m_f214;                                         // +0x214
-	float   m_f218;                                         // +0x218
+	LTMatrix m_Mat1dc;                                      // +0x1dc
 	uint8   m_pad_21c[0x31c - 0x21c];                       // +0x21c
 	float   m_f31c;                                         // +0x31c
 	float   m_f320;                                         // +0x320
@@ -87,6 +73,29 @@ struct XForm1000f2c0
 	float   m_f32c;                                         // +0x32c
 	float   m_f330;                                         // +0x330
 };
+
+
+// ltmatrix.h's MatVMul_H, with the z row's SECOND matrix term read
+// through a float pointer to the matrix (w2_1000a8a0_os.cpp's helper
+// reads the first and third that way).  icl canonicalises the term order
+// of a sum, but which product it emits first follows the operands'
+// address forms: this spelling gives the shipped y, z, x (the header's
+// gives y, x, z; the 40-byte twin ships z, x, y).  Found by sweeping
+// m[2][c] / f[8+c] per column x member / v[c] per component x product
+// order x term order x the side of one_over_w (3072 spellings, 80
+// identical -- every one with exactly f[9] among the three products and
+// members for the vertex; the term order and the rest do not matter).
+inline float MatVMulH_f2c0(LTVector *pDest, LTMatrix *pMat, LTVector *pSrc)
+{
+	const float* f = &pMat->m[0][0];
+	float one_over_w = 1.0f / (pMat->m[3][0]*pSrc->x + pMat->m[3][1]*pSrc->y + pMat->m[3][2]*pSrc->z + pMat->m[3][3]);
+
+	pDest->x = one_over_w * (pMat->m[0][0]*pSrc->x + pMat->m[0][1]*pSrc->y + pMat->m[0][2]*pSrc->z + pMat->m[0][3]);
+	pDest->y = one_over_w * (pMat->m[1][0]*pSrc->x + pMat->m[1][1]*pSrc->y + pMat->m[1][2]*pSrc->z + pMat->m[1][3]);
+	pDest->z = one_over_w * (pMat->m[2][0]*pSrc->x + f[9]*pSrc->y + pMat->m[2][2]*pSrc->z + pMat->m[2][3]);
+
+	return one_over_w;
+}
 
 
 LTBOOL sub_1000f2c0(TVert1000f2c0** ppVerts, uint32* pnVerts,
@@ -103,26 +112,7 @@ LTBOOL sub_1000f2c0(TVert1000f2c0** ppVerts, uint32* pnVerts,
 		pWalk = *ppVerts;
 		while (nLeft--)
 		{
-			fOOW = 1.0f / (float)(pM->m_f20c * pWalk->m_vPos.x
-			                    + pM->m_f210 * pWalk->m_vPos.y
-			                    + pM->m_f214 * pWalk->m_vPos.z
-			                    + pM->m_f218);
-
-			vScreen.x = (pWalk->m_vPos.x * pM->m_f1dc
-			           + pWalk->m_vPos.y * pM->m_f1e0
-			           + pWalk->m_vPos.z * pM->m_f1e4
-			           + pM->m_f1e8) * fOOW;
-
-			vScreen.y = (pWalk->m_vPos.x * pM->m_f1ec
-			           + pWalk->m_vPos.y * pM->m_f1f0
-			           + pWalk->m_vPos.z * pM->m_f1f4
-			           + pM->m_f1f8) * fOOW;
-
-			vScreen.z = (pWalk->m_vPos.x * pM->m_f1fc
-			           + pWalk->m_vPos.y * pM->m_f200
-			           + pWalk->m_vPos.z * pM->m_f204
-			           + pM->m_f208) * fOOW;
-
+			fOOW = MatVMulH_f2c0(&vScreen, &pM->m_Mat1dc, &pWalk->m_vPos);
 			pWalk->m_vPos = vScreen;
 			pWalk->m_fRHW = fOOW;
 			pWalk++;

@@ -1898,12 +1898,29 @@ static void sub_1003dd50(Surf3dd50* pThis, Vert3dd50* pVerts, uint32 nVerts)
 					//  %eax already advanced by 0x20) with a copy at
 					//  0x1003e29d for the last one; the counter is
 					//  `dec %edx ; jne`, a countdown, not an index.
+					//
+					//  4 BYTES LEFT (was 12).  Closed: the loop as a
+					//  `for` with both steps in its header and nLeft
+					//  set before pWalk (the shipped `mov -0x14,%edx`
+					//  ahead of `mov -0x18,%eax`), and row 1's z
+					//  product read through a float pointer to the
+					//  matrix (icl sorts a sum's products by their
+					//  operands' address forms -- w2_1000a8a0_os.cpp;
+					//  one of 128 spellings of that row).  Left: the w
+					//  row's z product loads the vertex first in the
+					//  shipped code (`flds 0x8(%eax) ; fmuls -0x4c`)
+					//  and the matrix first in ours.  Not moved by the
+					//  128 m[3][c] / fm[12+c] x member / pv[c] spellings
+					//  of the w row in all six term orders and both
+					//  product orders, nor by those of rows 0 and 2.
 					// ---------------------------------------------- //
-					pWalk = pVerts;
 					nLeft = nVerts;
+					pWalk = pVerts;
 
-					while (nLeft--)
+					for (; nLeft; nLeft--, pWalk++)
 					{
+						const float* fm = &mInv.m[0][0];
+
 						fW = 1.0f / (pWalk->m_fX00 * mInv.m[3][0]
 						           + pWalk->m_fY04 * mInv.m[3][1]
 						           + pWalk->m_fZ08 * mInv.m[3][2]
@@ -1916,7 +1933,7 @@ static void sub_1003dd50(Surf3dd50* pThis, Vert3dd50* pVerts, uint32 nVerts)
 
 						fWY = (pWalk->m_fX00 * mInv.m[1][0]
 						     + pWalk->m_fY04 * mInv.m[1][1]
-						     + pWalk->m_fZ08 * mInv.m[1][2]
+						     + pWalk->m_fZ08 * fm[6]
 						     + mInv.m[1][3]) * fW;
 
 						fWZ = (pWalk->m_fX00 * mInv.m[2][0]
@@ -1936,7 +1953,6 @@ static void sub_1003dd50(Surf3dd50* pThis, Vert3dd50* pVerts, uint32 nVerts)
 						               + vBasis1.y * fDY
 						               + vBasis1.z * fDZ) * fScale + 0.5f;
 
-						pWalk++;
 					}
 
 					// -- 0x1003e2d6: vtable +0x64, six dwords, `add

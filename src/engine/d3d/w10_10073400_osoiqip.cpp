@@ -148,10 +148,18 @@ void quat_GetVectors(const float *pQuat, float *pRight, float *pUp, float *pForw
 //  comes out w, z, x, y, and z, y, x, w comes out w, x, z, y -- the same
 //  rewrite, measured, that makes 0x10073400's normalisation identical.
 //
-//  NEAR, 4 bytes (measured): only the w and z products of the dot
-//  load/fold the other way round (shipped `flds pQ1[3] ; fmuls pQ2[3]`,
-//  ours `flds pQ2[3] ; fmuls pQ1[3]`, the same for [2]); the x and y
-//  products, and everything else, match.  Changing nothing: all 24 term
+//  IDENTICAL.  It was 4 bytes: only the w and z products of the dot
+//  loaded/folded the other way round (shipped `flds pQ1[3] ; fmuls
+//  pQ2[3]`, ours `flds pQ2[3] ; fmuls pQ1[3]`, the same for [2]).  icl
+//  canonicalises the operand order of each product, and what it sorts on
+//  follows the operands' ADDRESS FORMS (as in w2_1000a8a0_os.cpp), not
+//  the order they are written in: with each of the eight operands spelled
+//  either through the float pointer (pQ1[i] / pQ2[i]) or as the member
+//  (pFrom->x / pTo->x), 3 of the 256 spellings are identical -- the one
+//  kept (x of pFrom, z and w of pTo as members) and two with more
+//  members.  Variable names do not matter (16 pairs measured).
+//  The earlier measurements, for the record --
+//  changing nothing: all 24 term
 //  orders, all 16 operand orders, four parenthesisations, all 720 orders
 //  of the local declarations, pQ1/pQ2 declared then assigned, the SDK's
 //  own (float*) signature and body verbatim, /Qip and quat_GetVectors in
@@ -181,7 +189,8 @@ void sub_10073500(LTQuat* pDestQ, LTQuat* pFrom, LTQuat* pTo, float t)
 	int		i, j;
 
 	// Calculate the cosine
-	cosom = pQ2[2]*pQ1[2] + pQ1[1]*pQ2[1] + pQ1[0]*pQ2[0] + pQ2[3]*pQ1[3];
+	// (the address forms are the sweep's -- see the note above)
+	cosom = pFrom->x*pQ2[0] + pQ1[1]*pQ2[1] + pQ1[2]*pTo->z + pQ1[3]*pTo->w;
 
 	// adjust signs if necessary
 	if (cosom < 0.0f)
