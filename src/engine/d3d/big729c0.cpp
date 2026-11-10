@@ -732,6 +732,17 @@ L_MakeRec:
 }
 
 // ======================================================================= //
+//  NEAR: the loop guard of region 2 now goes to the `if (nAcc)` test as
+//  shipped (the element walk is the DrawElems729c0 inline).  Left: (a)
+//  the sunk blocks' order and (c) one `xor`.  On (a), measured with
+//  probe TUs: icl emits a sunk block when its place in a depth-first
+//  walk of the function comes up -- a then-arm's cold blocks as soon as
+//  the arm ends, an else-arm's only when the code it falls into has
+//  been walked to its end -- so region 4's pop (in the else arm) comes
+//  after both binds here, and second in the shipped code.  Not moved
+//  by: the gate's arms without gotos, with `continue`, as a switch or
+//  two tests; region 4 or its step as inlines; an `if` around the gate
+//  or around region 4's loop; the gate's return type.  Before that:
 //  NEAR, now the shipped 1916 bytes: (b) below is closed -- the second
 //  draw loop assigns the list head to pElem and walks a copy of it,
 //  which is the shipped store to -0x20 and `mov %eax,%ebx`.  (a) and
@@ -759,6 +770,72 @@ L_MakeRec:
 //  local or in an inline helper, the draw-or-defer step as an inline
 //  helper taking &pDeferElems (563).
 // ======================================================================= //
+// ======================================================================= //
+//  THE ELEMENT WALK of regions 2 and 4, as ONE inline: draw each element
+//  of the bucket through 0x1006d910, or copy it onto the deferral chain
+//  when its surface asks for the lit pass; bFree recycles each element as
+//  it goes (region 4), and the answer is the OR of what the draws said
+//  (region 2 keeps it, region 4 discards it -- which is why region 4 has
+//  no `or`).  ppDefer is this helper's parameter, and the comparison with
+//  `(Elem**)-1` is its own.
+//
+//  Why an inline and not the two loops written out: with the loop in the
+//  function itself icl knows the accumulator is 0 when the list is empty
+//  and threads the loop guard past the `if (nAcc)` that follows
+//  (`je 0x10072a7b`); the shipped guard goes to that test (`je
+//  0x10072a60`), as it does when the accumulator is the inline's result.
+// ======================================================================= //
+static inline uint32 DrawElems729c0(Bucket729c0* pBucket, Elem729c0** ppDefer, LTBOOL bFree)
+{
+	Elem729c0* pElem;
+	Elem729c0* pNextElem;
+	Elem729c0* pNew;
+	uint32     nAcc;
+
+	nAcc  = 0;                                          // 0x10072a20
+	pElem = pBucket->m_pElements;                       // 0x10072a1d / 0x10072a8a
+	while (pElem)
+	{
+		pNextElem = pElem->m_pNext;
+
+		if (!(pElem->m_pOwner->m_p28->m_nFlags38 & 0x8000)
+		    || ppDefer == (Elem729c0**)-1)
+		{
+			g_n1008b874 = pElem->m_nClipFlags10;
+			nAcc |= sub_1006d910(pElem->m_pOwner);
+		}
+		else
+		{
+			// -- 0x10072f56 / 0x10072fc3, SUNK.  struct_bank.h's
+			//    sb_Allocate inlined; the accumulator is set INSIDE the
+			//    success arm (`or $0x1,%esi` at 0x10072f73).
+			pNew = (Elem729c0*)sb_Allocate729c0(&g_Pool1008d4e4);
+
+			if (pNew)
+			{
+				pNew->m_pOwner       = pElem->m_pOwner;
+				pNew->m_nClipFlags10 = pElem->m_nClipFlags10;
+				pNew->m_pNext        = *ppDefer;
+				*ppDefer             = pNew;
+
+				nAcc |= 1;
+			}
+		}
+
+		// 0x10072ac3 -- region 4 only: the original goes back on the
+		// free list whether it was drawn or copied.
+		if (bFree)
+		{
+			pElem->m_pOwner = (Obj729c0*)g_pFreeElems1008d4fc;
+			g_pFreeElems1008d4fc = pElem;
+		}
+
+		pElem = pNextElem;
+	}
+
+	return nAcc;
+}
+
 // ======================================================================= //
 //  0x100729c0
 //
@@ -898,55 +975,8 @@ void sub_100729c0()
 			//  at call positions 19 and 20 instead of 4 and 5; see
 			//  COIN-FLIP 1.
 			// ---------------------------------------------------------- //
-			nAcc = 0;                                   // 0x10072a20
+			nAcc = DrawElems729c0(pBucket, ppDefer, LTFALSE);
 
-			pElem = pBucket->m_pElements;               // 0x10072a1d
-			while (pElem)                               // 0x10072a22/0x10072a5e
-			{
-				pNextElem = pElem->m_pNext;             // 0x10072a28
-
-				if (!(pElem->m_pOwner->m_p28->m_nFlags38 & 0x8000)
-				    || ppDefer == (Elem729c0**)-1)      // 0x10072a31/0x10072a3b
-				{
-					g_n1008b874 = pElem->m_nClipFlags10;
-					                                    // 0x10072a44/0x10072a48
-					nAcc |= sub_1006d910(pElem->m_pOwner);
-					                                    // 0x10072a50/0x10072a55
-				}
-				else
-				{
-					// -- 0x10072f56, SUNK.  Take a fresh element off the
-					//    free list, copy the owner and the clip mask into
-					//    it and push it on the deferral chain.  The
-					//    accumulator is set to 1 (`or $0x1,%esi` at
-					//    0x10072f73) INSIDE the success arm, so a failed
-					//    allocation neither defers nor keeps the bucket.
-					//
-					//    The allocator is 0x1000a6a0's body INLINED, in
-					//    the same three-statement shape big124a4.cpp and
-					//    big24020.cpp record, INCLUDING the redundant
-					//    second null test at 0x10072f69 known as
-					//    the vanishing null test.  Unlike
-					//    big73140.cpp's copy, this one DOES test the
-					//    result before storing through it.
-					pNew = (Elem729c0*)sb_Allocate729c0(&g_Pool1008d4e4);
-
-					if (pNew)                           // 0x10072f69
-					{
-						pNew->m_pOwner       = pElem->m_pOwner;
-						                                // 0x10072f71/76
-						pNew->m_nClipFlags10 = pElem->m_nClipFlags10;
-						                                // 0x10072f78/7b
-						pNew->m_pNext        = pDeferElems;
-						                                // 0x10072f7e/81
-						pDeferElems          = pNew;    // 0x10072f84
-
-						nAcc |= 1;                      // 0x10072f73
-					}
-				}
-
-				pElem = pNextElem;                      // 0x10072a5a
-			}
 
 			// ---------------------------------------------------------- //
 			//  REGION 3 -- 0x10072a60..0x10072a89.  Something deferred, so
@@ -988,42 +1018,7 @@ void sub_100729c0()
 			//  the free-list push, NOT the loop tail.  A deferred element
 			//  is COPIED, so the original still has to be recycled.
 			// ---------------------------------------------------------- //
-			pElem = pBucket->m_pElements;               // 0x10072a8a
-			while (pElem)                               // 0x10072a8d/0x10072ad4
-			{
-				pNextElem = pElem->m_pNext;             // 0x10072a93
-
-				if (!(pElem->m_pOwner->m_p28->m_nFlags38 & 0x8000)
-				    || ppDefer == (Elem729c0**)-1)      // 0x10072a9c/0x10072aa6
-				{
-					g_n1008b874 = pElem->m_nClipFlags10;
-					                                    // 0x10072aaf/b3
-					sub_1006d910(pElem->m_pOwner);      // 0x10072abb
-				}
-				else
-				{
-					// -- 0x10072fc3, SUNK.  Region 2's block without the
-					//    accumulator.
-					pNew = (Elem729c0*)sb_Allocate729c0(&g_Pool1008d4e4);
-
-					if (pNew)                           // 0x10072fd6
-					{
-						pNew->m_pOwner       = pElem->m_pOwner;
-						                                // 0x10072fde/e0
-						pNew->m_nClipFlags10 = pElem->m_nClipFlags10;
-						                                // 0x10072fe2/e5
-						pNew->m_pNext        = pDeferElems;
-						                                // 0x10072fe8/eb
-						pDeferElems          = pNew;    // 0x10072fee
-					}
-				}
-
-				pElem->m_pOwner = (Obj729c0*)g_pFreeElems1008d4fc;
-				                                        // 0x10072ac3/ca
-				g_pFreeElems1008d4fc = pElem;           // 0x10072acc
-
-				pElem = pNextElem;                      // 0x10072ad2
-			}
+			DrawElems729c0(pBucket, ppDefer, LTTRUE);
 		}
 
 		// -------------------------------------------------------------- //
