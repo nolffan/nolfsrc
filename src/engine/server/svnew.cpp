@@ -25,6 +25,7 @@
 // tcpdriver.cpp, objbank.cpp all do it) and it costs nothing in bytes — a
 // member's offset is all the codegen sees.
 #include "servermgr.h"
+#include "objbank.h"
 
 
 // ======================================================================= //
@@ -178,8 +179,10 @@ uint32 CWorldPolyOwnerView::GetVertexCount()
 //  so all three are the same bank template objbank.cpp already instantiates.
 //  What is new is that each has a CONSTRUCTOR of its own, and the three
 //  constructors differ: the 0x18 bank grows sixty-four records at a time
-//  through sb_Init2 while the other two take sb_Init's default. That is why
-//  they are three classes here and not one template.
+//  through sb_Init2 while the other two take sb_Init's default. Both are
+//  objbank.h's template's constructors (with and without a grow size); the
+//  0x18 bank below is now that template, and the other two are still
+//  classes of their own here.
 //
 //  Placement, from where the four-function groups land in .text:
 //      0x1000d95d  between dsi.cpp's con_Printf and dhash.cpp's dhash_Create,
@@ -213,26 +216,16 @@ public:
 
 // ---- dhash.cpp: the hash-element bank (0x1004d638) ---------------------- //
 
-class CHashElemBank : public CGlobalBankBase
-{
-public:
-	// 0x1000d967 (30 bytes) — 0x18-byte elements, a cache of thirty-two and
-	// a grow of sixty-four. Four arguments, so sb_Init2 and one batched
-	// `add $0x10,%esp`.
-	__forceinline CHashElemBank() { sb_Init2(&m_Bank, 0x18, 0x20, 0x40); }
-	// 0x1000d991 (35 bytes) — the chunks go back and the two vptr stores
-	// bracket the call: this class's on the way in, the base's on the way
-	// out, with the two `pop ecx` of the cdecl cleanup split around the
-	// second one.
-	__forceinline ~CHashElemBank() { sb_FreeChunks(&m_Bank, 1); }
-
-	StructBank m_Bank;                       // +0x04
-	uint32     m_Unknown20;                  // +0x20
-};
-
-// 0x100583e8. Defined after the class, as fsstream.cpp's two are, because
-// VC6 can only expand a constructor it has already seen.
-static CHashElemBank g_HashElemBank;
+// 0x100583e8 — objbank.h's bank over servermgr.h's hash elements, so its
+// vtable (0x1004d638) is the template's: 0x1000d967 (30 bytes) is the constructor expanded, 0x18-byte
+// elements, a cache of thirty-two and a grow of sixty-four, four arguments
+// so sb_Init2 and one batched `add $0x10,%esp`; 0x1000d991 (35 bytes) the
+// destructor expanded, the chunks going back between the two vptr stores.
+// Slots 1..3 are the shared five-byte forward 0x1000de9b (`jmp 0x1000ed6f`,
+// see servermessage.cpp's CXferFileBank: the element's LTLink has a
+// constructor, so the typed allocation is not expanded into the slot), the
+// shared Free 0x10015ac1 and Init 0x1000dea0.
+static CObjectBank<CHashElement> g_HashElemBank(0x40);
 
 // ---- lthread.cpp: the thread-message bank (0x1004d8dc) ------------------ //
 

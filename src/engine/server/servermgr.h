@@ -2545,8 +2545,9 @@ public:
 void* dhash_Create(int nSlots, int n);                      // 0x1000d9b4
 
 // The bank word-keyed elements come out of: the same vptr-over-StructBank
-// shape as the others, but its Allocate hands the record back raw — a hash
-// element has no constructor (name ours).
+// shape as the others, and its Allocate is the shared forward 0x1000ed6f
+// (objbank.h: the element's LTLink has an empty constructor, nothing more)
+// (name ours).
 //
 // Recycled word-keyed elements go back onto the bank's own free list:
 // 0x10058404, which dhash.cpp's frees write, is g_HashElementBank + 0x1c,

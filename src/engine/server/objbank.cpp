@@ -24,6 +24,7 @@
 #include <new.h>
 #include <math.h>
 #include "servermgr.h"
+#include "objbank.h"
 #include "objtypes.h"
 #include "commonmodel.h"
 #include "de_error.h"
@@ -384,29 +385,6 @@ public:
 // The lock is lthread.h's LCriticalSection (servermgr.h already brings it
 // in): Enter, Leave and the destructor are the three calls named above.
 
-
-// The interface the banks are reached through. It carries nothing: the
-// concrete bank restores this vtable on the way out of its own destructor,
-// which is what says it is here at all, and every slot is pure.
-//
-// NOT a template, and the teardown at 0x1002ca7c is what proves it: that
-// function expands eleven bank destructors and restores this vftable after
-// each one from a REGISTER, in two bytes, which it can only do if all eleven
-// restores name one symbol. Templated here, ours were eleven and each cost a
-// six-byte immediate -- 322 bytes against 285. objtypes.cpp reaches the same
-// four slots through its own non-templated view, IObjectBank, and names the
-// second one Allocate returning CObjBase*, which is the concrete type that
-// side needs; void* is the generic one, because CNetBank, CMessageBank and
-// CFileBank restore this same vftable and hand out net packets, messages and
-// file records rather than objects.
-class CObjectBankBase
-{
-public:
-	virtual ~CObjectBankBase() {}
-	virtual void* Allocate() = 0;
-	virtual void  Free(void* pObj) = 0;
-	virtual void  Init() = 0;
-};
 
 // Each object type has a destructor of its own; the deleting form the bank
 // reaches through slot zero is what these emit, and it is identical for all
@@ -842,64 +820,6 @@ CObjPolyGrid::~CObjPolyGrid()
 CBankElem54::~CBankElem54() {}
 
 
-// The bank itself: a vptr, a struct bank, and nothing else it owns. The
-// free list Free pushes onto is the struct bank's own, at +0x18 of it.
-template<class T>
-class CObjectBank : public CObjectBankBase
-{
-public:
-	// 0x1002449b builds eleven of these, each one `vptr = <table> ;
-	// sb_Init2(&bank, <size>, 0x20, <grow>)`. The cache size is 0x20 every
-	// time and the record size is the type's own, so the only thing that
-	// varies between the eleven is the grow size -- which makes it the one
-	// constructor argument. (That sizeof(T) reproduces all eleven shipped
-	// immediates -- 0x1a8, 0x248, 0x270, 0x1c8, 0x1ac, 0x1d0, 0x25c,
-	// 0x11f8, 0x21c, 0x274, 0x1b4 -- is an independent check on the eleven
-	// object layouts this file already carries.)
-	CObjectBank(uint32 nGrowBy)
-	{
-		sb_Init2(&m_Bank, sizeof(T), 0x20, nGrowBy);
-	}
-
-	virtual ~CObjectBank()
-	{
-		sb_FreeChunks(&m_Bank, 1);
-	}
-
-	// The bank hands back raw memory, so the construction is explicit.
-	virtual void* Allocate()
-	{
-		T* pRet = (T*)sb_Allocate(&m_Bank);
-
-		if (pRet)
-			new(pRet) T;
-
-		return pRet;
-	}
-
-	// Destructed, not released: the flag tells the deleting destructor to
-	// leave the memory alone, and it goes back to the bank instead.
-	virtual void Free(void* pObj)
-	{
-		((T*)pObj)->~T();
-
-		sb_Free(&m_Bank, pObj);
-	}
-
-	// Starting over drops whatever the bank was holding first, so Init
-	// doubles as a reset.
-	virtual void Init()
-	{
-		sb_FreeChunks(&m_Bank, 1);
-		sb_Init(&m_Bank, sizeof(T), 0x20);
-	}
-
-public:
-	StructBank m_Bank;                       // +0x04
-	uint32     m_Unknown20;                  // +0x20
-};
-
-
 // The locking bank. Only Init and the destructor are written: its Allocate
 // and Free are not the shared ones (0x1001409c / 0x100140a1 and 0x100075b5 /
 // 0x100075ba), and the Free forwards to a *cdecl* function of one argument
@@ -931,24 +851,14 @@ public:
 };
 
 
-// The eleven instantiations. Where the shipped engine keeps them is not
-// visible from here; what matters is that each exists.
+// The eleven object banks need no instantiation of their own: CObjMgrView's
+// constructor below builds all eleven, and the vtables it stores bring every
+// slot with them. (Instantiated here as well, each also emitted a
+// non-deleting destructor the shipped image does not have.)
 //
-// Explicit instantiation also emits a non-deleting destructor per bank that
-// the shipped image does not have — there the body is only ever inlined into
-// the deleting form. Those eleven symbols are ours, not missing work; they
-// match no shipped address and score as nothing.
-template class CObjectBank<CObjNormal>;
-template class CObjectBank<CObjModel>;
-template class CObjectBank<CObjWorldModel>;
-template class CObjectBank<CObjSprite>;
-template class CObjectBank<CObjLight>;
-template class CObjectBank<CObjCamera>;
-template class CObjectBank<CObjParticleSystem>;
-template class CObjectBank<CObjPolyGrid>;
-template class CObjectBank<CObjLineSystem>;
-template class CObjectBank<CObjContainer>;
-template class CObjectBank<CObjCanvas>;
+// The banks of raw records are built nowhere in this file; what matters for
+// them is their slot bodies, each the one shipped body its record size
+// gives.
 template class CObjectBank<CBankElem54>;
 template class CObjectBank<CBankElem14>;
 template class CObjectBank<CBankElem0c>;

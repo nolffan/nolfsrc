@@ -8,6 +8,7 @@
 #include "commonmodel.h"
 #include "servermodel.h"
 #include "servermgr.h"
+#include "objbank.h"
 #include "de_error.h"
 #include "packet.h"
 
@@ -1447,53 +1448,26 @@ CUpdateContext::~CUpdateContext()
 
 class CXferFile;
 
-// 0x1000ed6f — the shared bank forward (see servermgr.h's CHashElementBank
-// and packet.cpp's CLinkNodeBank: /OPT:ICF folded all three into one body).
-class CXferFileBank : public CBankBase
-{
-public:
-	// The constructor ph_CreateHolder's `new` reaches through CClientFiles':
-	// vptr, then sb_Init(0x1c, 0x20) (S:0x1000e5aa..0x1000e5b9, expanded
-	// whole at 0x0042fbe0..0x0042fbef).
-	CXferFileBank() { sb_Init(&m_Bank, 0x1c, 0x20); }
-	// Slot 0 of its vtable (0x1004d648 -> 0x1000ed95, the scalar deleting
-	// form): the chunks given back, as svnew.cpp's CXferFileBankView has it.
-	// In the class body so the deleting destructor carries it expanded, as
-	// the shipped one does, and over servermgr.h's CBankBase, whose vtable
-	// (0x1004d260) that destructor restores last.
-	virtual ~CXferFileBank() { sb_FreeChunks(&m_Bank, 1); }
-
-	// 0x1000ed6f — `add $0x4,%ecx; push %ecx; call sb_Allocate; pop %ecx`,
-	// and in the class body because lithtech.exe has no out-of-line copy of
-	// it inside xfer_AddFile: 0x0042fd22 is `lea 0x1c(%edi),%ebx` — this+4,
-	// the bank itself — and 0x0042fd26-0x0042fd43 is servermgr.h's inline
-	// sb_Allocate expanded whole around it, free list at +0x18, grow count
-	// at +0x08, the cdecl `push/push/call sb_Grow/add $0x8,%esp` in the
-	// middle.
-	//
-	// The forward is three instructions, so the size rule would say leave it
-	// alone; what /Ob1 measures is the expansion, and after sb_Allocate goes
-	// into it that is the same thirty-nine bytes with a nested call that
-	// servermgr.h records /Os declining. server.dll proves it: its build of
-	// this unit still reaches the bank through `lea 0x18(%edi),%ecx;
-	// call 0x1000ed6f` at 0x1000e668, from source that must already have had
-	// this body inline for lithtech.exe to expand it. Nothing of ours
-	// defines the symbol today, so there is no standalone match to lose —
-	// and the /O1 COMDAT this now emits is itself 0x1000ed6f.
-	// An in-class body for BOTH images costs server.dll xfer_AddFile
-	// (0x1000e650), so the body is lithtech.exe only: /O2 expands it
-	// (0x0042fd22..0x0042fd43 is the forward and sb_Allocate whole) and the
-	// /O1 build keeps the call to 0x1000ed6f. With it, and the record's
-	// stores in lithtech's order, 0x0042fd10 is identical on /O2 too.
-#ifndef LT_SERVER_BUILD
-	CXferFile* Allocate() { return (CXferFile*)sb_Allocate(&m_Bank); }
-#else
-	CXferFile* Allocate();
-#endif
-
-	StructBank m_Bank;                       // +0x04
-	uint32     m_Unknown20;                  // +0x20
-};
+// The record bank: objbank.h's bank over the records below (vtable
+// 0x1004d648). Its constructor is the template's default one, which
+// ph_CreateHolder's `new` reaches through CClientFiles': vptr, then
+// sb_Init(0x1c, 0x20) (S:0x1000e5aa..0x1000e5b9, expanded whole at
+// 0x0042fbe0..0x0042fbef). Slot 0 is the scalar deleting destructor
+// 0x1000ed95, slot 1 the shared five-byte forward 0x1000de9b, slot 2 the
+// shared Free 0x10015ac1 and slot 3 Init 0x1000ed7a.
+//
+// 0x1000ed6f — `add $0x4,%ecx; push %ecx; call sb_Allocate; pop %ecx; ret`
+// — is the bank's typed AllocateT for this record, and the one body
+// /OPT:ICF kept for every bank of LTLink-headed records (the hash elements,
+// the list nodes, these). xfer_AddFile calls it (`lea 0x18(%edi),%ecx;
+// call 0x1000ed6f` at 0x1000e668), where a forward with no constructor
+// behind it would have been expanded at /O1: the record's LTLink member
+// has an (empty) constructor, so the placement new in AllocateT calls one,
+// and /O1 judges the body too big to expand before that call goes away.
+// lithtech.exe's /O2 does expand it, sb_Allocate and all
+// (0x0042fd22..0x0042fd43: `lea 0x1c(%edi),%ebx`, this+4, the free list at
+// +0x18 and the grow count at +0x08 around the cdecl sb_Grow call).
+typedef CObjectBank<CXferFile> CXferFileBank;
 
 // One file on a client's list. The three payload fields are exactly what
 // 0x1000e738 puts on the wire, in that order: the file's id as a WORD out of
@@ -1772,7 +1746,7 @@ int xfer_AddFile(CClientFiles* pState, char* pName, uint32 nUnknown,
 	if (!pState)
 		return 0;
 
-	CXferFile* pFile = pState->m_FileBank.Allocate();
+	CXferFile* pFile = pState->m_FileBank.AllocateT();
 
 	pFile->m_Link.m_pData = pFile;
 	pFile->m_Flags = nFlags;
@@ -1818,17 +1792,6 @@ int xfer_AddFile(CClientFiles* pState, char* pName, uint32 nUnknown,
 
 	return 1;
 }
-
-#ifdef LT_SERVER_BUILD
-// 0x1000ed6f — the out-of-line forward server.dll's /O1 build calls (see the
-// class). Defined after xfer_AddFile, and not `inline`, so /Ob1 cannot expand
-// it there; lithtech.exe keeps the in-class body. The other banks' identical
-// forwards were folded onto this one body by /OPT:ICF (link/aliases.rsp).
-CXferFile* CXferFileBank::Allocate()
-{
-	return (CXferFile*)sb_Allocate(&m_Bank);
-}
-#endif
 
 // 0x10036d21 — see the declaration above: empty in release, the image's one
 // shared bare `ret`. Defined after its caller so nothing expands it.

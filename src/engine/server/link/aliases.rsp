@@ -407,9 +407,9 @@
 /ALTERNATENAME:?_lm00@LMessageImpl@@UAEXXZ=?Release@LMessageImpl@@QAEKXZ
 # 0x1000ed6f -- packet.cpp's sm_CreateInterObjectLink (0x10013b63, identical) loads
 # the node bank 0x10058bc0 and calls 0x1000ed6f (0x10013b9b); servermessage.obj's
-# CXferFileBank::Allocate is that three-instruction forward (xfer_AddFile 0x1000e650
+# CXferFileBank::AllocateT is that three-instruction forward (xfer_AddFile 0x1000e650
 # calls it at 0x1000e668). /OPT:ICF folded the banks' identical forwards into one.
-/ALTERNATENAME:?Allocate@CLinkNodeBank@@QAEPAVLTLink@@XZ=?Allocate@CXferFileBank@@QAEPAVCXferFile@@XZ
+/ALTERNATENAME:?Allocate@CLinkNodeBank@@QAEPAVLTLink@@XZ=?AllocateT@?$CObjectBank@VCXferFile@@@@QAEPAVCXferFile@@XZ
 # 0x10039735 -- objtypes.h's CObjRoot destructor is worldtree.cpp's CWTObj_D one (same class,
 # vtable 0x1004ea04; CObjRoot's ctor 0x10039707 is already aliased to ??0CWTObj_D above)
 /ALTERNATENAME:??1CObjRoot@@UAE@XZ=??1CWTObj_D@@UAE@XZ
@@ -511,9 +511,9 @@
 # 0x1000ed6f -- the one shared bank forward, `add $0x4,%ecx; push %ecx;
 # call sb_Allocate (0x10001c86); pop %ecx; ret`. dhash_AddElement calls it
 # for the hash-element bank (`call 0x1000ed6f` at 0x1000dc74, /O1), and
-# /OPT:ICF left one body for all the banks with this forward; servermsg.cpp
-# defines it as CXferFileBank::Allocate (server build).
-/ALTERNATENAME:?Allocate@CHashElementBank@@QAEPAVCHashElement@@XZ=?Allocate@CXferFileBank@@QAEPAVCXferFile@@XZ
+# /OPT:ICF left one body for all the banks with this forward; servermessage.cpp
+# defines it as CXferFileBank::AllocateT (objbank.h's template).
+/ALTERNATENAME:?Allocate@CHashElementBank@@QAEPAVCHashElement@@XZ=?AllocateT@?$CObjectBank@VCXferFile@@@@QAEPAVCXferFile@@XZ
 # 0x1000e3f9 (dsi_ServerError) -- CServerMgr::UpdateObjects' class-tick dump pushes
 # "%s| %3d |  %3d  |           %6d | %6d | %6d" (0x10054dd8) and calls 0x1000e3f9 at
 # 0x10032afa, and "  (OBJECTS) Total: %d, Updated: %d,  (TICKS) %d" (0x10054d98) at
@@ -530,9 +530,9 @@
 # loads it into %ecx at 0x1002ac42 and calls 0x1000ed6f; smgr.cpp and smgrnew.cpp name the
 # object g_ObjQueueBank and the forward CObjQueueBank::Allocate. 0x1000ed6f (`add $4,%ecx;
 # push %ecx; call sb_Allocate; pop %ecx; ret`, /OPT:ICF-shared) is defined as
-# CXferFileBank::Allocate in servermessage.cpp
+# CXferFileBank::AllocateT in servermessage.cpp
 /ALTERNATENAME:?g_ObjQueueBank@@3VCObjQueueBank@@A=?g_LinkNodeBank@@3VCLinkNodeBank@@A
-/ALTERNATENAME:?Allocate@CObjQueueBank@@QAEPAVLTLink@@XZ=?Allocate@CXferFileBank@@QAEPAVCXferFile@@XZ
+/ALTERNATENAME:?Allocate@CObjQueueBank@@QAEPAVLTLink@@XZ=?AllocateT@?$CObjectBank@VCXferFile@@@@QAEPAVCXferFile@@XZ
 # 0x1004e2f0 -- CMessageBank's vftable (CServerMgr's ctor stores it at +0x9f0,
 # 0x1002c806; its destructor again at 0x1002c981). Slot 2 = 0x1002ccb5, svnew.cpp's
 # CMsgRecordBank::Free (placed there, identical); slot 3 = 0x1002ce31, objbank.cpp's
