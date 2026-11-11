@@ -55,6 +55,18 @@ SHIPPED_ENV = "NOLF_SOURCE"
 # not the shipped image has them so): reported as `driver`.
 DRIVER_OBJS = {"sdkforce.obj"}
 
+# RezMgr's objects, as build/build.mk copies them beside the engine's own
+# (for the per-object checks): the links read RezMgr.lib, and the .map names
+# its functions by library member (`RezMgr:rezmgr2.obj`), so the library is
+# what lithtech.exe and server.dll score and these copies are left out. Read
+# as bare objects they could never be found in the map: a short function of
+# theirs (the hash tables' five-byte destructor, server.dll 0x1003a9f0,
+# lithtech.exe 0x0048e1a0) was placed by its shape alone and never checked by
+# what it calls. (Not third-party code; `third_party` is the key that leaves
+# an input of the link's directory out.)
+REZMGR_COPIES = ["rezmgr.obj", "rezmgr2.obj", "rezfile.obj", "rezemu.obj",
+                 "rezdir.obj", "rezhash.obj"]
+
 LITHSHARED = "src/lithshared/out/"
 
 TARGETS = [
@@ -67,8 +79,9 @@ TARGETS = [
          # the same prebuilt Lith.lib as server.dll (its island below, plus
          # baselist at 0x0048de30) and StdLith.lib, confined to its block
          # by lib_range
-         objs=["src/engine/lithtech/Release/*.obj", LITHSHARED + "Lith.lib",
-               LITHSHARED + "StdLith.lib"],
+         objs=["src/engine/lithtech/Release/*.obj", LITHSHARED + "RezMgr.lib",
+               LITHSHARED + "Lith.lib", LITHSHARED + "StdLith.lib"],
+         third_party=REZMGR_COPIES,
          cites=True,
          # Placed by a rigorous oracle rather than by eye: the static CRT is
          # the same library in every image built with this toolchain, so it
@@ -133,8 +146,9 @@ TARGETS = [
          # 0x1003e0ef, below); like RegMgr.lib in NOLF.exe, its functions
          # there are ours, from our reconstructed library. Lith.lib
          # (basehash/baselist/virtlist) is the island above the CRT.
-         objs=["src/engine/server/Release/*.obj", LITHSHARED + "StdLith.lib",
-               LITHSHARED + "Lith.lib"],
+         objs=["src/engine/server/Release/*.obj", LITHSHARED + "RezMgr.lib",
+               LITHSHARED + "StdLith.lib", LITHSHARED + "Lith.lib"],
+         third_party=REZMGR_COPIES,
          cites=True,
          # The static CRT (libcmt.lib) begins at _ftol, 0x1003e0f0.
          # Evidence: every libcmt.lib member was searched for in .text
