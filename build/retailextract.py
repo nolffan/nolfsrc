@@ -33,15 +33,15 @@ the build takes out of the retail binaries, is this file's).
                                                             directory, with its
                                                             origin
 
-<retaildir> is the Game of the Year Edition (Europe) as the rez/ submodule
-installs it from the two disc images (rez/install-games.sh nolf-eu-goty:
-rez/games/nolf-eu-goty/, see build/retail.sh). It is only read: nothing in it
+<retaildir> is the Game of the Year Edition (Europe) as the ext/rez/ submodule
+installs it from the two disc images (ext/rez/install-games.sh nolf-eu-goty:
+ext/rez/games/nolf-eu-goty/, see build/retail.sh). It is only read: nothing in it
 is run, and the build never writes to it.
 
 `resources` is build/all.sh's first step. It copies every file of the play
 disc's Game/ directory that is not a Windows executable image (PE files are
 recognised by their content, the "MZ" header, not by their name), the movie
-files, and the four .rez archives the retail startup.txt stacks. (rez/
+files, and the four .rez archives the retail startup.txt stacks. (ext/rez/
 installs Game/ into the directory's top level, beside the .rez archives and
 EReg/, which the build does not use.) The archives
 are game data, but three of them also carry the retail game DLLs
@@ -61,7 +61,7 @@ in the game directory and installs OpenMiles' mss32.dll and our FFmpeg-based
 binkw32.dll, which build/ext.sh built from ext/ into <extdir>. OpenMiles
 decodes and mixes everything itself, so no Miles provider file goes in.
 It also installs Microsoft's DirectMusic DLLs from
-toolchains/directmusic-5.3.1.904/ as ms_<name>.dll, with the
+ext/toolchains/directmusic-5.3.1.904/ as ms_<name>.dll, with the
 lithtech.exe.manifest that makes the game use them
 (src/modern/directmusic/README.md); without that directory it installs
 neither and says so.
@@ -98,7 +98,7 @@ written anywhere or run; the text stays out of this repository.
 `reference` copies the retail lithtech.exe, server.dll, d3d.ren, NOLF.exe,
 NolfServ.exe and ltmsg.dll, the Game of the Year CShell.dll, Object.lto and CRes.dll out of
 NOLFGOTY.REZ, and sres.dll out of NOLF2.REZ, to a reference directory (build/reference.sh: out/reference/). They
-are what tools/progress.py, `build/engine.sh ... verify` and the
+are what ext/tools/progress.py, `build/engine.sh ... verify` and the
 reconstruction tools compare our objects against; the build never reads
 them, and nothing in that directory is ever run or goes into a game
 directory.
@@ -112,8 +112,8 @@ import os
 import sys
 from pathlib import Path
 
-# the shared helpers (rezextract.py and the rest) are tools/'s
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
+# the shared helpers (rezextract.py and the rest) are ext/tools/'s
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ext", "tools"))
 import shutil
 
 from rezextract import Rez  # noqa: E402
@@ -163,10 +163,10 @@ def is_third_party(name):
 
 
 class Retail:
-    """The installed retail game, read only. rez/ records where each of its
+    """The installed retail game, read only. ext/rez/ records where each of its
     files came from in its MANIFEST.txt (`<path>\t<image>.iso:<disc path>`);
     `game(p)` is whether a file is one of the play disc's Game/ directory,
-    which rez/ installs into the top level."""
+    which ext/rez/ installs into the top level."""
 
     def __init__(self, root):
         self.root = Path(root)
@@ -317,10 +317,10 @@ OPEN_RUNTIME = [
 
 
 # The modern build's DirectMusic (src/modern/directmusic/README.md):
-# Microsoft's DLLs from toolchains/directmusic-5.3.1.904/, installed as
+# Microsoft's DLLs from ext/toolchains/directmusic-5.3.1.904/, installed as
 # ms_<name>.dll, and the manifest that points lithtech.exe's COM at them.
 REPO = Path(__file__).resolve().parent.parent
-DIRECTMUSIC_SRC = REPO / "toolchains" / "directmusic-5.3.1.904"
+DIRECTMUSIC_SRC = REPO / "ext" / "toolchains" / "directmusic-5.3.1.904"
 DIRECTMUSIC_MANIFEST = REPO / "src" / "modern" / "directmusic" / "lithtech.exe.manifest"
 FONT_SRC = REPO / "src" / "modern" / "fonts"
 DIRECTMUSIC = ["dmband.dll", "dmcompos.dll", "dmime.dll", "dmloader.dll", "dmscript.dll",
@@ -329,7 +329,7 @@ DIRECTMUSIC = ["dmband.dll", "dmcompos.dll", "dmime.dll", "dmloader.dll", "dmscr
 
 def install_directmusic(gamedir, man):
     """Microsoft's DirectMusic into the game directory, or (without
-    toolchains/directmusic-5.3.1.904/) nothing at all, removing an earlier
+    ext/toolchains/directmusic-5.3.1.904/) nothing at all, removing an earlier
     build's."""
     import hashlib
     targets = ["ms_" + n for n in DIRECTMUSIC] + ["lithtech.exe.manifest"]
@@ -350,8 +350,8 @@ def install_directmusic(gamedir, man):
         if want.get(n) != got:
             sys.exit(f"{DIRECTMUSIC_SRC / n}: SHA-256 {got} is not the one SHA256SUMS pins")
         shutil.copyfile(DIRECTMUSIC_SRC / n, gamedir / ("ms_" + n))
-        man.add("ms_" + n, f"THIRD-PARTY Microsoft DirectMusic: toolchains/directmusic-5.3.1.904/{n}")
-        print(f"   ms_{n}  <-  toolchains/directmusic-5.3.1.904/{n}")
+        man.add("ms_" + n, f"THIRD-PARTY Microsoft DirectMusic: ext/toolchains/directmusic-5.3.1.904/{n}")
+        print(f"   ms_{n}  <-  ext/toolchains/directmusic-5.3.1.904/{n}")
     # Windows refuses to start lithtech.exe at all if its manifest is not
     # well-formed XML (Wine is more forgiving), so check it here.
     import xml.dom.minidom
@@ -530,7 +530,7 @@ def cmd_lithtechres(retaildir, resdir):
 
 # The GOTY string blocks: string IDs 30000-30095 are blocks 1876-1881 (a block
 # holds IDs 16*(n-1) .. 16*(n-1)+15). These are exactly what the retail DLL has
-# and ours lacks (tools/rsrcdiff.py); refuse a retail DLL where that is not so.
+# and ours lacks (ext/tools/rsrcdiff.py); refuse a retail DLL where that is not so.
 GOTY_STRING_BLOCKS = range(1876, 1882)
 RT_STRING = 6
 

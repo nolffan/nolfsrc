@@ -14,7 +14,7 @@
 # src/engine/<target>/Release/<target>-link.txt.
 #
 # Each target can also be checked against the retail binaries, function by
-# function (tools/exematch.py), which is the reconstruction loop of tools/guides/:
+# function (ext/tools/exematch.py), which is the reconstruction loop of ext/tools/guides/:
 #   build/engine.sh server verify          compile, then match every object
 #   build/engine.sh server-one smgr.cpp [symbol]
 #                                          recompile ONE file and match it
@@ -43,7 +43,7 @@ ref() {  # ref <file> -> its path under $REF, or a loud error
     echo "$REF/$1"
 }
 
-# match <image> <obj|lib>... [-- symbol-filter]: tools/exematch.py, its report
+# match <image> <obj|lib>... [-- symbol-filter]: ext/tools/exematch.py, its report
 # optionally narrowed to the lines naming one symbol (and the totals)
 match() {
     local img="$1"; shift
@@ -53,9 +53,9 @@ match() {
         args+=("$1"); shift
     done
     if [ -n "$filter" ]; then
-        python3 tools/exematch.py "$img" "${args[@]}" | grep -Ei "${filter}|^matched"
+        python3 ext/tools/exematch.py "$img" "${args[@]}" | grep -Ei "${filter}|^matched"
     else
-        python3 tools/exematch.py "$img" "${args[@]}"
+        python3 ext/tools/exematch.py "$img" "${args[@]}"
     fi
 }
 
@@ -73,11 +73,11 @@ one() {
 
 # test_load <dir> <dll-or-ren> <loader.c> [extra files]: load the linked
 # binary under Wine with its preferred base occupied (so the loader relocates
-# it) through one of the tools/ test programs
+# it) through one of the ext/tools/ test programs
 test_load() {
     local d="out/$1" bin="$2" src="$3"; shift 3
     mkdir -p "$d"
-    cp "tools/$src" "$bin" "$@" "$d/" || exit 1
+    cp "ext/tools/$src" "$bin" "$@" "$d/" || exit 1
     ( cd "$d" && run_cl /nologo /O1 "$src" \
           /link /out:"${src%.c}.exe" kernel32.lib user32.lib ole32.lib >/dev/null &&
       "$WINE" "${src%.c}.exe" "$(basename "$bin")" rebase 2>/dev/null ) || exit 1
@@ -89,18 +89,18 @@ case "${1:-}" in
                   # resources and the C runtime (with its own default
                   # DllMain): the resources are compared payload for
                   # payload, the code as a whole (both relocation-normalised)
-                  python3 tools/bindiff.py src/engine/ltmsg/Release/ltmsg.dll "$(ref ltmsg.dll)"
-                  python3 tools/rsrcdiff.py src/engine/ltmsg/Release/ltmsg.dll "$(ref ltmsg.dll)"
+                  python3 ext/tools/bindiff.py src/engine/ltmsg/Release/ltmsg.dll "$(ref ltmsg.dll)"
+                  python3 ext/tools/rsrcdiff.py src/engine/ltmsg/Release/ltmsg.dll "$(ref ltmsg.dll)"
               fi ;;
     sres)     nolfsrc_make sres ;;
     launcher) case "${2:-}" in
                   link)   nolfsrc_make launcher ;;
                   # every launcher function, matched in the retail NOLF.exe;
-                  # the whole-exe link is refreshed first: tools/progress.py
+                  # the whole-exe link is refreshed first: ext/tools/progress.py
                   # uses it as a second, unmasked check
                   verify) nolfsrc_make launcher
                           D=src/engine/launcher/Release
-                          python3 tools/exematch.py "$(ref NOLF.exe)" \
+                          python3 ext/tools/exematch.py "$(ref NOLF.exe)" \
                               $D/launcher.obj $D/gamedlg.obj $D/gamehelp.obj $D/dlgconfig.obj $D/dlgcustom.obj \
                               $D/dlghelp.obj $D/dlgsound.obj $D/dlgdisplay.obj $D/preview.obj $D/cdcheck.obj \
                               $D/dib.obj $D/dibmgr.obj $D/dibpal.obj $D/RezFind.obj $D/Utils.obj \

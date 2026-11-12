@@ -9,8 +9,8 @@ passes and expects back.
 **How claims are cited:**
 * `file:line` means a file in the reconstruction (`src/engine/lithtech/` = **E/**, `src/engine/d3d/` = **D/**).
 * `0x004xxxxx` is a lithtech.exe address. `0x100xxxxx` is a retail d3d.ren address.
-* `Mac [0x1xxxxx]` is a code offset in the Mac engine (`rez/games/nolf-mac-usa/NOLF/LithTech`).
-  Read it with `tools/pef.py dis - <name>`.
+* `Mac [0x1xxxxx]` is a code offset in the Mac engine (`ext/rez/games/nolf-mac-usa/NOLF/LithTech`).
+  Read it with `ext/tools/pef.py dis - <name>`.
 * "(inferred)" marks anything not read directly off code.
 
 All engine↔renderer calls are **cdecl**: the caller cleans the stack, every site passes 32-bit
@@ -990,7 +990,7 @@ The DLL may use its own CRT for its own memory. Use +0x34/+0x38 only for memory 
 
 * **d3d.ren is linked with** `/export:RenderDLLSetup /export:GetSupportedModes /export:FreeModeList`.
   There is no .def file (build/build.mk:563-568).
-* **Retail d3d.ren** (rez/games/nolf-eu-goty/d3d.ren = out/reference/d3d.ren):
+* **Retail d3d.ren** (ext/rez/games/nolf-eu-goty/d3d.ren = out/reference/d3d.ren):
   * exports exactly those three undecorated names (ordinals 1 FreeModeList, 2 GetSupportedModes, 3 RenderDLLSetup);
   * one resource: an RT_STRING table, language 0x409, **string 5 = "LithTech Direct3D Renderer"**.
 

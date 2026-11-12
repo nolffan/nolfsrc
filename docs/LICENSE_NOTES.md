@@ -13,16 +13,16 @@ This file says which is which; it is not legal advice and grants nothing.
 | `progress/reference/LT2/lithshared/libs/` | **Monolith Productions**: the prebuilt lithshared libraries of the same release (Release and Debug builds), unmodified; never built into anything, only compared against by `make progress` (`progress/reference/README.md`) | as `src/game/` |
 | `src/lithshared/` | the LithTech shared libraries. Much of it (`stdlith/`, `CryptMgr/`, `RegMgr/`, `MFCStub/`, the `ButeMgr/` parser, `lith/`) is adapted from Monolith's later public source release for *No One Lives Forever 2*; the rest was written or reconstructed for this project, including `ztools/`, `rezmgr/` and `gamespy/` (a stand-in for the GameSpy middleware). `zlib/` is zlib | Monolith's code under the terms of the release it came from; zlib under the zlib licence; the rest as `src/engine/` |
 | `src/engine/` | the LithTech engine (`lithtech.exe`, `server.dll`, `d3d.ren`), the `NOLF.exe` launcher, the `NolfServ.exe` dedicated server, `ltmsg.dll` and `sres.dll`: written for this project, reconstructed from the retail binaries so that it compiles back to them. It implements Monolith's engine and interfaces, and `launcher.rc` / `nolfserv.rc` / `ltmsg.rc` reproduce the retail resource scripts (dialogs and strings). `NolfServ.exe` also compiles the game's `src/game/Shared/NetDefs.cpp` (Monolith's) and links the static MFC of the toolchain | written for this project; no licence is declared |
-| `src/nolfsrc/`, `src/modern/`, `build/`, `tools/`, `docker/`, `progress/`, `Makefile`, the documentation | written for this project | no licence is declared |
+| `src/nolfsrc/`, `src/modern/`, `build/`, `ext/tools/`, `docker/`, `progress/`, `Makefile`, the documentation | written for this project | no licence is declared |
 | `ext/openmiles` (submodule) | **OpenMiles**, a clean-room reimplementation of the Miles Sound System, upstream at github.com/maci0/openmiles; our fork, github.com/nolffan/openmiles (branch `miles6-fixes`: upstream's release with our fixes, GPL-3.0-only as the code they change); vendors miniaudio and TinySoundFont | GPL-3.0-only (its vendored libraries: MIT, MIT-0, zlib); see its `LICENSE` and `deps/README.md` |
 | `ext/ffmpeg` (submodule) | **FFmpeg**, upstream at github.com/FFmpeg/FFmpeg | LGPL-2.1-or-later as the modern build configures it (no GPL or non-free parts enabled); see its `LICENSE.md` |
 | `ext/nolf1-modernizer` (submodule) | **NOLF Modernizer** by HeyThereCoffeee (haekb), upstream at github.com/haekb/nolf1-modernizer. The modern build uses two of its files, the seasonal main menus' Cate models (`ASSETS/CHARS/MODELS/INTHERO_CASUAL.abc`, `INTHERO_WINTER.abc`, linked from `src/modern/data/files/`), which the modern build's archives carry; none of its code | no licence of its own: its readme says it remains under Monolith's end-user licence for the v1.003 source release, as `src/game/` |
 
 ## Not in this repository, taken from the retail game at build time
 
-The build takes these from the Game of the Year Edition as the `rez/`
+The build takes these from the Game of the Year Edition as the `ext/rez/`
 submodule installs it, from the redump images of its two discs that it
-fetches from archive.org (`rez/README.md`).
+fetches from archive.org (`ext/rez/README.md`).
 
 | What | Origin | Where it goes |
 |---|---|---|
@@ -45,9 +45,9 @@ the game directory.
 
 ## Not in this repository, provided by you
 
-The compilers in `toolchains/` (Microsoft Visual C++ 6.0, Intel C/C++ 4.0;
-see `toolchains/README.md`), under their own licences.
-`toolchains/directmusic-5.3.1.904/` also holds Microsoft's DirectMusic DLLs
+The compilers in `ext/toolchains/` (Microsoft Visual C++ 6.0, Intel C/C++ 4.0;
+see `ext/toolchains/README.md`), under their own licences.
+`ext/toolchains/directmusic-5.3.1.904/` also holds Microsoft's DirectMusic DLLs
 from the DirectX 9.0c redistributable, which the modern build installs in
 its game directory (below).
 
@@ -69,7 +69,7 @@ build. The LGPL asks that whoever receives `binkw32.dll` can rebuild it
 against a modified FFmpeg, which `build/ext.sh` and the source here allow.
 
 It also has Microsoft's DirectMusic DLLs (`ms_dmime.dll` and the rest, from
-`toolchains/directmusic-5.3.1.904/`), under the licence of Microsoft's DirectX
+`ext/toolchains/directmusic-5.3.1.904/`), under the licence of Microsoft's DirectX
 End-User Runtime they come from. Check its terms before passing on a game
 directory that carries them. `lithtech.exe.manifest`, which points the game
 at them, was written for this project.

@@ -7,9 +7,9 @@
 # release build is also checked for byte regressions (make progress).
 #
 # The build needs the two redump images of the Game of the Year discs
-# (rez/fetch-isos.sh nolf-eu-goty: 0.8 GB of zips from archive.org). The
+# (ext/rez/fetch-isos.sh nolf-eu-goty: 0.8 GB of zips from archive.org). The
 # job "prepare" fetches them once, into a cache keyed on
-# rez/isos/SHA256SUMS, and builds the docker image into a layer cache; then
+# ext/rez/isos/SHA256SUMS, and builds the docker image into a layer cache; then
 # the four builds run at the same time, each in a job of its own that
 # restores both and installs the retail game from the zips. None of the
 # builds needs another's output.
@@ -64,38 +64,38 @@ jobs:
 
       # .gitmodules names the submodules by SSH; all of them are public, so
       # fetch them over HTTPS instead, at the commit this one records. Only
-      # rez/ (the disc list and fetch-isos.sh) is needed here.
+      # ext/rez/ (the disc list and fetch-isos.sh) is needed here.
       - name: Submodules
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule sync
-          git submodule update --init --depth 1 rez
+          git submodule update --init --depth 1 ext/rez
 
       # hashFiles() sees only the checkout, so the key is made once the
       # submodule is there, and handed to the builds.
       - name: Cache key
         id: key
-        run: echo "key=redump-nolf-eu-goty-$(sha256sum rez/isos/SHA256SUMS | cut -c1-64)" >> "$GITHUB_OUTPUT"
+        run: echo "key=redump-nolf-eu-goty-$(sha256sum ext/rez/isos/SHA256SUMS | cut -c1-64)" >> "$GITHUB_OUTPUT"
 
       # Only whether the cache has them: nothing is downloaded on a hit.
       - name: Look for the disc images
         id: discs
         uses: actions/cache/restore@v4
         with:
-          path: rez/isos/*.zip
+          path: ext/rez/isos/*.zip
           key: ${{ steps.key.outputs.key }}
           lookup-only: true
 
       # Checked against SHA256SUMS before it is saved.
       - name: Fetch the disc images
         if: steps.discs.outputs.cache-hit != 'true'
-        run: rez/fetch-isos.sh nolf-eu-goty
+        run: ext/rez/fetch-isos.sh nolf-eu-goty
 
       - name: Save the disc images
         if: steps.discs.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: rez/isos/*.zip
+          path: ext/rez/isos/*.zip
           key: ${{ steps.key.outputs.key }}
 
       # Written to the layer cache here, once; the builds only read it.
@@ -140,7 +140,7 @@ jobs:
       - name: Restore the disc images
         uses: actions/cache/restore@v4
         with:
-          path: rez/isos/*.zip
+          path: ext/rez/isos/*.zip
           key: ${{ needs.prepare.outputs.discs-key }}
           fail-on-cache-miss: true
 

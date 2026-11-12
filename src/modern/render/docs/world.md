@@ -10,7 +10,7 @@ Sources:
   and `clientmgr2.cpp` (SceneDesc, CreateRenderWorld).
 - **Retail PC renderer.** d3d.ren, reconstructed in `src/engine/d3d/*.cpp`.
 - **Mac renderer.** The Mac build of the same engine version
-  (`rez/games/nolf-mac-usa/NOLF/LithTech`, PowerPC, names preserved, OpenGL renderer linked in).
+  (`ext/rez/games/nolf-mac-usa/NOLF/LithTech`, PowerPC, names preserved, OpenGL renderer linked in).
 
 Address conventions:
 - `PC 0x004xxxxx` is lithtech.exe.
@@ -38,7 +38,7 @@ Organisation: a summary and implementation recipe (section 0), then the five det
 
 ## 0.1 Tooling
 
-The Mac evidence was read with `tools/pef.py`. Two of its early gaps, both
+The Mac evidence was read with `ext/tools/pef.py`. Two of its early gaps, both
 fixed since, mattered while this was written: `dis` stopped at the first
 instruction capstone cannot decode (`fcmpo`), and `funcs` skipped names with
 template arguments (`r_FullSetupPoly3<...>`, `r_CalcFog_*`, `r_InitFrustrum2`).
@@ -127,15 +127,15 @@ drawing. Other parts cover the BSP data (B), lightmaps (C), visibility / world
 models / sky (D) and the per-poly passes (E).
 
 Evidence notation: `PC 0x…` = address in lithtech.exe or d3d.ren; `Mac 0x…` =
-code offset in rez/games/nolf-mac-usa/NOLF/LithTech (PowerPC, OpenGL renderer
-linked in), disassembled with tools/pef.py. "inferred" marks anything not read
+code offset in ext/rez/games/nolf-mac-usa/NOLF/LithTech (PowerPC, OpenGL renderer
+linked in), disassembled with ext/tools/pef.py. "inferred" marks anything not read
 directly off an instruction.
 
 ---------------------------------------------------------------------------
 
 ## A.0 Tooling notes (read first if you re-check anything here)
 
-* `tools/pef.py` decodes every instruction and names template functions (see 0.1).
+* `ext/tools/pef.py` decodes every instruction and names template functions (see 0.1).
 
 ---------------------------------------------------------------------------
 
@@ -725,8 +725,8 @@ drawing are Part D; pass logic is Part E.
 
 ## Evidence conventions
 
-* `Mac 0xNNNNNN` = code offset in rez/games/nolf-mac-usa/NOLF/LithTech (PPC,
-  CodeWarrior, names preserved). Listings come from `tools/pef.py dis`.
+* `Mac 0xNNNNNN` = code offset in ext/rez/games/nolf-mac-usa/NOLF/LithTech (PPC,
+  CodeWarrior, names preserved). Listings come from `ext/tools/pef.py dis`.
 * `PC 0x1000xxxx` = d3d.ren, `PC 0x004xxxxx` = lithtech.exe, with the repo file
   that reconstructs it.
 * The renderer never loads the world file; the engine does (w_LoadWorldBsp,
@@ -1272,7 +1272,7 @@ LMGridSize, extents min/max, WorldTree layout, nWorlds, then per world a dword
 # C. Lightmaps, end to end
 
 Sources:
-- Mac `LithTech` PEF (PowerPC, names intact), disassembled with `tools/pef.py`. Every Mac address below is a code offset.
+- Mac `LithTech` PEF (PowerPC, names intact), disassembled with `ext/tools/pef.py`. Every Mac address below is a code offset.
 - PC d3d.ren reconstruction:
   - `src/engine/d3d/w13_1006c6e0_osoiqip.cpp` (LM pages)
   - `src/engine/d3d/w17_1006ad20_qip.cpp` (compositing, dynamic lights)
@@ -1783,7 +1783,7 @@ Lightmap texture filtering is `GL_LINEAR` min and mag, with no mipmaps (0x19c77c
 # Part D — Visibility, world models, sky
 
 Sources: Mac `LithTech` PEF (named, PowerPC, OpenGL renderer linked in), disassembled with a
-skipdata wrapper (stock `tools/pef.py dis` stops at the first `fcmpo`/`fcmpu`, so long
+skipdata wrapper (stock `ext/tools/pef.py dis` stops at the first `fcmpo`/`fcmpu`, so long
 functions come out truncated). PC d3d.ren equivalents come from `src/engine/d3d/*.cpp`. "Mac
 0xNNNNNN" is a code-section offset in the Mac binary. "PC 0x10NNNNNN" is a d3d.ren address.
 Where a claim is inferred rather than read off the code, it says so.
@@ -2453,7 +2453,7 @@ animates the offsets.
 
 # Part E: how the renderer draws world polygons
 
-Sources. The main source is the Mac OpenGL renderer (`rez/games/nolf-mac-usa/NOLF/LithTech`). Addresses are offsets into the Mac code section, as `tools/pef.py` prints them. **The stock `pef.py dis` stops at the first `fcmpo`/`fcmpu`** (capstone cannot decode them), so every long function here was re-disassembled with capstone `skipdata=True`. The skipped compares show up as `.byte fc 0x 0x 40`. The PC `d3d.ren` side is used where it confirms or differs.
+Sources. The main source is the Mac OpenGL renderer (`ext/rez/games/nolf-mac-usa/NOLF/LithTech`). Addresses are offsets into the Mac code section, as `ext/tools/pef.py` prints them. **The stock `pef.py dis` stops at the first `fcmpo`/`fcmpu`** (capstone cannot decode them), so every long function here was re-disassembled with capstone `skipdata=True`. The skipped compares show up as `.byte fc 0x 0x 40`. The PC `d3d.ren` side is used where it confirms or differs.
 
 Console-variable names come from the `ConVar(name, default, int*, float*)` constructors in `__sinit_common_stuff_cpp` (0x14e6d0), `__sinit_opengl_draw_cpp` (0x159760) and `__sinit_lm_dualpass_cpp` (0x19ad50), mapped to the data addresses that the code reads. GL enum values were decoded from the immediates.
 

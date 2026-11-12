@@ -13,8 +13,8 @@ M-P4-12).
 
 * **The DLLs.** `build/all.sh` step 2 (`build/retailextract.py openruntime`)
   copies Microsoft's nine DirectMusic DLLs from
-  `toolchains/directmusic-5.3.1.904/` (where they come from:
-  `toolchains/README.md`; checked against `SHA256SUMS` there) into the game
+  `ext/toolchains/directmusic-5.3.1.904/` (where they come from:
+  `ext/toolchains/README.md`; checked against `SHA256SUMS` there) into the game
   directory as `ms_<name>.dll`:
   `ms_dmband.dll`, `ms_dmcompos.dll`, `ms_dmime.dll`, `ms_dmloader.dll`,
   `ms_dmscript.dll`, `ms_dmstyle.dll`, `ms_dmsynth.dll`, `ms_dmusic.dll`,
@@ -42,7 +42,7 @@ default GM collection, so the retail game never used it, and the music's
 instruments are its own DLS banks (`Music/*/*.dls`). Checked under Wine:
 with `gm.dls` in the prefix nothing opens it.
 
-When `toolchains/directmusic-5.3.1.904/` is missing, the build says so and
+When `ext/toolchains/directmusic-5.3.1.904/` is missing, the build says so and
 installs neither the DLLs nor the manifest (a manifest naming missing files
 would break DirectMusic on Windows); the music then needs winetricks as
 before (`README.md`, "Play").
@@ -54,7 +54,7 @@ DLLs, register them in a scratch Wine prefix and read the registry back:
 
 ```sh
 WINEPREFIX=/tmp/pfx wineboot -i
-cp toolchains/directmusic-5.3.1.904/*.dll /tmp/pfx/drive_c/windows/system32/
+cp ext/toolchains/directmusic-5.3.1.904/*.dll /tmp/pfx/drive_c/windows/system32/
 for f in dmband dmcompos dmime dmloader dmscript dmstyle dmsynth dmusic dswave; do
     WINEPREFIX=/tmp/pfx WINEDLLOVERRIDES="$f=n" wine regsvr32 /s $f.dll
 done

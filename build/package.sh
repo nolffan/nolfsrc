@@ -18,7 +18,7 @@
 #                               every file of the archive and every file the
 #                               scripts write; they refuse a directory that is
 #                               not the archive unpacked. It needs the images
-#                               in rez/isos/; without them it is skipped.
+#                               in ext/rez/isos/; without them it is skipped.
 #
 # NOLF_ARCHIVES (default "private public") says which to write; with
 # "public" alone (the CI build, .github/workflows/public-archives.yml) the

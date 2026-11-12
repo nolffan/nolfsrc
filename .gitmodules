@@ -1,8 +1,8 @@
 [submodule "toolchains"]
-	path = toolchains
+	path = ext/toolchains
 	url = git@github.com:nolffan/toolchains.git
 [submodule "rez"]
-	path = rez
+	path = ext/rez
 	url = git@github.com:nolffan/rez.git
 [submodule "ext/openmiles"]
 	path = ext/openmiles
@@ -13,7 +13,7 @@
 	url = git@github.com:FFmpeg/FFmpeg.git
 	shallow = true
 [submodule "tools"]
-	path = tools
+	path = ext/tools
 	url = git@github.com:nolffan/tools.git
 [submodule "ext/nolf1-modernizer"]
 	path = ext/nolf1-modernizer

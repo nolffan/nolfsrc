@@ -8,37 +8,37 @@ parts of it by hand.
 * **Linux with Docker.** The compilers are Win32 programs and run under Wine
   in a container; the host needs nothing else (no Wine, no Python).
 * **The submodules**: `git submodule update --init`.
-  * `toolchains/`, the compilers (about 560 MB). See `toolchains/README.md`.
-  * `rez/`, the retail game the build takes its data from. It fetches the
+  * `ext/toolchains/`, the compilers (about 560 MB). See `ext/toolchains/README.md`.
+  * `ext/rez/`, the retail game the build takes its data from. It fetches the
     redump images of the two discs of *No One Lives Forever: Game of the Year
     Edition* (Europe) from archive.org, checks them, and installs the game
-    from them as its own setup would, into `rez/games/nolf-eu-goty/`, checked
-    file by file against `rez/games.sha256`. `make` does this the first time
-    (`make retail`); see `rez/README.md`.
-  * `tools/`, the build's helpers (the scorer, the object makers, the
+    from them as its own setup would, into `ext/rez/games/nolf-eu-goty/`, checked
+    file by file against `ext/rez/games.sha256`. `make` does this the first time
+    (`make retail`); see `ext/rez/README.md`.
+  * `ext/tools/`, the build's helpers (the scorer, the object makers, the
     playtest, ...) and the reconstruction tools and guides
     ([nolffan/tools](https://github.com/nolffan/tools)). Every build needs it.
   * `ext/openmiles` and `ext/ffmpeg`, the upstream projects the modern build
     uses in place of Miles and Bink ("The modern build's middleware" below).
     The release build does not need them.
 * About 9 GB of disk: 2.6 GB for the docker image, 2.8 GB for `out/` (the
-  game directory, its two .tar.gz, and the 0.6 GB Wine prefix), about 3 GB in `rez/`
+  game directory, its two .tar.gz, and the 0.6 GB Wine prefix), about 3 GB in `ext/rez/`
   (the disc images, zipped and unzipped, and the installed game), a few
   hundred MB of objects.
 
 ## What `make` does
 
-1. Checks the compilers are in `toolchains/` and that `rez/` is there.
+1. Checks the compilers are in `ext/toolchains/` and that `ext/rez/` is there.
 2. Builds the docker image `nolfsrc-build` from `docker/Dockerfile` if
    needed (a few minutes, once).
 3. `make retail`, in a container: the first time, fetches the two disc
-   images and installs the retail game from them (`rez/fetch-isos.sh
-   nolf-eu-goty`, `rez/install-games.sh nolf-eu-goty`); every time, checks
-   the installed files against `rez/games.sha256` (the result is remembered
+   images and installs the retail game from them (`ext/rez/fetch-isos.sh
+   nolf-eu-goty`, `ext/rez/install-games.sh nolf-eu-goty`); every time, checks
+   the installed files against `ext/rez/games.sha256` (the result is remembered
    in `out/.retail-verified` while the files are unchanged). See
    `build/retail.sh`.
 4. Runs `build/all.sh` in a throwaway container (`--rm --init`, named
-   `nolfsrc-build`), as your user, with the checkout (and so `rez/`) mounted
+   `nolfsrc-build`), as your user, with the checkout (and so `ext/rez/`) mounted
    at `/repo`.
 
 `build/all.sh` then:
@@ -67,7 +67,7 @@ compiles objects of all of them at once, one job per CPU (`make JOBS=<n>`
 for another number), and a rebuild redoes only what changed. An object is
 rebuilt when its source, a header it includes, or its command line changes;
 a binary when one of its inputs does. VC6 cannot list the headers a file
-includes (`/showIncludes` came with VS2005), so `tools/mkdeps.py` finds them
+includes (`/showIncludes` came with VS2005), so `ext/tools/mkdeps.py` finds them
 the way the compiler does, and every command line is kept beside its output
 (`<output>.cmd`) to be compared with the next. A one-file change rebuilds in
 seconds; a full build takes about half the time it did as a sequence of
@@ -77,7 +77,7 @@ compile). `make clean` starts from nothing.
 Each compile is the command the original build scripts ran, flag for flag,
 one source at a time instead of one batch per directory -- and the
 binaries come out the same, byte for byte (only the time stamps the tools
-write differ; `tools/buildcmp.py` compares two sets of build outputs that
+write differ; `ext/tools/buildcmp.py` compares two sets of build outputs that
 way). The objects themselves are not reproducible from one build to the
 next, with any build: VC6 leaves memory it never initialised in some fields
 and orders some symbols and relocations differently, none of which reaches
@@ -90,7 +90,7 @@ below) and one for everything else.
 ## Other targets
 
 ```sh
-make test         # build/playtest.sh with tools/playtest-basic.txt on
+make test         # build/playtest.sh with ext/tools/playtest-basic.txt on
                   #   Worlds\T01S01 and Worlds\M03S01, under Xvfb; passes if the
                   #   game is still running after the script on both
 make test TEST_LEVELS="M06S01"   # other levels
@@ -99,7 +99,7 @@ make progress     # score the build against the retail binaries, function by
                   #   recorded as byte-identical in progress/identical.txt no
                   #   longer is, or if the text in an image's data differs from
                   #   the retail text in a way progress/data-known.txt does not
-                  #   list (tools/datacheck.py); our lithshared libraries too,
+                  #   list (ext/tools/datacheck.py); our lithshared libraries too,
                   #   against Monolith's prebuilt ones in progress/reference/
 make progress-update   # record the score in progress/ and README.md
 make shell        # a shell in the build container, at /repo
@@ -111,14 +111,14 @@ make distclean    # clean, and remove the docker image
 `wine.log`, `script.log`, the screenshots in `shots/` and a contact sheet
 `shots.png`.
 
-The dedicated server has a test of its own, `tools/servertest.sh` (in
+The dedicated server has a test of its own, `ext/tools/servertest.sh` (in
 `make shell`): it starts the game directory's `NolfServ.exe` unattended
 under Xvfb, hosting a deathmatch, checks it hosts and stops cleanly, and
 with `SERVERTEST_CLIENT=1` has the game join it; the run, its screenshots
 and logs are in `out/play/<game directory>-server/`:
 
 ```sh
-SERVERTEST_CLIENT=1 tools/servertest.sh out/nolf-legacy-release 60
+SERVERTEST_CLIENT=1 ext/tools/servertest.sh out/nolf-legacy-release 60
 ```
 
 `make progress` scores what the last `make` built (it compiles nothing), so
@@ -146,7 +146,7 @@ build/engine.sh server-one smgr.cpp PlaySound   # recompile one file, match it
 build/engine.sh nolfserv verify       # the dedicated server's objects, matched
 build/engine.sh nolfserv-one ServerDlg.cpp OnTimer   # (likewise one file)
 build/playtest.sh out/nolf-legacy-release 'Worlds\M01S01' 60   # idle for 60 s on a level
-tools/servertest.sh out/nolf-legacy-release 60  # host with NolfServ.exe for 60 s
+ext/tools/servertest.sh out/nolf-legacy-release 60  # host with NolfServ.exe for 60 s
 ```
 
 All of them build through `build/build.mk`, which has every compiler and
@@ -158,7 +158,7 @@ compiled into both `server.dll` and `lithtech.exe`; a full build rebuilds
 both after a change to it, a `*-one` loop only the object it names.
 
 The `verify` and `*-one` targets are the reconstruction loop:
-`tools/guides/02-the-loop.md` explains it, and `tools/guides/` the rest of the method.
+`ext/tools/guides/02-the-loop.md` explains it, and `ext/tools/guides/` the rest of the method.
 
 ## Variant builds: debug and modern
 
@@ -199,7 +199,7 @@ time, runs `make progress` on the release build (a
 function recorded as byte-identical that stops matching fails the run), and
 keeps the four public archives as the run's artifacts, each the `.tar.gz`
 itself rather than a zip around it. It caches the two redump zips (keyed on
-`rez/isos/SHA256SUMS`) and the docker image's layers, so only the first run
+`ext/rez/isos/SHA256SUMS`) and the docker image's layers, so only the first run
 downloads from archive.org.
 
 ### The modern build: `NOLFSRC_MODERN`
@@ -221,12 +221,12 @@ The release build never sees such a block: `build/compile.sh` (and
 `build/libs.sh`, `build/build.sh`, `build/engine.sh`) compile a copy of
 `src/` in `out/release-tree/` with
 every `#ifdef`/`#ifndef NOLFSRC_MODERN` (and `NOLFSRC_DEBUG`) block resolved
-and its directives removed (`tools/releasesrc.py`), then copy their outputs
+and its directives removed (`ext/tools/releasesrc.py`), then copy their outputs
 back into `src/`. Merely skipping the blocks is not enough: VC6 lets a file's
 layout, skipped lines included, decide where some out-of-line inline
 functions go (`src/modern/README.md`). So the release build compiles exactly
 what it compiled before -- as long as nothing is added outside a block, not
-even a blank line; `python3 tools/releasesrc.py diff master` lists anything
+even a blank line; `python3 ext/tools/releasesrc.py diff master` lists anything
 that is. It still matches the retail binaries and `make progress` still
 passes; check that after any such change (`build/engine.sh <target>-one
 <file>` shows the function still matching). Test the two macros only with
@@ -234,7 +234,7 @@ passes; check that after any such change (`build/engine.sh <target>-one
 
 The game DLLs are also built from the same paths wherever the checkout is:
 `build/build.mk` makes the tree's `src/` Wine's drive `S:` and its
-`toolchains/` drive `T:` (in a Wine prefix of their own), so their compiles
+`ext/toolchains/` drive `T:` (in a Wine prefix of their own), so their compiles
 run in `S:\game\...` with
 `T:\...` on the include path. VC6's output for `CShell.dll` and
 `Object.lto` depends on those paths (the same source built in two
@@ -271,11 +271,11 @@ Wine, the modern build's `nolfcmds.txt` leaves out `+DisableMovies 1`.
 
 The same step installs Microsoft's DirectMusic, so the music plays under Wine
 and Proton without winetricks: the nine DLLs in
-`toolchains/directmusic-5.3.1.904/` (checked against its `SHA256SUMS`) go in
+`ext/toolchains/directmusic-5.3.1.904/` (checked against its `SHA256SUMS`) go in
 as `ms_<name>.dll`, with `src/modern/directmusic/lithtech.exe.manifest`,
 which points the engine's DirectMusic classes at them (`src/modern/directmusic/README.md`, MODERN.md
 M-P4-12). The audit lists them as `THIRD-PARTY`. Without
-`toolchains/directmusic-5.3.1.904/` the build warns and installs neither.
+`ext/toolchains/directmusic-5.3.1.904/` the build warns and installs neither.
 
 Everything in `ext/` is compiled with [Zig](https://ziglang.org/) 0.16.0,
 which the build image installs (pinned and checksummed in
@@ -284,7 +284,7 @@ OpenMiles is written in Zig, and `zig cc` is clang with its own mingw-w64
 headers and libraries, so FFmpeg and the Bink player are cross-compiled for
 32-bit Windows with it too. The same compiler targets Linux and macOS, which
 a native port of the game would need. None of this touches the 2000-era
-compilers in `toolchains/`, which still build every game and engine binary.
+compilers in `ext/toolchains/`, which still build every game and engine binary.
 
 Each upstream project is a submodule under `ext/`, pinned to a commit
 (FFmpeg n8.1.3, a shallow clone). Nothing is written into `ext/`: the builds
@@ -385,7 +385,7 @@ and the crash then goes on as it would have (Wine's own crash dialog, or the
 playtest's CRASHED). A frame with no name is in code without debug
 information -- the static C runtime, or a `d3d.ren` file compiled with
 `/Qip`, for which Intel C/C++ 4.0 writes none -- and is given at the
-binary's preferred base; `tools/mapaddr.py out/nolf-legacy-debug/d3d.map
+binary's preferred base; `ext/tools/mapaddr.py out/nolf-legacy-debug/d3d.map
 0x10036d1c` names it from the map.
 
 The playtest runs the game in `out/play/<name>/`, so a playtest's

@@ -3,8 +3,8 @@
 Some changes in the modern build (`make modern`, `NOLFSRC_MODERN`; see
 `BUILDING.md`, "Variant builds") need game data changed as well as code. The
 game data is not in this repository -- it comes from the retail game, which
-the `rez/` submodule installs -- so a change is committed here as a recipe,
-and `tools/moddata.py` applies it when the modern build is made. The results go into the game directory's `custom/` rez
+the `ext/rez/` submodule installs -- so a change is committed here as a recipe,
+and `ext/tools/moddata.py` applies it when the modern build is made. The results go into the game directory's `custom/` rez
 directory, which the engine searches after the four `.rez` archives, so they
 override the retail copies. The release build never sees any of it.
 
@@ -21,9 +21,9 @@ To make a patch, edit a copy of the file and let the tool write the diff
 (after a `make modern`, so `out/nolf-modern-release/` exists):
 
 ```sh
-python3 tools/moddata.py show out/nolf-modern-release ATTRIBUTES/WEAPONS.txt > /tmp/weapons.txt
+python3 ext/tools/moddata.py show out/nolf-modern-release ATTRIBUTES/WEAPONS.txt > /tmp/weapons.txt
 # ... edit /tmp/weapons.txt ...
-python3 tools/moddata.py diff out/nolf-modern-release ATTRIBUTES/WEAPONS.txt /tmp/weapons.txt \
+python3 ext/tools/moddata.py diff out/nolf-modern-release ATTRIBUTES/WEAPONS.txt /tmp/weapons.txt \
     > src/modern/data/ATTRIBUTES/WEAPONS.txt.patch
 ```
 

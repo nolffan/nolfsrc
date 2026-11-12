@@ -3,7 +3,7 @@
 # (and, with an input script, does it PLAY)?
 #
 #   build/playtest.sh [gamedir] [world] [seconds]
-#   PLAYTEST_SCRIPT=tools/playtest-basic.txt build/playtest.sh [gamedir] [world]
+#   PLAYTEST_SCRIPT=ext/tools/playtest-basic.txt build/playtest.sh [gamedir] [world]
 #
 # gamedir:    a complete game directory, as build/all.sh assembles it
 #             (default out/nolf-legacy-release). It is tested exactly as it is: every

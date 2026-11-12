@@ -1,9 +1,9 @@
 """What the scoreboard scores: No One Lives Forever's binaries, and where
 each one's own code, and ours, is.
 
-tools/progress.py and tools/ratchet.py read this file and nothing else
+ext/tools/progress.py and ext/tools/ratchet.py read this file and nothing else
 about the project (their header documents every key). It is NOLF1's
-configuration, which tools/progress.py held itself until the tools became
+configuration, which ext/tools/progress.py held itself until the tools became
 shared with nolf2src and cjacksrc; the evidence for every address is the
 comment beside it (the CSVs in this directory are the rest of it).
 
@@ -16,7 +16,7 @@ functions.
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ext", "tools"))
 from d3dcheck import NAMED as D3D_NAMED, SYMBOLS as D3D_SYMBOLS  # noqa: E402
 
 REFERENCE = "out/reference"     # build/reference.sh writes it
@@ -136,7 +136,7 @@ TARGETS = [
          # ret 8`) claim the tail of 0x4919e0 as a function at 0x491a10.
          lib_range={"StdLith.lib": (0x00490b50, 0x004919e0)},
          # the CRT's _purecall, every abstract vtable's filler
-         # (tools/vtabcheck.py: lithtech.exe links the CRT statically, so
+         # (ext/tools/vtabcheck.py: lithtech.exe links the CRT statically, so
          # there is no `jmp [IAT]` thunk to find it by)
          purecall=0x004928e7),
     dict(label="server.dll", what="the server", kind="image",
@@ -193,7 +193,7 @@ TARGETS = [
          objs=["src/engine/d3d/Release/*.obj"],
          cites=True,
          # Intel C/C++: multi-byte lea/mov nop padding and /Qip register
-         # entries (`X$`, `X$$1`); tools/d3dcheck.py's tables name the
+         # entries (`X$`, `X$$1`); ext/tools/d3dcheck.py's tables name the
          # shipped address of the engine-named and template functions
          icl=True, own_names=D3D_NAMED, own_symbols=D3D_SYMBOLS,
          # The tail begins with the generic thunk run at 0x1007faa0, above
@@ -315,7 +315,7 @@ TARGETS = [
          # at 0x100edab0
          middleware=[(0x100eb650, 0x100edab0)],
          # the CRT's _purecall (`push 0x19; call _amsg_exit`): libcmt is
-         # linked statically, so tools/vtabcheck.py has no `jmp [IAT]`
+         # linked statically, so ext/tools/vtabcheck.py has no `jmp [IAT]`
          # thunk to find it by, as with lithtech.exe
          purecall=0x100f0a13),
     dict(label="Object.lto", what="the game: server objects", kind="image",

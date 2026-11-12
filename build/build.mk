@@ -3,7 +3,7 @@
 # The libraries (src/lithshared/), the game DLLs (src/game/) and the engine
 # (src/engine/) are one dependency graph here, so `make -j` compiles
 # objects of every binary at once and a rebuild redoes only what changed: an
-# object is rebuilt when its source, a header it includes (tools/mkdeps.py
+# object is rebuilt when its source, a header it includes (ext/tools/mkdeps.py
 # finds them: VC6 cannot list them), or its command line changes (the line
 # is kept in <object>.cmd), a binary when any of its inputs does.
 #
@@ -21,17 +21,17 @@
 #
 # Every command line is the one the original build scripts ran, flag for
 # flag, one source per compile instead of a batch per directory: the
-# objects come out byte for byte the same (tools/buildcmp.py checks), and
+# objects come out byte for byte the same (ext/tools/buildcmp.py checks), and
 # the compiles can run in parallel. The flags reproduce what each original
 # binary was built with:
 #   lithshared libraries    cl 12.00.8447 /O2
-#   CRes, CShell, Object    cl 12.00 (toolchains/msvc-6.00-9782), /O2, with a
+#   CRes, CShell, Object    cl 12.00 (ext/toolchains/msvc-6.00-9782), /O2, with a
 #                           precompiled header, from fixed Wine drives (below)
 #   ltmsg, sres, launcher   cl 12.00, /O2
 #   NolfServ.exe            cl 12.00, /O2 /GR, MFC, precompiled header
 #   server.dll              cl 12.00.8447 /O1; localdriver.cpp /Os
 #   lithtech.exe            cl 12.00.8447 /O2; a few files with their own flags
-#   d3d.ren                 Intel C/C++ 4.0 (toolchains/icl-4.0), per-file
+#   d3d.ren                 Intel C/C++ 4.0 (ext/toolchains/icl-4.0), per-file
 #                           flag groups; new files encode their group in
 #                           their name (w<N>_*_<flags>.cpp)
 # src/engine/server/*.cpp is compiled into both server.dll and lithtech.exe.
@@ -78,7 +78,7 @@ MODERN := $(if $(findstring NOLFSRC_MODERN,$(NOLFSRC_CFLAGS)),1)
 # wineserver. VC6's output for CShell.dll and Object.lto depends on where the
 # compiler finds things (the same source built in two directories whose
 # paths differ in length gave two binaries), so the game DLLs are built with
-# the tree's src/ as drive S: and toolchains/ as drive T:, and the compilers
+# the tree's src/ as drive S: and ext/toolchains/ as drive T:, and the compilers
 # see the same paths wherever the tree is. Everything else must NOT see those
 # drives: Wine names a working directory by the deepest drive that holds it,
 # and Intel C/C++ builds a different d3d.ren from S:\engine\d3d than from
@@ -90,7 +90,7 @@ WINE := wine
 PFX_PLAIN  := $(ROOT)/.wine/plain
 PFX_DRIVES := $(ROOT)/.wine/drives
 
-TC      := $(ROOT)/toolchains
+TC      := $(ROOT)/ext/toolchains
 VC9782  := $(TC)/msvc-6.00-9782
 CL      := $(VC9782)/VC98/Bin/CL.EXE
 CL8447  := $(TC)/msvc-6.00-8447/BIN/cl.exe
@@ -101,7 +101,7 @@ RC      := $(VC9782)/Common/MSDev98/Bin/RC.EXE
 
 # Windows paths: everything is under Z: (/) ...
 wz = z:$(subst /,\,$(1))
-# ... except, in the drives prefix, src/ (S:) and toolchains/ (T:)
+# ... except, in the drives prefix, src/ (S:) and ext/toolchains/ (T:)
 ws = $(if $(filter $(ROOT)/src $(ROOT)/src/%,$(1)),s:$(subst /,\,$(patsubst $(ROOT)/src%,%,$(1))),$(if $(filter $(TC) $(TC)/%,$(1)),t:$(subst /,\,$(patsubst $(TC)%,%,$(1))),$(call wz,$(1))))
 
 # The environment of a tool run, by prefix. src/nolfsrc/ (nolfsrc_debug.h)
@@ -165,7 +165,7 @@ DEPSPEC :=
 # after the shell command <first> if there is one
 # (the variant flags last, after the command's own: /Oy- must follow the /O2
 # that implies /Oy). The source and its headers are prerequisites through
-# tools/mkdeps.py's rules.
+# ext/tools/mkdeps.py's rules.
 define compile
 OBJECTS += $(1)
 cmd_$(1) := cd $(2) && $(if $(8),$(8) && )$(4) $(WINE) $(5) $(call q,$(6) $(3) $(NOLFSRC_CFLAGS))
@@ -273,7 +273,7 @@ lslib = $(LOUT)/$(1).lib
 # ---------------------------------------------------------------------------
 # 2. The game DLLs, from Monolith's v1.003 source release (src/game/)
 #
-# Source lists come from the .dsp project files (tools/dsp2files.py). In the
+# Source lists come from the .dsp project files (ext/tools/dsp2files.py). In the
 # modern build (NOLFSRC_MODERN) CShell.dll and Object.lto also get the
 # project's own game code (src/modern/cshell/, src/modern/object/), find
 # headers under src/modern/, and link winmm.lib; CRes.dll gets
@@ -294,7 +294,7 @@ MODERN_LIBS := $(if $(MODERN),winmm.lib)
 # an RTTI-carrying __InitLock class the retail images do not have.
 LIBCIMT_RTM := msvc-6.00-8168\LIB\libcimt.lib
 WINLIBS := $(strip kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib $(MODERN_LIBS))
-dsp = $(shell python3 tools/dsp2files.py $(1) Release cpp)
+dsp = $(shell python3 ext/tools/dsp2files.py $(1) Release cpp)
 
 # $(call gamelib,<project dir>) -> the lithshared library, as the link names it
 glib = ..\..\lithshared\out\$(1).lib
@@ -393,9 +393,9 @@ game: cres cshell object
 #
 # Each link reads committed link inputs in src/engine/<target>/link/: an
 # alias list (aliases.rsp, turned into an object of weak externals by
-# tools/mkaliasobj.py), for lithtech.exe and server.dll the stand-in vtables
-# (vtables.txt, tools/mkvtabobj.py), for d3d.ren the data views (d3dviews.txt,
-# tools/mkviewobj.py). Import libraries for Miles and DirectDraw are
+# ext/tools/mkaliasobj.py), for lithtech.exe and server.dll the stand-in vtables
+# (vtables.txt, ext/tools/mkvtabobj.py), for d3d.ren the data views (d3dviews.txt,
+# ext/tools/mkviewobj.py). Import libraries for Miles and DirectDraw are
 # generated from their export lists. Each link's report is
 # src/engine/<target>/Release/<target>-link.txt; a link that leaves no
 # binary fails the build with the report's errors.
@@ -428,7 +428,7 @@ $(eval $(call tool,$(E)/sres/Release/sres.dll,$(E)/sres/Release/sres.obj | wine-
 
 # NOLF.exe, the launcher; its art (res/) is read out of the retail NOLF.exe
 # by build/all.sh. Miles' import libraries come from libs/mss32.def: lib.exe
-# makes the undecorated one, tools/mkimplib.py the decorated one.
+# makes the undecorated one, ext/tools/mkimplib.py the decorated one.
 LAUNCHER := $(E)/launcher
 LAUNCHER_SRC := stdafx.cpp launcher.cpp gamedlg.cpp gamehelp.cpp dlgconfig.cpp dlgcustom.cpp dlghelp.cpp dlgsound.cpp \
     dlgdisplay.cpp preview.cpp cdcheck.cpp dib.cpp dibmgr.cpp dibpal.cpp RezFind.cpp Utils.cpp globals.cpp
@@ -441,7 +441,7 @@ MSS32_DECORATED = $(shell sed -n "s/^ *\(AIL_[A-Za-z0-9_]*@[0-9]*\) *$$/_\1/p" $
 $(eval $(call tool,$(LAUNCHER)/Release/mss32.lib,$(MSS32_DEF) | wine-plain,\
     cd $(LAUNCHER) && $(ENV) $(WINE) $(LIBEXE) /nologo /machine:i386 '/def:libs\mss32.def' '/out:Release\mss32.lib' >/dev/null))
 $(foreach d,$(LAUNCHER)/Release $(E)/lithtech/link,$(eval $(call tool,$(d)/mss32dec.lib,$(MSS32_DEF),\
-    python3 tools/mkimplib.py --keep-decoration $(d)/mss32dec.lib mss32.dll $$(MSS32_DECORATED) >/dev/null)))
+    python3 ext/tools/mkimplib.py --keep-decoration $(d)/mss32dec.lib mss32.dll $$(MSS32_DECORATED) >/dev/null)))
 LAUNCHER_LINKOBJ := launcher gamedlg gamehelp dlgconfig dlgcustom dlghelp dlgsound dlgdisplay preview cdcheck dib dibmgr \
     dibpal RezFind Utils globals stdafx
 # Modern executables share every launcher object; only their entry points
@@ -535,8 +535,8 @@ server_flags = $(if $(filter $(1),$(SERVER_OS_SRC)),$(subst /O1,/Os /Ob1 /Gf,$(S
 $(foreach s,$(SERVER_SRC) $(SERVER_OS_SRC),$(eval $(call compile,$(SERVER)/Release/$(s:.cpp=.obj),$(SERVER),$(s),$(ENV),$(CL8447),\
     /nologo $(call server_flags,$(s)),wine-plain)))
 SERVER_OBJ := $(sort $(patsubst %.cpp,$(SERVER)/Release/%.obj,$(SERVER_SRC) $(SERVER_OS_SRC)))
-$(eval $(call tool,$(SERVER)/link/aliases.obj,$(SERVER)/link/aliases.rsp,python3 tools/mkaliasobj.py $(SERVER)/link/aliases.rsp $(SERVER)/link/aliases.obj))
-$(eval $(call tool,$(SERVER)/link/vtables.obj,$(SERVER)/link/vtables.txt,python3 tools/mkvtabobj.py $(SERVER)/link/vtables.txt $(SERVER)/link/vtables.obj))
+$(eval $(call tool,$(SERVER)/link/aliases.obj,$(SERVER)/link/aliases.rsp,python3 ext/tools/mkaliasobj.py $(SERVER)/link/aliases.rsp $(SERVER)/link/aliases.obj))
+$(eval $(call tool,$(SERVER)/link/vtables.obj,$(SERVER)/link/vtables.txt,python3 ext/tools/mkvtabobj.py $(SERVER)/link/vtables.txt $(SERVER)/link/vtables.obj))
 # its resources: the version block and one string (server.rc). link/server.def
 # only names the DLL "server.DLL" in its export table, as the retail one does.
 $(eval $(call tool,$(SERVER)/Release/server.res,$(SERVER)/server.rc | wine-plain,\
@@ -594,9 +594,9 @@ $(foreach s,$(LITHTECH_ALL),$(eval $(call compile,$(call c_obj,$(s),$(LITHTECH)/
 LITHTECH_OBJ := $(sort $(foreach s,$(LITHTECH_ALL),$(call c_obj,$(s),$(LITHTECH)/Release)))
 # the modern build's ILTClient has slots the retail one lacks (vtables.txt's
 # %ifdef NOLFSRC_MODERN block)
-$(eval $(call tool,$(LITHTECH)/link/aliases.obj,$(LITHTECH)/link/aliases.rsp,python3 tools/mkaliasobj.py $(LITHTECH)/link/aliases.rsp $(LITHTECH)/link/aliases.obj))
+$(eval $(call tool,$(LITHTECH)/link/aliases.obj,$(LITHTECH)/link/aliases.rsp,python3 ext/tools/mkaliasobj.py $(LITHTECH)/link/aliases.rsp $(LITHTECH)/link/aliases.obj))
 $(eval $(call tool,$(LITHTECH)/link/vtables.obj,$(LITHTECH)/link/vtables.txt,\
-    python3 tools/mkvtabobj.py $(if $(MODERN),--define NOLFSRC_MODERN) $(LITHTECH)/link/vtables.txt $(LITHTECH)/link/vtables.obj))
+    python3 ext/tools/mkvtabobj.py $(if $(MODERN),--define NOLFSRC_MODERN) $(LITHTECH)/link/vtables.txt $(LITHTECH)/link/vtables.obj))
 # its resources (lithtech.rc): the icon and the console font, read out of the
 # retail lithtech.exe into res/ (build/all.sh, step 2b), MFC's from afxres.rc
 $(eval $(call tool,$(LITHTECH)/Release/lithtech.res,$(LITHTECH)/lithtech.rc $(wildcard $(LITHTECH)/res/*) | wine-plain,\
@@ -654,9 +654,9 @@ $(foreach s,$(filter-out $(D3D_CL_SRC),$(D3D_SRC)),$(eval $(call compile,$(D3D)/
 $(foreach s,$(D3D_CL_SRC),$(eval $(call compile,$(D3D)/Release/$(s:.cpp=.obj),$(D3D),$(s),$(ENV),$(CL8447),\
     /nologo /MT /W3 /GX /O2 /D WIN32 /D NDEBUG /D _WINDOWS /D NO_PRAGMA_LIBS /c /I ..\..\LT2\lithshared\stdlith /FoRelease/,wine-plain)))
 D3D_OBJ := $(sort $(D3D_SRC:%.cpp=$(D3D)/Release/%.obj))
-$(eval $(call tool,$(D3D)/link/aliases.obj,$(D3D)/link/aliases.rsp,python3 tools/mkaliasobj.py $(D3D)/link/aliases.rsp $(D3D)/link/aliases.obj))
-$(eval $(call tool,$(D3D)/link/d3dviews.obj,$(D3D)/link/d3dviews.txt,python3 tools/mkviewobj.py $(D3D)/link/d3dviews.txt $(D3D)/link/d3dviews.obj))
-$(eval $(call tool,$(D3D)/link/ddraw7.lib,,python3 tools/mkimplib.py $(D3D)/link/ddraw7.lib DDRAW.dll _DirectDrawCreateEx@16))
+$(eval $(call tool,$(D3D)/link/aliases.obj,$(D3D)/link/aliases.rsp,python3 ext/tools/mkaliasobj.py $(D3D)/link/aliases.rsp $(D3D)/link/aliases.obj))
+$(eval $(call tool,$(D3D)/link/d3dviews.obj,$(D3D)/link/d3dviews.txt,python3 ext/tools/mkviewobj.py $(D3D)/link/d3dviews.txt $(D3D)/link/d3dviews.obj))
+$(eval $(call tool,$(D3D)/link/ddraw7.lib,,python3 ext/tools/mkimplib.py $(D3D)/link/ddraw7.lib DDRAW.dll _DirectDrawCreateEx@16))
 # its one resource, the renderer's name (d3d.rc)
 $(eval $(call tool,$(D3D)/Release/d3d.res,$(D3D)/d3d.rc | wine-plain,\
     cd $(D3D) && $(ENV) $(WINE) $(RC) $(NOLFSRC_RCFLAGS) /l 0x409 /d NDEBUG /foRelease/d3d.res d3d.rc))
@@ -703,12 +703,12 @@ $(TOOLS):
 
 FORCE:
 
-# Header dependencies (tools/mkdeps.py), brought up to date on every run
+# Header dependencies (ext/tools/mkdeps.py), brought up to date on every run
 DEPDIR := $(ROOT)/.build
 $(shell mkdir -p $(DEPDIR))
 $(file >$(DEPDIR)/deps.spec,$(subst |, ,$(subst $(space),$(nl),$(DEPSPEC))))
-DEPS_OK := $(shell python3 tools/mkdeps.py $(DEPDIR)/deps.spec $(DEPDIR)/deps.mk && echo ok)
+DEPS_OK := $(shell python3 ext/tools/mkdeps.py $(DEPDIR)/deps.spec $(DEPDIR)/deps.mk && echo ok)
 ifneq ($(DEPS_OK),ok)
-$(error tools/mkdeps.py failed)
+$(error ext/tools/mkdeps.py failed)
 endif
 include $(DEPDIR)/deps.mk

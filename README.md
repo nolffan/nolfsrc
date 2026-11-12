@@ -33,7 +33,7 @@ Monolith Productions.
 
 **No game data is included.** The build takes the game's data (and the Miles
 and Bink sound/video runtime, the only binaries not built from source) from
-the retail Game of the Year Edition, which the `rez/` submodule installs from
+the retail Game of the Year Edition, which the `ext/rez/` submodule installs from
 the redump images of its two discs, fetched from archive.org. The modern
 build replaces that runtime with open-source builds from `ext/`: OpenMiles
 for Miles, and our own Bink player on FFmpeg.
@@ -105,9 +105,9 @@ only.
 You need Linux with Docker and the submodules:
 
 1. Fetch them: `git submodule update --init` (or clone with
-   `--recurse-submodules`). `toolchains/` is the compilers (about 560 MB,
-   see `toolchains/README.md`); `rez/` fetches and installs the retail game
-   (see `rez/README.md`); `tools/` is the build's helpers and the
+   `--recurse-submodules`). `ext/toolchains/` is the compilers (about 560 MB,
+   see `ext/toolchains/README.md`); `ext/rez/` fetches and installs the retail game
+   (see `ext/rez/README.md`); `ext/tools/` is the build's helpers and the
    reconstruction tools and guides; `ext/openmiles` and `ext/ffmpeg` are the
    modern build's open-source middleware (about 130 MB), and
    `ext/nolf1-modernizer` the NOLF Modernizer, two of whose models the
@@ -179,7 +179,7 @@ On Windows, drop both images onto `windows-install.bat` (or put them in the
 game folder and double-click it), then start `NOLF.exe`. Each script finds
 the images in the game directory or the one above it by itself, and can be
 run again: a file already in place is checked and kept. The public archive
-is made only if `rez/isos/` has the two `.iso` images (`build/mkinstall.py`).
+is made only if `ext/rez/isos/` has the two `.iso` images (`build/mkinstall.py`).
 
 Music needs more in the release build: it is DirectMusic, which Wine
 implements only in part. Its own DirectMusic cannot load the music's styles,
@@ -218,7 +218,7 @@ speed and dead zones, and Customize controls binds the buttons like keys
 ## Contributing
 
 The remaining work is functions that are written but not yet byte-identical,
-and functions not written yet. `tools/guides/` explains the method, from reading the
+and functions not written yet. `ext/tools/guides/` explains the method, from reading the
 retail machine code to the compiler quirks that decide the last few bytes;
 `make progress` (after `make`) shows where things stand and catches a change
 that breaks a function that matched before.
@@ -273,11 +273,11 @@ the two seasonal menu models.
 | `src/LT2/` | the LithTech SDK and shared-library headers from the same release |
 | `docs/` | the documentation: installing, building, the modern build's changes, the console, retail bugs, licences |
 | `build/` | the build scripts (`all.sh` is the whole build) |
-| `tools/` | the build's helpers, the playtest, and the tools for reading the retail code and comparing ours with it (a submodule, [nolffan/tools](https://github.com/nolffan/tools), meant for any reconstruction like this one) |
-| `tools/guides/` | how to reconstruct a function so it compiles to the retail bytes: start here to contribute; `14-progress.md` is the scoreboard |
+| `ext/tools/` | the build's helpers, the playtest, and the tools for reading the retail code and comparing ours with it (a submodule, [nolffan/tools](https://github.com/nolffan/tools), meant for any reconstruction like this one) |
+| `ext/tools/guides/` | how to reconstruct a function so it compiles to the retail bytes: start here to contribute; `14-progress.md` is the scoreboard |
 | `progress/` | the record of what is byte-identical so far, and what `make progress` checks against it |
 | `docker/` | the build image (Ubuntu 24.04 + Wine) |
-| `toolchains/` | the compilers (a submodule) |
-| `rez/` | the retail game the build takes its data from: fetches the disc images and installs the game from them (a submodule) |
-| `ext/` | upstream open-source projects the modern build uses, one submodule each: `openmiles/` (OpenMiles, for Miles) and `ffmpeg/` (FFmpeg, for Bink), built by `build/ext.sh` (OpenMiles from our fork, with our fixes as commits); and `nolf1-modernizer/` (the NOLF Modernizer, for two menu models) |
+| `ext/toolchains/` | the compilers (a submodule) |
+| `ext/rez/` | the retail game the build takes its data from: fetches the disc images and installs the game from them (a submodule) |
+| `ext/` | the submodules: `tools/`, `toolchains/` and `rez/` above, and the upstream open-source projects the modern build uses, one submodule each: `openmiles/` (OpenMiles, for Miles) and `ffmpeg/` (FFmpeg, for Bink), built by `build/ext.sh` (OpenMiles from our fork, with our fixes as commits); and `nolf1-modernizer/` (the NOLF Modernizer, for two menu models) |
 | `out/` | everything the build produces |

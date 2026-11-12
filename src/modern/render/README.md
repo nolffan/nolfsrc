@@ -10,7 +10,7 @@ engine can load in place of `d3d.ren` (MODERN.md, M-P0-04):
 
 The core is new code, written from the Mac release's OpenGL renderer, which
 is the same renderer for the same engine version and whose functions all
-kept their names (`tools/pef.py` reads it), and from what the engine
+kept their names (`ext/tools/pef.py` reads it), and from what the engine
 expects of `d3d.ren` on the PC, which is what it aims to look like. It
 draws through `rdev.h`, a small fixed-function device in the shape of
 OpenGL 1.x (state, texture units with combiners, matrix stacks, immediate
@@ -79,7 +79,7 @@ Console variables it reads besides the engine's own (the names and defaults
 
 ## The Mac renderer, for reference
 
-`rez/games/nolf-mac-usa/NOLF/LithTech` (rez/README.md) is one PowerPC
+`ext/rez/games/nolf-mac-usa/NOLF/LithTech` (ext/rez/README.md) is one PowerPC
 executable: the engine with the renderer linked in where the PC loads
 `d3d.ren`. The renderer is 514 functions, 225 KB of code, from
 `opengl_init.cpp` to `lightmap_dynamic.cpp`; CodeWarrior's static

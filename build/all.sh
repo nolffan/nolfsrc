@@ -9,9 +9,9 @@
 #   build/all.sh            (inside the build container, e.g. `make shell`)
 #   make test               (then: play it -- build/playtest.sh on out/nolf-legacy-release/)
 #
-# Needs: the toolchain (toolchains/, see toolchains/README.md), Wine (the build
+# Needs: the toolchain (ext/toolchains/, see ext/toolchains/README.md), Wine (the build
 # container has it), and the retail Game of the Year Edition (Europe) as the
-# rez/ submodule installs it from its two disc images (rez/games/nolf-eu-goty/,
+# ext/rez/ submodule installs it from its two disc images (ext/rez/games/nolf-eu-goty/,
 # build/retail.sh). It only reads that directory: no retail game binary is
 # run, linked or copied into the game, apart from the middleware of step 2.
 #

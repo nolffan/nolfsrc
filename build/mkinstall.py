@@ -45,8 +45,8 @@ Writes <outdir>/linux-install.sh, <outdir>/windows-install.bat,
 <outdir>/disc-files.txt, the game directory's paths the scripts write (the
 archive leaves them out), and <outdir>/disc-sums.txt, the SHA-256 of each of
 those but autoexec.cfg, which the engine rewrites (build/package.sh puts them
-in the archive's SHA256SUMS). <isodir> is rez/isos/ by default; the discs'
-installed copy, rez/games/nolf-eu-goty/, says where each retail file came
+in the archive's SHA256SUMS). <isodir> is ext/rez/isos/ by default; the discs'
+installed copy, ext/rez/games/nolf-eu-goty/, says where each retail file came
 from. Exits 3 if the disc images are not there.
 """
 import base64
@@ -57,12 +57,12 @@ import re
 import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(REPO, "tools"))
-sys.path.insert(0, os.path.join(REPO, "rez", "tools"))
+sys.path.insert(0, os.path.join(REPO, "ext", "tools"))
+sys.path.insert(0, os.path.join(REPO, "ext", "rez", "tools"))
 from rezextract import Rez  # noqa: E402
 from isoextract import Iso, SECTOR  # noqa: E402
 
-RETAIL = os.path.join(REPO, "rez", "games", "nolf-eu-goty")
+RETAIL = os.path.join(REPO, "ext", "rez", "games", "nolf-eu-goty")
 RECIPES = os.path.join(REPO, "src", "modern", "data")
 SCRIPTS = os.path.join(REPO, "build", "game-scripts")
 DISCS = {
@@ -240,18 +240,18 @@ def main():
     if len(sys.argv) not in (3, 4):
         sys.exit(__doc__)
     game, outdir = sys.argv[1].rstrip("/"), sys.argv[2]
-    isodir = sys.argv[3] if len(sys.argv) == 4 else os.path.join(REPO, "rez", "isos")
+    isodir = sys.argv[3] if len(sys.argv) == 4 else os.path.join(REPO, "ext", "rez", "isos")
     paths = {n: os.path.join(isodir, name) for n, name in DISCS.items()}
     missing = [p for p in paths.values() if not os.path.isfile(p)]
     if missing or not os.path.isfile(os.path.join(RETAIL, "MANIFEST.txt")):
-        print("mkinstall: no disc images (%s) or no rez/games/nolf-eu-goty/ -- "
-              "rez/fetch-isos.sh nolf-eu-goty && rez/install-games.sh nolf-eu-goty"
+        print("mkinstall: no disc images (%s) or no ext/rez/games/nolf-eu-goty/ -- "
+              "ext/rez/fetch-isos.sh nolf-eu-goty && ext/rez/install-games.sh nolf-eu-goty"
               % ", ".join(missing or paths.values()), file=sys.stderr)
         sys.exit(3)
     discs = {n: Disc(n, p) for n, p in paths.items()}
     by_name = {d.name: d for d in discs.values()}
 
-    # Where each retail file is on the discs (rez/install-games.sh's record).
+    # Where each retail file is on the discs (ext/rez/install-games.sh's record).
     retail = {}
     for line in open(os.path.join(RETAIL, "MANIFEST.txt"), errors="replace"):
         if line.startswith("#") or "\t" not in line:

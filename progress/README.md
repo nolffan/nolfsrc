@@ -15,14 +15,14 @@ make progress-update                     # record the score here and in README.m
 This is the reference. For a walk-through -- what to run when, what the
 output means, what to do when it fails, and how to score another project
 with the same tools -- see
-[`tools/guides/14-progress.md`](../tools/guides/14-progress.md).
+[`ext/tools/guides/14-progress.md`](../ext/tools/guides/14-progress.md).
 
 ## What is scored
 
 Every function of each retail binary is compared with what our build
 produced for it. The binaries, where each one's own code is and what of
 ours it is compared with are `targets.py` in this directory, with the
-evidence for every address (the shared `tools/progress.py` knows no binary
+evidence for every address (the shared `ext/tools/progress.py` knows no binary
 by name):
 
 | Target | Compared against | Our side |
@@ -140,7 +140,7 @@ ours are unplaced only by as many as our image has more of than the shipped
 one.
 
 `make progress` fails if either count goes up; `make progress COVERED=1`
-fails unless both are zero everywhere. `tools/progress.py --unplaced=<target>`
+fails unless both are zero everywhere. `ext/tools/progress.py --unplaced=<target>`
 and `--todo=<target>` (and `--attempted`) list them.
 
 This is the per-function measure. A whole binary is byte-perfect only once
@@ -154,7 +154,7 @@ resources.
 The function comparison masks every address the linker writes, so it never
 reads the data those addresses point at; a wrong string, a missing literal,
 a duplicate one, another C runtime's tables or imports pass it unseen.
-`tools/datacheck.py` reads them. For each image (the engine images,
+`ext/tools/datacheck.py` reads them. For each image (the engine images,
 `ltmsg.dll`, `sres.dll` and the game DLLs) it takes the text of every
 section that is neither code nor `.reloc` nor `.rsrc` (the resources are
 scored resource by resource, above), reads the import and export tables as
@@ -223,23 +223,23 @@ purpose, could never pass this test.
 * `README.md`'s table is not the one `summary.json` renders, or
 * the data check finds a text difference `data-known.txt` does not list
   (below),
-* `tools/fpconst.py` finds a float or double that one of our placed
+* `ext/tools/fpconst.py` finds a float or double that one of our placed
   functions loads (through an address the byte match masks) differing
   from the one retail loads there: a masked match is identical only up to
   the constants it reads, and two of `wm_SetObjectDims`' thresholds were
   once wrong behind an `identical`, or
-* `tools/vtabcheck.py --targets` finds a contradiction
+* `ext/tools/vtabcheck.py --targets` finds a contradiction
   `progress/vtab-known.txt` does not list: a vtable slot of ours, or a call
   or global one of our functions reaches, that is another one than retail's
   -- judged only where the evidence is unambiguous (the function's body fits
   exactly one retail address; same code under another name agrees), and
   everything else counted as unverified, not passed.
 
-Each run also writes `out/progress/evidence.json` (`tools/evidence.py`):
+Each run also writes `out/progress/evidence.json` (`ext/tools/evidence.py`):
 the source and submodule revisions, every retail image's hash, the
 configuration and exclusion files, our images, maps and link commands, and
 the toolchain trees the build used with their digests checked against
-`toolchains/fetch.sh`'s pins (a mismatch fails the run).
+`ext/toolchains/fetch.sh`'s pins (a mismatch fails the run).
 `make progress-update` keeps a copy as `progress/evidence.json`.
 
 Before anything is scored, the retail images cached in `out/reference/`
@@ -257,7 +257,7 @@ and a run without the libraries, since the record must cover every target.
 `make progress COMPLETE=1` also fails unless every function of every target
 is identical, and nothing is unwritten or unplaced (`COVERED=1` alone): the
 finish line for the code. It is not whole-image identity, which
-`tools/buildcmp.py` against the retail image is.
+`ext/tools/buildcmp.py` against the retail image is.
 
 The scoring compiles nothing; it reads what the last `make` left in the
 tree. Run `make` after changing the source, then `make progress`. It needs
@@ -284,20 +284,20 @@ and the libraries are skipped with a note; `make progress-update` needs them.
 
 | File | What |
 |---|---|
-| `targets.py` | the binaries scored: each one's retail image and our build of it, its objects and libraries, its own code's address ranges (`app`; the C runtime above them is listed, not counted), third-party code inside them (`middleware`), and the rest the shared tools need to know about NOLF1 (`tools/progress.py`'s header has every key) |
+| `targets.py` | the binaries scored: each one's retail image and our build of it, its objects and libraries, its own code's address ranges (`app`; the C runtime above them is listed, not counted), third-party code inside them (`middleware`), and the rest the shared tools need to know about NOLF1 (`ext/tools/progress.py`'s header has every key) |
 | `identical.txt` | every function verified identical (`target<TAB>function`): the baseline the test holds the build to. Written by `make progress-update` |
 | `summary.json` | per-target counts and bytes of the recorded run; the README table is rendered from it |
-| `data-known.txt` | the text in our images' data known to differ from the retail images', each entry under its reason: the data check's list (`tools/datacheck.py`). `make progress` fails on a difference not in it; `make progress-update` drops the entries that no longer differ |
+| `data-known.txt` | the text in our images' data known to differ from the retail images', each entry under its reason: the data check's list (`ext/tools/datacheck.py`). `make progress` fails on a difference not in it; `make progress-update` drops the entries that no longer differ |
 | `shipped-libs.sha256` | the source release's `.lib`s that are scored (paths relative to `libs/Release/`) |
 | `reference.sha256` | the retail images `out/reference/` must hold to be scored |
-| `vtab-known.txt` | the vtable and wiring differences `tools/vtabcheck.py` finds that are known, each with its reason |
-| `evidence.json` | what the recorded run rested on (`tools/evidence.py`) |
+| `vtab-known.txt` | the vtable and wiring differences `ext/tools/vtabcheck.py` finds that are known, each with its reason |
+| `evidence.json` | what the recorded run rested on (`ext/tools/evidence.py`) |
 | `corrections.txt` | the functions taken out of `identical.txt` when the scoring was corrected (2026-11-02), each with why: matches inside another identical function (the same bytes counted twice), and matches outside the image's own code |
 | `*-screen-exclude.csv` | per image (`lithtech`, `server`, `d3d`, `nolfserv`, and for the game DLLs `cshell`, `object`): enumerated addresses examined by hand. A reason that starts `NOT A FUNCTION` or `NOT GAME CODE` removes the row from the count (an operand byte, a jump target inside another function, padding); any other reason only marks the address as `attempted` (not in the game DLLs, where only the removal applies) |
 | `extent-splits.csv` | function starts the enumeration misses (a function hidden behind a thunk), with the evidence |
 | `lithtech-decoded-map.csv` | `lithtech.exe` addresses a function of ours has been mapped to, marking them `attempted` |
-| `*-enum-suspect.csv` | per image: enumerated rows judged wrong (`addr,severity,reason`); `bogus` rows are not functions, and `tools/uncovered.py`, `decoded.py` and `d3dwork.py` leave them off their worklists. Not read by the scoring |
-| `decoded-extents.csv`, `decoded-moved.csv` | for `tools/decoded.py`: the true extents of large functions whose enumerated row is wrong, and `d3d.ren` reconstructions moved out of their `big<addr>.cpp` file |
+| `*-enum-suspect.csv` | per image: enumerated rows judged wrong (`addr,severity,reason`); `bogus` rows are not functions, and `ext/tools/uncovered.py`, `decoded.py` and `d3dwork.py` leave them off their worklists. Not read by the scoring |
+| `decoded-extents.csv`, `decoded-moved.csv` | for `ext/tools/decoded.py`: the true extents of large functions whose enumerated row is wrong, and `d3d.ren` reconstructions moved out of their `big<addr>.cpp` file |
 
 The CSVs change what is counted, so a change to them is a change to the
 denominator: give the evidence in the reason, as the existing rows do.
@@ -307,6 +307,6 @@ The per-image function and vtable tables the reconstruction tools read
 `build/reference.sh` derives them from the retail images.
 
 Per run, in `out/progress/`: `functions.csv` (every retail function and its
-status) and `summary.json`. `tools/progress.py --nears` lists the near
+status) and `summary.json`. `ext/tools/progress.py --nears` lists the near
 matches closest first, and `--todo` / `--attempted` / `--small` the rows of
 that status.

@@ -13,19 +13,19 @@
 # time) and, to score the
 # lithshared libraries, NOLF_SOURCE: the NOLF Source Code v1.003 release.
 #
-#   check   tools/progress.py, then tools/ratchet.py check: fails if a
+#   check   ext/tools/progress.py, then ext/tools/ratchet.py check: fails if a
 #           function recorded in progress/identical.txt no longer matches
 #           (COMPLETE=1: also unless every function matches; COVERED=1:
 #           unless nothing is unwritten or unplaced)
-#   update  tools/progress.py, then tools/ratchet.py update: records the run
+#   update  ext/tools/progress.py, then ext/tools/ratchet.py update: records the run
 #           in progress/ and rewrites README.md's table (ACCEPT_LOSSES=1 to
 #           record a run that lost functions)
-#   both    then tools/datacheck.py: the text in our images' data against the
+#   both    then ext/tools/datacheck.py: the text in our images' data against the
 #           retail images'; fails on a difference progress/data-known.txt
 #           does not list (update also drops the entries no longer needed);
-#           and tools/fpconst.py --targets: the float constants our placed
+#           and ext/tools/fpconst.py --targets: the float constants our placed
 #           functions load through a (masked) relocation against retail's;
-#           fails on any that differs; and tools/vtabcheck.py --targets: our
+#           fails on any that differs; and ext/tools/vtabcheck.py --targets: our
 #           vtables slot by slot, and the callees and globals our uniquely
 #           placed functions reach, against retail's; fails on a
 #           contradiction progress/vtab-known.txt does not list
@@ -58,10 +58,10 @@ done
 # The cached retail images in out/reference/ are what is scored: they have
 # to be the retail images progress/reference.sha256 names, every run, not
 # merely present. The tables derived from them are stamped with what made
-# them (that list and tools/enumfuncs.py, by content): a different stamp
+# them (that list and ext/tools/enumfuncs.py, by content): a different stamp
 # extracts everything again.
 refcheck() { (cd out/reference && sha256sum --quiet -c ../../progress/reference.sha256); }
-stamp=$(cat progress/reference.sha256 tools/enumfuncs.py | sha256sum | cut -d' ' -f1)
+stamp=$(cat progress/reference.sha256 ext/tools/enumfuncs.py | sha256sum | cut -d' ' -f1)
 if [ -n "${need:-}" ] || ! refcheck 2>/dev/null || [ "$(cat out/reference/.stamp 2>/dev/null)" != "$stamp" ]; then
     echo "== retail images -> out/reference/ (for scoring only; missing, stale, or not the ones progress/reference.sha256 names)"
     bash build/reference.sh
@@ -69,31 +69,31 @@ if [ -n "${need:-}" ] || ! refcheck 2>/dev/null || [ "$(cat out/reference/.stamp
     echo "$stamp" > out/reference/.stamp
 fi
 
-python3 tools/progress.py
+python3 ext/tools/progress.py
 echo
 rc=0
 if [ "$mode" = check ]; then
-    python3 tools/ratchet.py check ${COMPLETE:+--complete} ${COVERED:+--covered} || rc=$?
+    python3 ext/tools/ratchet.py check ${COMPLETE:+--complete} ${COVERED:+--covered} || rc=$?
 else
-    python3 tools/ratchet.py update ${ACCEPT_LOSSES:+--accept-losses} || rc=$?
+    python3 ext/tools/ratchet.py update ${ACCEPT_LOSSES:+--accept-losses} || rc=$?
 fi
 # ... and the text in the images' data against the retail text, held to the
 # differences progress/data-known.txt lists (update: drops the ones that are
 # gone)
 echo
-python3 tools/datacheck.py "$mode" || rc=1
+python3 ext/tools/datacheck.py "$mode" || rc=1
 # ... and the float constants behind the masked relocations
 echo
-echo "float constants (tools/fpconst.py):"
-python3 tools/fpconst.py --targets || rc=1
+echo "float constants (ext/tools/fpconst.py):"
+python3 ext/tools/fpconst.py --targets || rc=1
 # ... and every vtable slot and every call and global our identically placed
 # functions reach, against the shipped ones (progress/vtab-known.txt)
 echo
-echo "vtables and wiring (tools/vtabcheck.py):"
-python3 tools/vtabcheck.py --targets || rc=1
+echo "vtables and wiring (ext/tools/vtabcheck.py):"
+python3 ext/tools/vtabcheck.py --targets || rc=1
 # ... and what all of it rested on (the toolchains' digests checked), kept
 # with the baseline when one is recorded
 echo
-python3 tools/evidence.py || rc=1
+python3 ext/tools/evidence.py || rc=1
 [ "$mode" = update ] && cp out/progress/evidence.json progress/evidence.json
 exit $rc

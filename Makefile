@@ -12,10 +12,10 @@
 #   make help     everything else
 #
 # Needs only docker on the host and the submodules (`git submodule update
-# --init`): tools/, the build's helpers; the compilers, toolchains/
-# (toolchains/README.md); and rez/, which
+# --init`): ext/tools/, the build's helpers; the compilers, ext/toolchains/
+# (ext/toolchains/README.md); and ext/rez/, which
 # fetches the redump images of the Game of the Year discs from archive.org and
-# installs the game from them (rez/README.md; `make retail`, which every build
+# installs the game from them (ext/rez/README.md; `make retail`, which every build
 # runs first, does it once). Every step runs in a throwaway container of the
 # image docker/Dockerfile describes, with this checkout mounted at /repo, as
 # you.
@@ -43,10 +43,10 @@ DOCKER_RUN = docker run --rm --init --name $(CONTAINER) \
 	$(if $(NOLF_ARCHIVES),-e NOLF_ARCHIVES="$(NOLF_ARCHIVES)") \
 	-v $(CURDIR):/repo -w /repo $(SRC_MOUNT) $(IMAGE)
 
-TOOLCHAIN_FILES = toolchains/msvc-6.00-9782/VC98/Bin/CL.EXE \
-	toolchains/msvc-6.00-8168/BIN/cl.exe \
-	toolchains/msvc-6.00-8447/BIN/cl.exe \
-	toolchains/icl-4.0/BIN/icl.exe
+TOOLCHAIN_FILES = ext/toolchains/msvc-6.00-9782/VC98/Bin/CL.EXE \
+	ext/toolchains/msvc-6.00-8168/BIN/cl.exe \
+	ext/toolchains/msvc-6.00-8447/BIN/cl.exe \
+	ext/toolchains/icl-4.0/BIN/icl.exe
 
 .PHONY: all game debug modern modern-debug image retail check-rez check-tools check-ext check-toolchain test test-modern test-compare test-renderers progress progress-update shell clean distclean help
 
@@ -68,8 +68,8 @@ help:
 	@echo "                function recorded in progress/identical.txt stops matching"
 	@echo "make progress-update  record the score in progress/ and README.md"
 	@echo "make retail     fetch the two disc images and install the retail game from"
-	@echo "                them (rez/, once; every build runs it), and check it"
-	@echo "make shell      a shell in the build container (build/*.sh, tools/ work there)"
+	@echo "                them (ext/rez/, once; every build runs it), and check it"
+	@echo "make shell      a shell in the build container (build/*.sh, ext/tools/ work there)"
 	@echo "make image      (re)build the docker image $(IMAGE)"
 	@echo "make clean      remove out/ and every build output in the source tree"
 	@echo "make distclean  clean, and remove the docker image too"
@@ -104,15 +104,15 @@ endif
 	@echo "== docker image $(IMAGE) ready"
 
 # The retail game the build takes its data from (build/retail.sh): installed
-# by rez/ the first time, checked against rez/games.sha256 every time.
+# by ext/rez/ the first time, checked against ext/rez/games.sha256 every time.
 retail: check-rez check-tools image
 	@$(DOCKER_RUN) bash -c 'source build/retail.sh && retail_install && retail_verify'
 
 check-rez:
-	@[ -f rez/install-games.sh ] || { echo "error: rez/ is empty -- the disc images and their installer are the rez/ submodule: run git submodule update --init (see rez/README.md)" >&2; exit 1; }
+	@[ -f ext/rez/install-games.sh ] || { echo "error: ext/rez/ is empty -- the disc images and their installer are the ext/rez/ submodule: run git submodule update --init (see ext/rez/README.md)" >&2; exit 1; }
 
 check-tools:
-	@[ -f tools/progress.py ] || { echo "error: tools/ is empty -- the build's helpers are the tools/ submodule: run git submodule update --init (see tools/README.md)" >&2; exit 1; }
+	@[ -f ext/tools/progress.py ] || { echo "error: ext/tools/ is empty -- the build's helpers are the ext/tools/ submodule: run git submodule update --init (see ext/tools/README.md)" >&2; exit 1; }
 
 check-ext:
 	@for d in ext/openmiles ext/ffmpeg; do \
@@ -122,7 +122,7 @@ check-ext:
 
 check-toolchain:
 	@for f in $(TOOLCHAIN_FILES); do \
-	  [ -f "$$f" ] || { echo "error: $$f is missing -- the compilers are the toolchains/ submodule: run git submodule update --init (see toolchains/README.md)" >&2; exit 1; }; \
+	  [ -f "$$f" ] || { echo "error: $$f is missing -- the compilers are the ext/toolchains/ submodule: run git submodule update --init (see ext/toolchains/README.md)" >&2; exit 1; }; \
 	done
 
 # $(call playtest,<game directory>,<run name prefix>): the scripted playtest
@@ -130,8 +130,8 @@ check-toolchain:
 define playtest
 	@[ -f $(1)/lithtech.exe ] || { echo "error: no $(1)/ -- build it first" >&2; exit 1; }
 	@rc=0; for w in $(TEST_LEVELS); do \
-	  echo "== playtest: $(1) Worlds\\$$w (tools/playtest-basic.txt)"; \
-	  $(DOCKER_RUN) env PLAYTEST_SCRIPT=tools/playtest-basic.txt PLAYTEST_NAME=$(2)$$w \
+	  echo "== playtest: $(1) Worlds\\$$w (ext/tools/playtest-basic.txt)"; \
+	  $(DOCKER_RUN) env PLAYTEST_SCRIPT=ext/tools/playtest-basic.txt PLAYTEST_NAME=$(2)$$w \
 	    $(if $(TEST_RES),PLAYTEST_RES=$(TEST_RES)) \
 	    bash build/playtest.sh $(1) "Worlds\\$$w" || rc=1; \
 	done; \
@@ -181,7 +181,7 @@ test-renderers: check-tools image
 	  done; \
 	done; echo "== side by side: out/play/compare-*-$(firstword $(TEST_RENDERERS:.ren=))-*.jpg"; exit $$rc
 
-# what tools/evidence.py cannot ask git for in the container (the build
+# what ext/tools/evidence.py cannot ask git for in the container (the build
 # image has no git)
 EVIDENCE_ENV = EVIDENCE_REVISION=$(shell git rev-parse HEAD 2>/dev/null) \
 	EVIDENCE_MODIFIED=$(shell git status --porcelain --untracked-files=no 2>/dev/null | wc -l) \

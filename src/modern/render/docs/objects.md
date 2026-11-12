@@ -1,6 +1,6 @@
 # NOLF (LithTech, NOLF 1 engine) — drawing the OBJECTS of a scene: spec for opengl.ren
 
-How to read this spec. Evidence is cited as `file:line` (repo src/), as a **PC address** (d3d.ren 0x1xxxxxxx, lithtech.exe 0x004xxxxx, server.dll 0x100xxxxx), or as **Mac** function@offset. The Mac addresses come from the Mac engine `rez/games/nolf-mac-usa/NOLF/LithTech`. Its OpenGL renderer is linked into the engine, and its function names are preserved. For Mac disassembly, use `tools/pef.py dis - <name>`. Anything inferred is marked *inferred* / INFERRED. PC and Mac use identical object layouts.
+How to read this spec. Evidence is cited as `file:line` (repo src/), as a **PC address** (d3d.ren 0x1xxxxxxx, lithtech.exe 0x004xxxxx, server.dll 0x100xxxxx), or as **Mac** function@offset. The Mac addresses come from the Mac engine `ext/rez/games/nolf-mac-usa/NOLF/LithTech`. Its OpenGL renderer is linked into the engine, and its function names are preserved. For Mac disassembly, use `ext/tools/pef.py dis - <name>`. Anything inferred is marked *inferred* / INFERRED. PC and Mac use identical object layouts.
 
 Contents
 - Part I (core): 1. engine/renderer boundary (RenderStruct callbacks, SceneDesc); 2. per-frame object enumeration, visibility, frame codes, queues and draw order; 3. LTObject common layout, flags, object matrix.
@@ -18,7 +18,7 @@ Contents
 
 ### 1.1 There is no import channel. Everything goes through RenderStruct, SceneDesc, and engine memory
 
-* Retail `d3d.ren` imports only DDRAW.dll, WINMM.dll, KERNEL32.dll and USER32.dll. It exports `FreeModeList`, `GetSupportedModes` and `RenderDLLSetup`. `lithtech.exe` exports nothing. Evidence: `objdump -p rez/games/nolf-eu-goty/d3d.ren` and `.../lithtech.exe`.
+* Retail `d3d.ren` imports only DDRAW.dll, WINMM.dll, KERNEL32.dll and USER32.dll. It exports `FreeModeList`, `GetSupportedModes` and `RenderDLLSetup`. `lithtech.exe` exports nothing. Evidence: `objdump -p ext/rez/games/nolf-eu-goty/d3d.ren` and `.../lithtech.exe`.
 * The renderer reaches engine services in only three ways:
   1. **The 15 engine callbacks** at RenderStruct +0x00..+0x38 (table below).
   2. **SceneDesc**, the struct passed to RenderScene (RenderStruct +0xb0). It holds pointers that include the ModelHook function and the object lists.
@@ -346,7 +346,7 @@ checked on both sides wherever a PC reader exists.
 
 Conventions used for evidence:
 - **Mac `Name` @addr**: disassembly of the Mac engine
-  (`tools/pef.py dis - <name>`). The address is the code offset.
+  (`ext/tools/pef.py dis - <name>`). The address is the code offset.
 - **PC 0x1xxxxxxx**: d3d.ren. **PC 0x004xxxxx**: lithtech.exe.
   **srv 0x100xxxxx**: server.dll (same engine classes).
 - *Inferred*: read from the code's shape, or from the math, rather than
@@ -1032,8 +1032,8 @@ fields and the RenderStruct services are covered in other sections. All offsets 
 byte offsets into the object, and they hold on both Mac and PC (same engine version).
 
 Evidence conventions:
-* `Mac fn+addr`: the Mac PEF `rez/games/nolf-mac-usa/NOLF/LithTech`, read with
-  `tools/pef.py` (`dis - <name>`, or `dis - 0x<addr>` for an address).
+* `Mac fn+addr`: the Mac PEF `ext/rez/games/nolf-mac-usa/NOLF/LithTech`, read with
+  `ext/tools/pef.py` (`dis - <name>`, or `dis - 0x<addr>` for an address).
 * `PC 0x1xxxxxxx`: d3d.ren, reconstructed in `src/engine/d3d/`.
 * **INFERRED** marks anything that was not read directly off code.
 

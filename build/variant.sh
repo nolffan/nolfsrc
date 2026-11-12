@@ -25,7 +25,7 @@
 #            features (MODERN.md). Compile + /D NOLFSRC_MODERN, resource
 #            scripts + /d NOLFSRC_MODERN, nothing else; then the game-data
 #            edits in src/modern/data/ are applied to the data from the
-#            discs (tools/moddata.py), into custom/. And open-source
+#            discs (ext/tools/moddata.py), into custom/. And open-source
 #            middleware instead of RAD's (NOLF_MIDDLEWARE=open, build/ext.sh):
 #            OpenMiles for Miles, our FFmpeg-based player for Bink, built
 #            from the ext/ submodules into out/ext/; the movies play.
@@ -39,7 +39,7 @@
 # One gap in the debug information: Intel C/C++ 4.0 emits none for a file
 # compiled with /Qip (the d3d.ren files whose names end in qip/qipni/...),
 # so frames in those functions have no name; the crash log gives their
-# address as the .map file beside d3d.ren lists it (tools/mapaddr.py).
+# address as the .map file beside d3d.ren lists it (ext/tools/mapaddr.py).
 #
 # It never touches the release build. The source is copied (without any
 # build output) into out/build-<variant>/ and built there by the same
@@ -82,18 +82,15 @@ if ! command -v wine >/dev/null 2>&1; then
 fi
 
 TREE="$REPO/out/build-$VARIANT"
-echo "== $VARIANT tree: src/ build/ tools/ -> out/build-$VARIANT/ (sources only; its outputs kept)"
+echo "== $VARIANT tree: src/ build/ ext/tools/ -> out/build-$VARIANT/ (sources only; its outputs kept)"
 mkdir -p "$TREE"
 source "$REPO/build/project.sh"
-python3 tools/releasesrc.py mirror "$REPO/src" "$TREE/src"
-rm -rf "$TREE/build" "$TREE/tools"
-tar -C "$REPO" -cf - --exclude='__pycache__' build tools | tar -C "$TREE" -xf -
-# the compilers, and the retail game where build/retail.sh looks for it
-[ -L "$TREE/toolchains" ] || ln -s ../../toolchains "$TREE/toolchains"
-[ -L "$TREE/rez" ] || ln -s ../../rez "$TREE/rez"
-# the modern build's open-source middleware (build/ext.sh), built once into
-# out/ext/ for every variant
-[ -L "$TREE/ext" ] || ln -s ../../ext "$TREE/ext"
+python3 ext/tools/releasesrc.py mirror "$REPO/src" "$TREE/src"
+# build/ and ext/tools/ copied, the rest of ext/ linked: the compilers, the
+# retail game where build/retail.sh looks for it, and the modern build's
+# open-source middleware (build/ext.sh), built once into out/ext/ for every
+# variant
+nolfsrc_tree_layout "$TREE"
 
 export NOLFSRC_CFLAGS="$CFLAGS"
 export NOLFSRC_LDFLAGS="$LDFLAGS"
@@ -106,7 +103,7 @@ bash "$TREE/build/all.sh"
 case "$VARIANT" in modern*)
     echo
     echo "== modern data: src/modern/data/ recipes -> out/$NAME/custom/"
-    python3 "$TREE/tools/moddata.py" apply "$NOLF_GAME_OUT" "$TREE/src/modern/data" ;;
+    python3 "$TREE/ext/tools/moddata.py" apply "$NOLF_GAME_OUT" "$TREE/src/modern/data" ;;
 esac
 
 case "$VARIANT" in *debug)

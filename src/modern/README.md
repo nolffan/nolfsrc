@@ -12,7 +12,7 @@ what has been done.
 | `launcher/` | entry points for `NOLFLauncher.exe` (interactive) and `NOLF.exe` (direct start, waits for the game); both share the launcher settings and command builder | `build/build.mk` |
 | `engine/` | new engine code for `lithtech.exe` (the controller device): files named in `build/build.mk`'s `LITHTECH_SRC`, compiled with the engine's own flags | `build/build.mk` |
 | `cres/` | new strings for `CRes.dll`: every `.rc` here is compiled into it beside `ClientRes.rc`; put the IDs in a `.h` beside it | `build/build.sh cres` |
-| `data/` | game-data recipes, applied to the data from the retail game (`data/README.md`) | `build/variant.sh`, `tools/moddata.py` |
+| `data/` | game-data recipes, applied to the data from the retail game (`data/README.md`) | `build/variant.sh`, `ext/tools/moddata.py` |
 | `render/` | the modern build's renderers the engine can load instead of `d3d.ren`: a renderer core over a device backend, `opengl.ren` on OpenGL (`render/README.md`); C++ compiled with `zig c++`, not VC6 | `build/ext.sh` |
 | `binkw32/` | the modern build's `binkw32.dll`: the Bink entry points `lithtech.exe` uses, playing the movies with FFmpeg (`ext/ffmpeg`); C, compiled with `zig cc`, not VC6 | `build/ext.sh` |
 
@@ -33,7 +33,7 @@ Conventions, so that work done in parallel merges cleanly:
 * Add nothing outside the block, not even a blank line: the release build
   compiles each retail file with its `NOLFSRC_MODERN` blocks taken out
   (below), so a line outside a block is a change to the release build.
-  `python3 tools/releasesrc.py diff master` lists every such change.
+  `python3 ext/tools/releasesrc.py diff master` lists every such change.
 
 The release build never sees these blocks at all. Skipping them is not
 enough with VC6: a skipped block still moves everything below it, and the
@@ -44,7 +44,7 @@ token unchanged (and restoring the line numbers with `#line` did not help).
 So `build/libs.sh`, `build/build.sh` and `build/engine.sh` compile a copy of
 `src/` in `out/release-tree/` with every `#ifdef`/`#ifndef NOLFSRC_MODERN`
 (and `NOLFSRC_DEBUG`) block resolved as the release build sees it
-(`tools/releasesrc.py`; `build/env.sh`, `nolfsrc_release_tree`), and copy
+(`ext/tools/releasesrc.py`; `build/env.sh`, `nolfsrc_release_tree`), and copy
 the build outputs back into `src/`. Test the variant macros only with
 `#ifdef` or `#ifndef`; anything else (`#if defined(...)`, `#elif`) stops the
 release build with an error.
