@@ -1528,6 +1528,46 @@ bool clu_dsi_ParseCommandFile(char* pFilename)
 //    * `cmp $0x1,%eax; jle` is signed (the limit is an int) while
 //      `cmp %eax,%edx; jb` is unsigned (the counter is a uint32).
 // ----------------------------------------------------------------------- //
+#ifdef NOLFSRC_MODERN
+// M-P1-30: declare the process DPI-aware before any window exists. Retail
+// declares nothing, so with display scaling above 100% Windows virtualises
+// it: the desktop size from EnumDisplaySettings is in pixels while the
+// cursor, ClipCursor, window rects and GetSystemMetrics are in scaled
+// units, so the game's cursor is held to the top-left 1/scale of the
+// screen and the system cursor is drawn enlarged (RETAIL_BUGS.md). Per-
+// monitor (v2) where Windows has it, then per-monitor, then system-wide;
+// each looked up at run time, as the oldest is Vista's.
+static void P1_DeclareDpiAware()
+{
+	typedef BOOL (WINAPI *SetContextFn)(HANDLE);
+	typedef HRESULT (WINAPI *SetAwarenessFn)(int);
+	typedef BOOL (WINAPI *SetAwareFn)(void);
+
+	HMODULE hUser = GetModuleHandleA("user32.dll");
+	if (hUser)
+	{
+		SetContextFn pSetContext = (SetContextFn)GetProcAddress(hUser, "SetProcessDpiAwarenessContext");
+		if (pSetContext && pSetContext((HANDLE)-4))   // PER_MONITOR_AWARE_V2
+			return;
+	}
+
+	HMODULE hShcore = LoadLibraryA("shcore.dll");
+	if (hShcore)
+	{
+		SetAwarenessFn pSetAwareness = (SetAwarenessFn)GetProcAddress(hShcore, "SetProcessDpiAwareness");
+		if (pSetAwareness && SUCCEEDED(pSetAwareness(2)))   // PROCESS_PER_MONITOR_DPI_AWARE
+			return;
+	}
+
+	if (hUser)
+	{
+		SetAwareFn pSetAware = (SetAwareFn)GetProcAddress(hUser, "SetProcessDPIAware");
+		if (pSetAware)
+			pSetAware();
+	}
+}
+#endif
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR lpCmdLine, int nCmdShow)
 {
@@ -1536,6 +1576,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	int                i;
 
 	NOLFSRC_INSTALL_CRASH_HANDLER();   // debug build only
+#ifdef NOLFSRC_MODERN
+	P1_DeclareDpiAware();
+#endif
 
 	args.m_pArgs = NULL;
 	args.m_nArgs = 0;

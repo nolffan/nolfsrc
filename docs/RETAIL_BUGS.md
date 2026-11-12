@@ -71,6 +71,7 @@ in.
 * [`-NetLevel` and `-NetCALevel` set settings nothing reads](#-netlevel-and--netcalevel-set-settings-nothing-reads)
 * [The server's setup wizard never closes its find handle](#the-servers-setup-wizard-never-closes-its-find-handle)
 * [Stepping up onto a slope where it is not](#stepping-up-onto-a-slope-where-it-is-not)
+* [On a scaled display the cursor is held to part of the screen](#on-a-scaled-display-the-cursor-is-held-to-part-of-the-screen)
 
 Every entry names the retail address it was read from, the binary, and the
 file that reproduces it. An entry is listed only once its function is
@@ -83,6 +84,23 @@ shipped, so their entries name the function and the source file instead.
 ---
 
 ## Wrong results
+
+### On a scaled display the cursor is held to part of the screen
+`WinMain` (lithtech.exe) · `src/engine/lithtech/clientwin.cpp`
+
+> **✅ FIXED in the modern build** (`NOLFSRC_MODERN`): `WinMain` declares
+> the process DPI-aware (per-monitor where Windows has it) before any
+> window is made, so every size and position the game sees is in pixels.
+
+The game declares nothing about DPI, so with Windows display scaling above
+100% it is virtualised: window rectangles, `GetSystemMetrics`, the cursor
+position and `ClipCursor` are all in scaled units (2560x1440 for a
+3840x2160 screen at 150%), and Windows stretches the window to fit. The
+game's own cursor then covers only the top-left 1/scale of the screen and
+the system cursor is drawn larger than the game's. The modern build's
+borderless window made it worse, as it is sized from the desktop's real
+resolution (`EnumDisplaySettings`, in pixels) while the cursor is clipped to
+it in scaled units.
 
 ### Level particle systems stop emitting at high frame rates
 `CParticleSystemFX::Update` (CShell.dll) · `src/game/ClientShellDLL/ParticleSystemFX.cpp`
