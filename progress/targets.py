@@ -313,7 +313,11 @@ TARGETS = [
          # / +0x88) right after ButeMgrNoMFC's zSLink::freecache, through
          # the SDK's hash table/array helpers, to libcimt's first function
          # at 0x100edab0
-         middleware=[(0x100eb650, 0x100edab0)]),
+         middleware=[(0x100eb650, 0x100edab0)],
+         # the CRT's _purecall (`push 0x19; call _amsg_exit`): libcmt is
+         # linked statically, so tools/vtabcheck.py has no `jmp [IAT]`
+         # thunk to find it by, as with lithtech.exe
+         purecall=0x100f0a13),
     dict(label="Object.lto", what="the game: server objects", kind="image",
          shipped=REFERENCE + "/Object.lto", stem="object",
          built="src/game/ObjectDLL/Final_Release/Object.lto",
@@ -333,7 +337,10 @@ TARGETS = [
          # StdLith's MoArray_FindElementMemcmp, to the end of the last
          # function's switch table; RegMgr's CRegMgr::Init starts at
          # 0x10141b30
-         middleware=[(0x10140950, 0x10141b30)]),
+         middleware=[(0x10140950, 0x10141b30)],
+         # the CRT's _purecall, as CShell.dll's: without it the abstract
+         # tables (CAIPoodleState's) are read on into the next one
+         purecall=0x101449ed),
 
     # ---- resources: scored resource by resource, left out of the total -----
     # CRes.dll: string tables, dialogs, bitmaps and text, and nothing but
