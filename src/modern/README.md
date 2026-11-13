@@ -12,7 +12,7 @@ what has been done.
 | `launcher/` | entry points for `NOLFLauncher.exe` (interactive) and `NOLF.exe` (direct start, waits for the game); both share the launcher settings and command builder | `build/build.mk` |
 | `engine/` | new engine code for `lithtech.exe` (the controller device): files named in `build/build.mk`'s `LITHTECH_SRC`, compiled with the engine's own flags | `build/build.mk` |
 | `cres/` | new strings for `CRes.dll`: every `.rc` here is compiled into it beside `ClientRes.rc`; put the IDs in a `.h` beside it | `build/build.sh cres` |
-| `data/` | game-data recipes, applied to the data from the retail game (`data/README.md`) | `build/variant.sh`, `ext/tools/moddata.py` |
+| `data/` | game-data recipes, applied to the data from the retail game into `nolfsrcdisc.rez` (`data/README.md`; our own new files are in `assets/modern/rez/`) | `build/all.sh`, `ext/tools/moddata.py` |
 | `render/` | the modern build's renderers the engine can load instead of `d3d.ren`: a renderer core over a device backend, `opengl.ren` on OpenGL (`render/README.md`); C++ compiled with `zig c++`, not VC6 | `build/ext.sh` |
 | `binkw32/` | the modern build's `binkw32.dll`: the Bink entry points `lithtech.exe` uses, playing the movies with FFmpeg (`ext/ffmpeg`); C, compiled with `zig cc`, not VC6 | `build/ext.sh` |
 

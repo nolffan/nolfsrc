@@ -29,6 +29,8 @@ the build takes out of the retail binaries, is this file's).
   build/retailextract.py reference   <retaildir> <refdir>   the retail engine images
                                                             and game DLLs, for
                                                             scoring only
+  build/retailextract.py oldcustom   <gamedir>              what older builds put
+                                                            in custom/, removed
   build/retailextract.py audit       <gamedir>              every PE file in a game
                                                             directory, with its
                                                             origin
@@ -47,8 +49,9 @@ EReg/, which the build does not use.) The archives
 are game data, but three of them also carry the retail game DLLs
 (CSHELL.dll, OBJECT.lto, CRES.dll, SRES.dll): those entries are overwritten
 with zeros in our copy -- the archive stays valid, the binary is gone -- so
-the only game code in the directory is what we compiled (installed in the
-custom/ rez directory, which the engine searches last-first).
+the only game code in the directory is what we compiled (packed into
+nolfsrc.rez, the archive the engine loads last of the game's, and which
+wins: it searches the stack last-first).
 
 `thirdparty` copies the licensed middleware the engine imports and we have
 no source for: Miles Sound System (mss32.dll and its .flt / .m3d / .asi /
@@ -106,7 +109,17 @@ directory.
 Every file the steps write is recorded in <gamedir>/MANIFEST.txt
 (`<origin>\\t<path>`); build/all.sh adds the binaries it built, and `audit`
 lists every PE file in the directory with its origin, failing on any it
-cannot account for -- or on any PE file still inside a .rez archive.
+cannot account for -- or on any PE file inside a .rez archive but the ones
+we built into our own (a manifest row `built <source>\t<archive>:<name>`).
+
+`oldcustom` removes what builds before nolfsrc.rez put in the game
+directory's custom/ rez directory (the game DLLs; the modern build's data
+edits, by custom/MODERN-DATA.txt, whose game-directory rows move to
+<gamedir>/MODERN-DATA.txt), and custom/ itself once empty: the release
+launcher still loads custom/, so they would load. Other files there (a
+player's) are kept. It also drops the manifest's rows for files no longer
+in the directory and for our archives and their entries, which
+build/all.sh writes again.
 """
 import os
 import sys
@@ -625,9 +638,50 @@ def cmd_reference(retaildir, refdir):
         rez.f.close()
 
 
+# Our own archives (build/all.sh, step 4): their rows are written afresh.
+OUR_REZ = {"nolfsrc.rez", "nolfsrcdisc.rez"}
+
+
+def cmd_oldcustom(gamedir):
+    gamedir = Path(gamedir)
+    custom = gamedir / "custom"
+    gone = set()
+    lst = custom / "MODERN-DATA.txt"
+    if lst.is_file():
+        carry = []
+        for e in lst.read_text().split("\n"):
+            if e.startswith("gamedir:"):
+                carry.append(e)
+            elif e:
+                gone.add("custom/" + e)
+        gone.add("custom/MODERN-DATA.txt")
+        new = gamedir / "MODERN-DATA.txt"
+        if carry and not new.exists():
+            new.write_text("".join(e + "\n" for e in carry))
+    man = Manifest(gamedir)
+    for p in list(man.rows):
+        if p.lower().startswith("custom/"):
+            gone.add(p)
+            del man.rows[p]
+        elif ":" in p or p.lower() in OUR_REZ or not (gamedir / p).exists():
+            del man.rows[p]
+    if man.path.exists():
+        man.save()
+    for p in sorted(gone):
+        f = gamedir / p
+        if f.is_file() or f.is_symlink():
+            f.unlink()
+            print(f"   removed {p} (an older build's)")
+    if custom.is_dir():
+        for root, _dirs, _files in os.walk(custom, topdown=False):
+            if not os.listdir(root):
+                os.rmdir(root)
+
+
 def cmd_audit(gamedir):
     gamedir = Path(gamedir)
     man = Manifest(gamedir)
+    inside = {p.lower(): o for p, o in man.rows.items() if ":" in p}
     bad = 0
     rows = []
     for root, _dirs, files in os.walk(gamedir, followlinks=True):
@@ -643,8 +697,12 @@ def cmd_audit(gamedir):
                 rows.append((origin, rel, full.stat().st_size))
             elif fn.lower().endswith(".rez"):
                 for ename, _pos, sz in rez_pe_entries(full):
-                    rows.append(("INSIDE A REZ ARCHIVE", f"{rel}:{ename}", sz))
-                    bad += 1
+                    origin = inside.get(f"{rel}:{ename}".lower(), "")
+                    if origin.startswith("built "):
+                        rows.append((origin, f"{rel}:{ename}", sz))
+                    else:
+                        rows.append(("INSIDE A REZ ARCHIVE", f"{rel}:{ename}", sz))
+                        bad += 1
     order = {"built": 0, "EXT": 1, "THIRD-PARTY": 2}
     rows.sort(key=lambda r: (order.get(r[0].split()[0], 3), r[1].lower()))
     print(f"{'size':>9}  {'file':<24} origin")
@@ -679,6 +737,8 @@ def main():
         cmd_goty(sys.argv[2], sys.argv[3])
     elif cmd == "reference" and len(sys.argv) == 4:
         cmd_reference(sys.argv[2], sys.argv[3])
+    elif cmd == "oldcustom" and len(sys.argv) == 3:
+        cmd_oldcustom(sys.argv[2])
     elif cmd == "audit" and len(sys.argv) == 3:
         sys.exit(cmd_audit(sys.argv[2]))
     else:

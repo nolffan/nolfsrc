@@ -18,8 +18,9 @@ export MKDEPS_PROJECT_INCLUDE=src/nolfsrc
 # build's own trees (out/release-tree/, out/build-<variant>/), the tools at
 # <tree>/ext/tools/ so that they take <tree> for the project (as layout.py
 # works it out), and every other submodule of ext/ (the compilers, the retail
-# game where build/retail.sh looks for it, the modern build's middleware) a
-# link to this checkout's. A tree made before the submodules moved to ext/
+# game where build/retail.sh looks for it, lithtools, the modern build's
+# middleware) a link to this checkout's, as is assets/ (what nolfsrc.rez
+# carries besides the game DLLs). A tree made before the submodules moved to ext/
 # had a link for ext/ itself and tools/, toolchains and rez at its top:
 # those go first.
 nolfsrc_tree_layout() {
@@ -36,4 +37,5 @@ nolfsrc_tree_layout() {
         n="$(basename "$d")"
         [ "$n" = tools ] || [ -L "$tree/ext/$n" ] || ln -s "../../../ext/$n" "$tree/ext/$n" || return 1
     done
+    [ -L "$tree/assets" ] || ln -s ../../assets "$tree/assets" || return 1
 }

@@ -13,7 +13,7 @@
 //           level's music when entered from the game).
 //
 //           What is listed comes from ATTRIBUTES/Jukebox.txt, written for
-//           this project (src/modern/data/files/ATTRIBUTES/Jukebox.txt);
+//           this project (assets/modern/rez/ATTRIBUTES/Jukebox.txt);
 //           the layout from LAYOUT.txt's [FolderJukebox] section (M-P4-03).
 //
 // ----------------------------------------------------------------------- //

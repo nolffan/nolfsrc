@@ -207,6 +207,9 @@ If you get stuck in the level geometry, `mpclip` lets you fly out.
 |---|---|
 | `autoexec.cfg` | Your settings and key bindings, rewritten when the game exits. Delete it to start from the defaults (`defaults.cfg`). |
 | `Save/` | Saved games. |
+| `nolfsrc.rez` | This project's archive: the game's code, built from source, and the modern build's own new files (the jukebox's list, the seasonal main menus). It loads after the game's own archives, so it overrides them. |
+| `nolfsrcdisc.rez` | The modern build's changes to the game's own data (weapon and layout tables, a few textures), which the installer makes from your discs. |
+| `Custom/` | Mods: a `.rez` archive here can be picked in the launcher's custom archives, and loads after `nolfsrc.rez`. |
 | `launcher.ini` | The launcher's settings (its Advanced options, the custom archives to load, the command line), in the modern build; the original kept them in the Windows registry. |
 | `modern.log` | The modern build's log, emptied each run. Attach it when you report a problem. |
 | `NetHost.txt`, `modern-server.log` | The dedicated server's settings, and its log in the modern build (below). |

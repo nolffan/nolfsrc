@@ -23,9 +23,11 @@
 #            (nolfsrc_crash.h) go to nolfsrc.log in the game's directory.
 #   modern   NOLFSRC_MODERN: the retail bugs fixed (RETAIL_BUGS.md) and new
 #            features (MODERN.md). Compile + /D NOLFSRC_MODERN, resource
-#            scripts + /d NOLFSRC_MODERN, nothing else; then the game-data
-#            edits in src/modern/data/ are applied to the data from the
-#            discs (ext/tools/moddata.py), into custom/. And open-source
+#            scripts + /d NOLFSRC_MODERN, nothing else; and our own data
+#            files of assets/modern/rez/ go in nolfsrc.rez with the game
+#            DLLs, and the game-data edits in src/modern/data/ are applied
+#            to the data from the discs (ext/tools/moddata.py) into
+#            nolfsrcdisc.rez (build/all.sh, step 4). And open-source
 #            middleware instead of RAD's (NOLF_MIDDLEWARE=open, build/ext.sh):
 #            OpenMiles for Miles, our FFmpeg-based player for Bink, built
 #            from the ext/ submodules into out/ext/; the movies play.
@@ -99,12 +101,6 @@ export NOLF_GAME_OUT="$REPO/out/$NAME"
 export NOLF_PACKAGE=0
 case "$VARIANT" in modern*) export NOLF_MIDDLEWARE=open NOLF_EXT_OUT="$REPO/out/ext" ;; esac
 bash "$TREE/build/all.sh"
-
-case "$VARIANT" in modern*)
-    echo
-    echo "== modern data: src/modern/data/ recipes -> out/$NAME/custom/"
-    python3 "$TREE/ext/tools/moddata.py" apply "$NOLF_GAME_OUT" "$TREE/src/modern/data" ;;
-esac
 
 case "$VARIANT" in *debug)
     echo

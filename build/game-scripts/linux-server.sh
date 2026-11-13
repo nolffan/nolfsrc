@@ -26,7 +26,7 @@
 #   WINEDEBUG    Wine's log channels (default: -all)
 #
 # The server runs in this directory: it loads the rez archives startup.txt
-# lists (custom/, with the game DLLs, last), keeps its settings in
+# lists (nolfsrc.rez, with the game DLLs, last), keeps its settings in
 # NetHost.txt and, in the modern build, logs to modern.log. It answers on
 # UDP port 27888 (or -NetPort) -- open it in a firewall for players on other
 # machines. It runs until its window is closed (Stop Server, or the window's

@@ -12,6 +12,12 @@ covers each change in detail, under its item number (M-P1-01 and so on).
 
 Since the first public release:
 
+- **The game's code and our data are in archives, not `custom/`.**
+  `nolfsrc.rez` holds the game code built from source and the modern
+  build's new files; `nolfsrcdisc.rez`, which the installer makes from your
+  discs, its changes to the game's own data. Both load after the game's own
+  archives, and a mod's (the launcher's custom archives, `Custom\*.rez`)
+  after them, so a mod can override ours.
 - **Other players move smoothly online.** Positions went to the server 7
   times a second and back 6 times a second (2001's modem settings), so other
   players skipped about; both are 30 now, and an existing config is raised

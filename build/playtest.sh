@@ -160,7 +160,10 @@ rm -f "$RUN/nolfcmds.txt"
 # is played, with its window title and without the screen mode)
 MIDDLEWARE=retail
 grep -q '^EXT .*	binkw32\.dll$' "$GAME/MANIFEST.txt" 2>/dev/null && MIDDLEWARE=open
-CMDS="$(bash "$REPO/build/nolfcmds.sh" $MIDDLEWARE | tr -d '\r\n')"
+# the modern build's own launcher names it
+MODERN=
+grep -q '	NOLFLauncher\.exe$' "$GAME/MANIFEST.txt" 2>/dev/null && MODERN=modern
+CMDS="$(bash "$REPO/build/nolfcmds.sh" $MIDDLEWARE $MODERN | tr -d '\r\n')"
 SCREEN=1024x768
 if [ -n "${PLAYTEST_RES:-}" ]; then
     RW=${PLAYTEST_RES%x*}; RH=${PLAYTEST_RES#*x}
