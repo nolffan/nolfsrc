@@ -79,9 +79,10 @@ static LONG WINAPI NolfsrcCrashFilter(EXCEPTION_POINTERS *ep)
     }
     if (pSymSetOptions)
         pSymSetOptions(SYMOPT_UNDNAME | SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS);
-    /* the .pdbs sit beside each binary; the game DLLs' (which the engine
-       copies out of nolfsrc.rez to load) in the game directory itself */
-    pSymInitialize(process, (LPSTR)".", TRUE);
+    /* the .pdbs sit beside each binary; the game DLLs are loaded out of the
+       custom/ rez directory, so look there as well (the modern build's,
+       out of nolfsrc.rez, have theirs in the game directory) */
+    pSymInitialize(process, (LPSTR)".;custom", TRUE);
 
     memset(&frame, 0, sizeof(frame));
     frame.AddrPC.Offset = ctx.Eip;

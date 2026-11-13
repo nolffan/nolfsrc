@@ -41,8 +41,9 @@
 #   * the installer's registry values under HKLM\Software\Monolith
 #     Productions\No One Lives Forever\1.0: the extra rez archives the
 #     launcher adds to the command line (the update, then the GOTY content
-#     and -- ours -- nolfsrc.rez, the game DLLs built from source), and
-#     movies off (on in the modern build, whose own Bink player plays them).
+#     and -- ours -- the custom/ directory holding the game DLLs built from
+#     source), and movies off (on in the modern build, whose own Bink
+#     player plays them).
 # On the first run autoexec.cfg -- the game's settings, rewritten on every
 # exit -- starts as a copy of defaults.cfg.
 #
@@ -104,7 +105,7 @@ fi
 # launcher.ini, and finds the archives itself.)
 if [ $MODERN = 0 ]; then
     reg "$KEY" /v 'Update Command Line'  /t REG_SZ /d '-rez nolfu003.rez'
-    reg "$KEY" /v 'Content Command Line' /t REG_SZ /d '-rez nolfgoty.rez -rez nolfsrc.rez'
+    reg "$KEY" /v 'Content Command Line' /t REG_SZ /d '-rez nolfgoty.rez -rez custom'
     reg "$KEY" /v 'Disable Movies'       /t REG_DWORD /d $MOVIES_OFF
 fi
 # The release build's CD-ROM drive (n:, see above). Wine reads the drive

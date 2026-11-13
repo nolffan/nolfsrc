@@ -274,7 +274,7 @@ the two seasonal menu models.
 | `src/LT2/` | the LithTech SDK and shared-library headers from the same release |
 | `docs/` | the documentation: installing, building, the modern build's changes, the console, retail bugs, licences |
 | `build/` | the build scripts (`all.sh` is the whole build) |
-| `assets/` | our own data files, which `nolfsrc.rez` carries with the game DLLs (`assets/README.md`); never retail data |
+| `assets/` | our own data files, which the modern build's `nolfsrc.rez` carries with the game DLLs (`assets/README.md`); never retail data |
 | `ext/tools/` | the build's helpers, the playtest, and the tools for reading the retail code and comparing ours with it (a submodule, [nolffan/tools](https://github.com/nolffan/tools), meant for any reconstruction like this one) |
 | `ext/tools/guides/` | how to reconstruct a function so it compiles to the retail bytes: start here to contribute; `14-progress.md` is the scoreboard |
 | `progress/` | the record of what is byte-identical so far, and what `make progress` checks against it |

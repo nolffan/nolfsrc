@@ -10,7 +10,8 @@ A game directory holds the retail game's data as well as what we built: the
 four .rez archives, the movies, the text and config files of the play disc,
 the retail Miles and Bink files (legacy builds) and the modern build's data
 edits made from them (nolfsrcdisc.rez, from the recipes of src/modern/data/;
-our own archive, nolfsrc.rez, ships in the archive). The public
+our game DLLs, in custom/ or the modern build's nolfsrc.rez, ship in the
+archive). The public
 archive (build/package.sh) leaves all of that out, and three scripts put it
 back from the player's own copies of the two discs -- the Game of the Year
 Edition (Europe), as .iso images or as redump's .bin/.cue (or its .zip),

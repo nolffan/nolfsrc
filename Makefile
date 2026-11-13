@@ -13,8 +13,8 @@
 #
 # Needs only docker on the host and the submodules (`git submodule update
 # --init`): ext/tools/, the build's helpers; the compilers, ext/toolchains/
-# (ext/toolchains/README.md); ext/lithtools/, whose lithrez packs
-# nolfsrc.rez (build/lithrez.sh); and ext/rez/, which
+# (ext/toolchains/README.md); ext/lithtools/, whose lithrez packs the modern
+# build's nolfsrc.rez (build/lithrez.sh); and ext/rez/, which
 # fetches the redump images of the Game of the Year discs from archive.org and
 # installs the game from them (ext/rez/README.md; `make retail`, which every build
 # runs first, does it once). Every step runs in a throwaway container of the
@@ -80,10 +80,10 @@ help:
 	@echo "           NOLF_SOURCE=<dir> (Monolith's prebuilt libraries for make progress;"
 	@echo "           default progress/reference), COMPLETE=1, COVERED=1, ACCEPT_LOSSES=1 (progress/README.md)"
 
-game: check-toolchain check-lithtools retail
+game: check-toolchain retail
 	$(DOCKER_RUN) bash build/all.sh
 
-debug: check-toolchain check-lithtools retail
+debug: check-toolchain retail
 	$(DOCKER_RUN) bash build/variant.sh $@
 
 # the modern build also builds OpenMiles and its Bink player from ext/
@@ -116,7 +116,7 @@ check-tools:
 	@[ -f ext/tools/progress.py ] || { echo "error: ext/tools/ is empty -- the build's helpers are the ext/tools/ submodule: run git submodule update --init (see ext/tools/README.md)" >&2; exit 1; }
 
 check-lithtools:
-	@[ -f ext/lithtools/tools/lithrez/CMakeLists.txt ] || { echo "error: ext/lithtools/ is empty -- lithrez, which packs the game DLLs and assets/ into nolfsrc.rez, is the ext/lithtools submodule's: run git submodule update --init ext/lithtools" >&2; exit 1; }
+	@[ -f ext/lithtools/tools/lithrez/CMakeLists.txt ] || { echo "error: ext/lithtools/ is empty -- lithrez, which packs the modern build's nolfsrc.rez, is the ext/lithtools submodule's: run git submodule update --init ext/lithtools" >&2; exit 1; }
 
 check-ext:
 	@for d in ext/openmiles ext/ffmpeg; do \

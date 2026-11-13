@@ -29,8 +29,9 @@ the build takes out of the retail binaries, is this file's).
   build/retailextract.py reference   <retaildir> <refdir>   the retail engine images
                                                             and game DLLs, for
                                                             scoring only
-  build/retailextract.py oldcustom   <gamedir>              what older builds put
-                                                            in custom/, removed
+  build/retailextract.py oldcustom   <gamedir>              what older modern builds
+                                                            put in custom/, removed
+  build/retailextract.py prune       <gamedir>              stale manifest rows
   build/retailextract.py audit       <gamedir>              every PE file in a game
                                                             directory, with its
                                                             origin
@@ -49,9 +50,9 @@ EReg/, which the build does not use.) The archives
 are game data, but three of them also carry the retail game DLLs
 (CSHELL.dll, OBJECT.lto, CRES.dll, SRES.dll): those entries are overwritten
 with zeros in our copy -- the archive stays valid, the binary is gone -- so
-the only game code in the directory is what we compiled (packed into
-nolfsrc.rez, the archive the engine loads last of the game's, and which
-wins: it searches the stack last-first).
+the only game code in the directory is what we compiled (installed in the
+custom/ rez directory, which the engine searches last-first; the modern
+build packs it into nolfsrc.rez, the archive it loads last of the game's).
 
 `thirdparty` copies the licensed middleware the engine imports and we have
 no source for: Miles Sound System (mss32.dll and its .flt / .m3d / .asi /
@@ -112,14 +113,16 @@ lists every PE file in the directory with its origin, failing on any it
 cannot account for -- or on any PE file inside a .rez archive but the ones
 we built into our own (a manifest row `built <source>\t<archive>:<name>`).
 
-`oldcustom` removes what builds before nolfsrc.rez put in the game
-directory's custom/ rez directory (the game DLLs; the modern build's data
-edits, by custom/MODERN-DATA.txt, whose game-directory rows move to
-<gamedir>/MODERN-DATA.txt), and custom/ itself once empty: the release
-launcher still loads custom/, so they would load. Other files there (a
-player's) are kept. It also drops the manifest's rows for files no longer
-in the directory and for our archives and their entries, which
-build/all.sh writes again.
+`oldcustom`, for a modern game directory only, removes what modern builds
+before nolfsrc.rez put in its custom/ rez directory (the game DLLs; the
+data edits, by custom/MODERN-DATA.txt, whose game-directory rows move to
+<gamedir>/MODERN-DATA.txt), and custom/ itself once empty: every launcher
+loads custom/, so they would load. Other files there (a player's) are
+kept. It refuses a directory whose manifest does not name NOLFLauncher.exe
+(the modern build's): a legacy build's game DLLs live in custom/.
+
+`prune` drops the manifest's rows for files no longer in the directory and
+for our archives and their entries, which build/all.sh writes again.
 """
 import os
 import sys
@@ -642,9 +645,24 @@ def cmd_reference(retaildir, refdir):
 OUR_REZ = {"nolfsrc.rez", "nolfsrcdisc.rez"}
 
 
+def cmd_prune(gamedir):
+    man = Manifest(gamedir)
+    for p in list(man.rows):
+        if ":" in p or p.lower() in OUR_REZ or not (Path(gamedir) / p).exists():
+            del man.rows[p]
+    if man.path.exists():
+        man.save()
+
+
 def cmd_oldcustom(gamedir):
     gamedir = Path(gamedir)
     custom = gamedir / "custom"
+    if not custom.is_dir():
+        return
+    man = Manifest(gamedir)
+    if "NOLFLauncher.exe" not in man.rows:
+        sys.exit(f"retailextract: oldcustom: {gamedir} is not a modern game directory "
+                 "(no NOLFLauncher.exe in its manifest); its custom/ is left alone")
     gone = set()
     lst = custom / "MODERN-DATA.txt"
     if lst.is_file():
@@ -658,12 +676,9 @@ def cmd_oldcustom(gamedir):
         new = gamedir / "MODERN-DATA.txt"
         if carry and not new.exists():
             new.write_text("".join(e + "\n" for e in carry))
-    man = Manifest(gamedir)
     for p in list(man.rows):
         if p.lower().startswith("custom/"):
             gone.add(p)
-            del man.rows[p]
-        elif ":" in p or p.lower() in OUR_REZ or not (gamedir / p).exists():
             del man.rows[p]
     if man.path.exists():
         man.save()
@@ -739,6 +754,8 @@ def main():
         cmd_reference(sys.argv[2], sys.argv[3])
     elif cmd == "oldcustom" and len(sys.argv) == 3:
         cmd_oldcustom(sys.argv[2])
+    elif cmd == "prune" and len(sys.argv) == 3:
+        cmd_prune(sys.argv[2])
     elif cmd == "audit" and len(sys.argv) == 3:
         sys.exit(cmd_audit(sys.argv[2]))
     else:
