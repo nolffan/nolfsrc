@@ -111,7 +111,8 @@ You need Linux with Docker and the submodules:
    reconstruction tools and guides; `ext/openmiles` and `ext/ffmpeg` are the
    modern build's open-source middleware (about 130 MB), and
    `ext/nolf1-modernizer` the NOLF Modernizer, two of whose models the
-   modern build uses (about 60 MB).
+   modern build uses (about 60 MB); `ext/lithtools` is our LithTech tools,
+   whose `lithrez` packs the game's `nolfsrc.rez`.
 2. Run
 
 ```sh
@@ -279,5 +280,5 @@ the two seasonal menu models.
 | `docker/` | the build image (Ubuntu 24.04 + Wine) |
 | `ext/toolchains/` | the compilers (a submodule) |
 | `ext/rez/` | the retail game the build takes its data from: fetches the disc images and installs the game from them (a submodule) |
-| `ext/` | the submodules: `tools/`, `toolchains/` and `rez/` above, and the upstream open-source projects the modern build uses, one submodule each: `openmiles/` (OpenMiles, for Miles) and `ffmpeg/` (FFmpeg, for Bink), built by `build/ext.sh` (OpenMiles from our fork, with our fixes as commits); and `nolf1-modernizer/` (the NOLF Modernizer, for two menu models) |
+| `ext/` | the submodules: `tools/`, `toolchains/` and `rez/` above, and the upstream open-source projects the modern build uses, one submodule each: `openmiles/` (OpenMiles, for Miles) and `ffmpeg/` (FFmpeg, for Bink), built by `build/ext.sh` (OpenMiles from our fork, with our fixes as commits); `nolf1-modernizer/` (the NOLF Modernizer, for two menu models); and `lithtools/` (our LithTech tools, whose `lithrez` packs `nolfsrc.rez`, `build/lithrez.sh`) |
 | `out/` | everything the build produces |

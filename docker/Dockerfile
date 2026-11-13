@@ -7,7 +7,8 @@
 # Zig, pinned to the version ext/openmiles declares -- the compiler for
 # OpenMiles, and (`zig cc`, clang with its own mingw-w64 headers and
 # libraries) the 32-bit Windows C cross-compiler for FFmpeg and our
-# binkw32.dll.
+# binkw32.dll. And g++, CMake and Ninja for lithtools' lithrez
+# (build/lithrez.sh), which packs our game DLLs and assets/ into nolfsrc.rez.
 #
 # The Makefile builds it as `nolfsrc-build` and runs every step in a
 # throwaway container with the checkout mounted at /repo, as the invoking
@@ -29,6 +30,7 @@ RUN dpkg --add-architecture i386 \
         libgl1:i386 libglu1-mesa:i386 libgl1-mesa-dri:i386 \
         procps \
         curl ca-certificates gcc make libc6-dev zlib1g-dev \
+        g++ cmake ninja-build \
         xz-utils patch \
  && rm -rf /var/lib/apt/lists/*
 

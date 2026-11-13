@@ -19,3 +19,7 @@
 	path = ext/nolf1-modernizer
 	url = git@github.com:haekb/nolf1-modernizer.git
 	shallow = true
+[submodule "lithtools"]
+	path = ext/lithtools
+	url = git@github.com:nolffan/lithtools.git
+	shallow = true

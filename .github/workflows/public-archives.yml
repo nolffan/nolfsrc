@@ -131,6 +131,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # All of them: ext/tools (the build's scripts), ext/toolchains (the
+      # compilers), ext/rez (the discs' installer), ext/lithtools (lithrez,
+      # which packs nolfsrc.rez) and the modern build's middleware.
       - name: Submodules
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
