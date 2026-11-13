@@ -24,7 +24,6 @@
     <comClass clsid="{4BE0537B-5C19-11D3-8BDC-00600893B1B6}" threadingModel="Both" description="DirectMusicParamControlTrack"/>
     <comClass clsid="{55A8FD00-4288-11D3-9BD1-8A0D61C88835}" threadingModel="Both" description="DirectMusicMarkerTrack"/>
     <comClass clsid="{995C1CF5-54FF-11D3-8BDA-00600893B1B6}" threadingModel="Both" description="DirectMusicLyricsTrack"/>
-    <comClass clsid="{AED5F0A5-D972-483D-A384-649DFEB9C181}" threadingModel="Both" description="DirectMusicSong"/>
     <comClass clsid="{BAE4D665-4EA1-11D3-8BDA-00600893B1B6}" threadingModel="Both" description="DirectMusicSegTriggerTrack"/>
     <comClass clsid="{D2AC2881-B39B-11D1-8704-00600893B1BD}" threadingModel="Both" description="DirectMusicPerformance"/>
     <comClass clsid="{D2AC2882-B39B-11D1-8704-00600893B1BD}" threadingModel="Both" description="DirectMusicSegment"/>
@@ -55,7 +54,6 @@
   </file>
   <file name="ms_dmstyle.dll">
     <comClass clsid="{3F037241-414E-11D1-A7CE-00A0C913F73C}" threadingModel="Both" description="DirectMusicSection"/>
-    <comClass clsid="{B0684266-B57F-11D2-97F9-00C04FA36E58}" threadingModel="Both" description="DirectMusicMelodyFormulationTrack"/>
     <comClass clsid="{D2AC288A-B39B-11D1-8704-00600893B1BD}" threadingModel="Both" description="DirectMusicStyle"/>
     <comClass clsid="{D2AC288B-B39B-11D1-8704-00600893B1BD}" threadingModel="Both" description="DirectMusicChordTrack"/>
     <comClass clsid="{D2AC288C-B39B-11D1-8704-00600893B1BD}" threadingModel="Both" description="DirectMusicCommandTrack"/>
