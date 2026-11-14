@@ -112,89 +112,9 @@ detail.
 
 ## Play
 
-To play a release download, see [`docs/INSTALL.md`](docs/INSTALL.md). What
-the modern build changes is listed in [`CHANGELOG.md`](CHANGELOG.md); its
-console commands, cheats and settings are in
-[`docs/CONSOLE.md`](docs/CONSOLE.md) and
-[`docs/VARIABLES.md`](docs/VARIABLES.md). The rest of this section is about
-playing your own build.
-
-`out/nolf-legacy-release/` is a complete game directory. On a Linux machine with Wine
-(32-bit support needed):
-
-```sh
-out/nolf-legacy-release/linux-run.sh                # the launcher, NOLF.exe: click Launch
-```
-
-The legacy build starts through its launcher. In modern builds, `NOLF.exe`
-(and `linux-run.sh`) starts the game immediately with the same saved settings
-and waits until it exits; `NOLFLauncher.exe` opens the launcher. To go
-straight into a level when testing a build, use `build/playtest.sh`
-(`make test` and `make shell`; its header has the options).
-
-To play elsewhere, copy `out/nolf-legacy-release-private.tar.gz` (one file), unpack it
-and run `nolf-legacy-release/linux-run.sh`. Every variant is packaged the same way:
-`out/nolf-legacy-debug-private.tar.gz`, `out/nolf-modern-release-private.tar.gz` and
-`out/nolf-modern-debug-private.tar.gz`. `nolf-legacy-release/linux-server.sh` runs a
-dedicated server (`NolfServ.exe`; without a display it runs under
-`xvfb-run`). The scripts document their options in their headers. Sound needs Wine's audio to work on that machine.
-
-The `-private` archives hold the retail game's data (1.1 GB of it), so they
-are for your own machines and for others developing on the build. To give
-the game to anyone else, give them the `-public` archive instead
-(`out/nolf-modern-release-public.tar.gz`, about 5 MB): the same directory
-without anything from the discs, and three scripts that copy it out of their
-own disc images of the Game of the Year Edition (Europe). An image can be a
-plain `.iso` (an own rip), redump's `.bin` (or its `.cue`), or redump's
-`.zip` as archive.org serves it; a `.bin` or `.zip` is converted to a
-temporary `.iso` first (about 0.6 GB a disc; on Linux this needs
-`python3`). They check each image's SHA-256 and every file they write, so
-the result is the `-private` archive's directory, byte for byte:
-
-```sh
-nolf-modern-release/linux-install.sh disc1.zip disc2.zip    # Linux, Steam Deck
-nolf-modern-release/mac-install.command disc1.zip disc2.zip # a Mac, for CrossOver
-```
-
-On Windows, drop both images onto `windows-install.bat` (or put them in the
-game folder and double-click it), then start `NOLF.exe`. Each script finds
-the images in the game directory or the one above it by itself, and can be
-run again: a file already in place is checked and kept. The public archive
-is made only if `ext/rez/isos/` has the two `.iso` images (`build/mkinstall.py`).
-
-Music needs more in the release build: it is DirectMusic, which Wine
-implements only in part. Its own DirectMusic cannot load the music's styles,
-so the game plays in silence apart from the sound effects. The modern build
-carries Microsoft's DirectMusic in its game directory and needs nothing
-installed, in Wine or in Proton (a Steam Deck included;
-`src/modern/directmusic/README.md`). For the release build, install
-Microsoft's DirectMusic into the Wine prefix the game runs in
-(`linux-run.sh` uses `~/.wine-nolf`):
-
-```sh
-WINEPREFIX=~/.wine-nolf winetricks dmband dmcompos dmime dmloader dmscript \
-    dmstyle dmsynth dmusic dmusic32 dswave gmdls
-```
-
-Not winetricks' `directmusic` verb: it also replaces Wine's DirectSound with
-Microsoft's, which the sound effects play through, and they then repeat. If
-it is already installed, give DirectSound back to Wine:
-`WINEPREFIX=~/.wine-nolf wine reg delete 'HKCU\Software\Wine\DllOverrides' /v dsound /f`.
-
-On a Steam Deck (or any Steam with Proton), the modern build needs no
-winetricks or Protontricks: unpack `nolf-modern-release-private.tar.gz` (or the public one, then run
-`linux-install.sh`), add its
-`NOLF.exe` as a non-Steam game (Desktop Mode, Steam > Games > Add a
-Non-Steam Game), and in the shortcut's Properties > Compatibility force a
-Proton version. The music plays from the game directory's own DirectMusic.
-(Checked under Wine 9.0; the Proton steps are untested here.)
-
-The modern build plays with a controller: an Xbox-style (XInput) pad, which
-is also what Steam Input makes of the Steam Deck's controls and of most other
-pads. The sticks move and look, the triggers fire and zoom, and the menus
-follow the d-pad, A and B; Options > Controls > Controller sets the look
-speed and dead zones, and Customize controls binds the buttons like keys
-([`docs/MODERN.md`](docs/MODERN.md), P7). So far it is tested with a simulated pad only.
+See [`docs/INSTALL.md`](docs/INSTALL.md). What the modern build changes is
+listed in [`CHANGELOG.md`](CHANGELOG.md); to play a build of your own, see
+[`docs/BUILDING.md`](docs/BUILDING.md#playing-your-build).
 
 ## Contributing
 
@@ -243,23 +163,3 @@ This project builds on the work of others:
 The modern build reimplements the Modernizer's changes rather than copying
 its code (`docs/MODERN.md`, "Rules for this work"); of its assets, it uses
 the two seasonal menu models.
-
-## Layout
-
-| Path | What |
-|---|---|
-| `src/engine/` | the engine, launcher, dedicated server and resource DLLs (reconstructed source) |
-| `src/lithshared/` | the LithTech shared static libraries the engine and game link |
-| `src/game/` | Monolith's NOLF Source Code v1.003 (client, server and resource DLLs) |
-| `src/LT2/` | the LithTech SDK and shared-library headers from the same release |
-| `docs/` | the documentation: installing, building, the modern build's changes, the console, retail bugs, licences |
-| `build/` | the build scripts (`all.sh` is the whole build) |
-| `assets/` | our own data files, which the modern build's `nolfsrc.rez` carries with the game DLLs (`assets/README.md`); never retail data |
-| `ext/tools/` | the build's helpers, the playtest, and the tools for reading the retail code and comparing ours with it (a submodule, [nolffan/tools](https://github.com/nolffan/tools), meant for any reconstruction like this one) |
-| `ext/tools/guides/` | how to reconstruct a function so it compiles to the retail bytes: start here to contribute; `14-progress.md` is the scoreboard |
-| `progress/` | the record of what is byte-identical so far, and what `make progress` checks against it |
-| `docker/` | the build image (Ubuntu 24.04 + Wine) |
-| `ext/toolchains/` | the compilers (a submodule) |
-| `ext/rez/` | the retail game the build takes its data from: fetches the disc images and installs the game from them (a submodule) |
-| `ext/` | the submodules: `tools/`, `toolchains/` and `rez/` above, and the upstream open-source projects the modern build uses, one submodule each: `openmiles/` (OpenMiles, for Miles) and `ffmpeg/` (FFmpeg, for Bink), built by `build/ext.sh` (OpenMiles from our fork, with our fixes as commits); `nolf1-modernizer/` (the NOLF Modernizer, for two menu models); and `lithtools/` (our LithTech tools, whose `lithrez` packs `nolfsrc.rez`, `build/lithrez.sh`) |
-| `out/` | everything the build produces |

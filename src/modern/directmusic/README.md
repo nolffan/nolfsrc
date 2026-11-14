@@ -45,7 +45,7 @@ with `gm.dls` in the prefix nothing opens it.
 When `ext/toolchains/directmusic-5.3.1.904/` is missing, the build says so and
 installs neither the DLLs nor the manifest (a manifest naming missing files
 would break DirectMusic on Windows); the music then needs winetricks as
-before (`README.md`, "Play").
+before (`docs/BUILDING.md`, "Playing your build").
 
 ## Regenerating the manifest
 
