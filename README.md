@@ -38,26 +38,6 @@ the redump images of its two discs, fetched from archive.org. The modern
 build replaces that runtime with open-source builds from `ext/`: OpenMiles
 for Miles, and our own Bink player on FFmpeg.
 
-## Roadmap
-
-1. **Byte-for-byte compatibility, for preservation.** Every binary compiles
-   to exactly the machine code that shipped, so this source is a faithful
-   record of the game as released. The whole game already builds from this
-   source and plays; how much of it already compiles to the retail bytes is
-   under [Progress](#progress). The rest is written and working, but not yet
-   identical.
-2. **Integrate the [NOLF Modernizer](https://haekb.itch.io/nolf-modernizer)
-   patch**, so its improvements are part of the source rather than a patch
-   applied on top.
-3. **Fix the bugs found during reverse engineering.** Rebuilding the engine
-   to the exact bytes means reproducing its original bugs as well; once the
-   byte-exact version is preserved, the fixes can go on top of it. The bugs
-   found so far are listed in [`docs/RETAIL_BUGS.md`](docs/RETAIL_BUGS.md). Fixes go
-   behind the `NOLFSRC_MODERN` define and are built by `make modern`, so the
-   release build keeps matching the retail one.
-4. **Move the renderer from Direct3D 7 to Vulkan**, for native play on every
-   platform, without Wine.
-
 ## Progress
 
 How much of each binary compiles to exactly the bytes of the retail game

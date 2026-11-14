@@ -9,7 +9,7 @@ retail machine code means compiling its mistakes too. They are fixed in the
 **modern build** (`make modern`, the `NOLFSRC_MODERN` define; see
 `BUILDING.md`, "Variant builds"): each fix goes behind `#ifdef
 NOLFSRC_MODERN`, with the retail code kept in the `#else`, so the release
-build is unchanged and still matches. This is step 3 of the README's roadmap.
+build is unchanged and still matches.
 
 An entry that is fixed says so under its heading, with the file the fix is
 in.
