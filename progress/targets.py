@@ -22,6 +22,7 @@ from d3dcheck import NAMED as D3D_NAMED, SYMBOLS as D3D_SYMBOLS  # noqa: E402
 REFERENCE = "out/reference"     # build/reference.sh writes it
 OUT = "out/progress"            # each run's functions.csv and summary.json
 DATA = "progress"               # the recorded baseline and the evidence
+README = "progress/README.md"   # the file holding the progress table (ratchet.py)
 
 # Every hex address cited in these source trees marks the address
 # `attempted` in a target with `cites`. Monolith's game source cites no

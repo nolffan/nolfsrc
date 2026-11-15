@@ -101,7 +101,7 @@ make progress     # score the build against the retail binaries, function by
                   #   the retail text in a way progress/data-known.txt does not
                   #   list (ext/tools/datacheck.py); our lithshared libraries too,
                   #   against Monolith's prebuilt ones in progress/reference/
-make progress-update   # record the score in progress/ and README.md
+make progress-update   # record the score in progress/ (and its README.md table)
 make shell        # a shell in the build container, at /repo
 make clean        # remove out/ and every build output in the source tree
 make distclean    # clean, and remove the docker image

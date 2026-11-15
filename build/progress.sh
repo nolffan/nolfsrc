@@ -18,7 +18,7 @@
 #           (COMPLETE=1: also unless every function matches; COVERED=1:
 #           unless nothing is unwritten or unplaced)
 #   update  ext/tools/progress.py, then ext/tools/ratchet.py update: records the run
-#           in progress/ and rewrites README.md's table (ACCEPT_LOSSES=1 to
+#           in progress/ and rewrites progress/README.md's table (ACCEPT_LOSSES=1 to
 #           record a run that lost functions)
 #   both    then ext/tools/datacheck.py: the text in our images' data against the
 #           retail images'; fails on a difference progress/data-known.txt
