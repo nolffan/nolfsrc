@@ -2,7 +2,7 @@
 
 Source code and a build for **The Operative: No One Lives Forever** (Game of
 the Year Edition, PC, 2000/2001): every executable and DLL of the game --
-the LithTech engine (`lithtech.exe`, `server.dll`, the Direct3D renderer
+the LithTech 2.2 engine (`lithtech.exe`, `server.dll`, the Direct3D renderer
 `d3d.ren`), the `NOLF.exe` launcher, the `NolfServ.exe` dedicated server,
 `ltmsg.dll`, `sres.dll` and the three game DLLs -- compiled from the source in this repository with the original
 2000-era compilers.
