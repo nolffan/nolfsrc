@@ -642,7 +642,7 @@ def cmd_reference(retaildir, refdir):
 
 
 # Our own archives (build/all.sh, step 4): their rows are written afresh.
-OUR_REZ = {"nolfsrc.rez", "nolfsrcdisc.rez"}
+OUR_REZ = {"nolfsrc.rez", "nolfsrcdisc.rez", "nolfsrcps2.rez"}
 
 
 def cmd_prune(gamedir):

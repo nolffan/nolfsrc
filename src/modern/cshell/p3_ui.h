@@ -22,6 +22,18 @@ extern VarTrack g_vtP3ShowFramerate;    // ShowFramerate
 extern VarTrack g_vtP3NoFunMenus;       // NoFunMenus
 extern VarTrack g_vtP3Cinematics4x3;    // RestrictCinematicsTo4x3
 extern VarTrack g_vtP3UseGotyMenu;      // UseGotyMenu
+extern VarTrack g_vtP3MainMenuCate;     // MainMenuCate (M-P8-10)
+
+// MainMenuCate's values: the Cate of the main menu
+enum
+{
+	P3_MENUCATE_SEASONAL = 0,	// the day's: winter 15-31 December, casual on Fridays
+	P3_MENUCATE_ORIGINAL,
+	P3_MENUCATE_CASUAL,
+	P3_MENUCATE_WINTER,
+	P3_MENUCATE_YOUNG,			// the PS2 release's young Cate (with its levels)
+	P3_MENUCATE_COUNT
+};
 
 void        P3_InitVars();
 
@@ -86,6 +98,7 @@ void        P3_MenuArt(CScaleFX *pScaleFX);
 // ---- M-P3-11: seasonal main menus
 
 int         P3_MainFolder(int nFolderID);  // FOLDER_ID_MAIN -> today's main menu
+LTBOOL      P3_IsMainFolder(int nFolderID); // one of the main menus (M-P8-10)
 
 // ---- M-P3-12: HUD scaling
 

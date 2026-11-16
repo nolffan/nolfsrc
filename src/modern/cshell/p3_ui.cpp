@@ -16,6 +16,7 @@ VarTrack g_vtP3ShowFramerate;
 VarTrack g_vtP3NoFunMenus;
 VarTrack g_vtP3Cinematics4x3;
 VarTrack g_vtP3UseGotyMenu;
+VarTrack g_vtP3MainMenuCate;
 
 void P3_InitVars()
 {
@@ -26,6 +27,7 @@ void P3_InitVars()
 	g_vtP3NoFunMenus.Init(g_pLTClient, "NoFunMenus", LTNULL, 0.0f);
 	g_vtP3Cinematics4x3.Init(g_pLTClient, "RestrictCinematicsTo4x3", LTNULL, 0.0f);
 	g_vtP3UseGotyMenu.Init(g_pLTClient, "UseGotyMenu", LTNULL, 1.0f);
+	g_vtP3MainMenuCate.Init(g_pLTClient, "MainMenuCate", LTNULL, 0.0f);
 }
 
 // ---------------------------------------------------------------------------
@@ -246,9 +248,27 @@ void P3_MenuArt(CScaleFX *pScaleFX)
 // ---------------------------------------------------------------------------
 // M-P3-11: seasonal main menus
 
+LTBOOL P3_IsMainFolder(int nFolderID)
+{
+	return nFolderID == FOLDER_ID_MAIN || nFolderID == FOLDER_ID_MAIN_CASUAL ||
+		nFolderID == FOLDER_ID_MAIN_WINTER || nFolderID == FOLDER_ID_MAIN_THIEF;
+}
+
 int P3_MainFolder(int nFolderID)
 {
 	if (nFolderID != FOLDER_ID_MAIN) return nFolderID;
+
+	// M-P8-10: the Cate the player chose (0: the day's)
+	switch ((int)g_vtP3MainMenuCate.GetFloat())
+	{
+		case P3_MENUCATE_ORIGINAL:	return FOLDER_ID_MAIN;
+		case P3_MENUCATE_CASUAL:	return FOLDER_ID_MAIN_CASUAL;
+		case P3_MENUCATE_WINTER:	return FOLDER_ID_MAIN_WINTER;
+		case P3_MENUCATE_YOUNG:
+			if (P9_HaveThiefMenu()) return FOLDER_ID_MAIN_THIEF;
+			break;
+	}
+
 	if (g_vtP3NoFunMenus.GetFloat() != 0.0f) return FOLDER_ID_MAIN;
 
 	SYSTEMTIME st;

@@ -1,0 +1,83 @@
+--- a/ATTRIBUTES/MISSIONS.txt
++++ b/ATTRIBUTES/MISSIONS.txt
+@@ -678,7 +678,8 @@
+ Rank5			= "P 1"
+ Rank6			= "D 1"
+ Level0			= "Worlds\m03s01"
+-Level1			= "Worlds\m03s02"
++Level1			= "Worlds\thiefmission1"
++Level2			= "Worlds\m03s02"
+ 
+ [Mission5]
+ //	Care to Explain?
+@@ -824,11 +825,11 @@
+ DefaultGadgets	= "Coin,Barrette"
+ AllowedGadgets	= ""
+ RequiredGadgets	= "Sunglasses,Lighter"
+-OneTimeGadgets	= ""
++OneTimeGadgets	= "Thief Lock Pick,Thief Safe Cracker"
+ DeniedGadgets	= "Space Code Breaker"
+ AllowedAmmo		= "BarretteLockpick,BarrettePoison,"
+ RequiredAmmo	= "Camera,Lighter,Welder"
+-OneTimeAmmo		= ""
++OneTimeAmmo		= "Safe Cra Gadget"
+ DeniedAmmo		= ""
+ AllowedMods		= "Delisle Scope"
+ DefaultMods		= "P38 Silencer,Delisle Scope"
+@@ -854,7 +855,8 @@
+ Level1			= "Worlds\m05s02"
+ Level2			= "Worlds\m05s03"
+ Level3			= "Worlds\m05s04"
+-Level4			= "Worlds\m05s05"
++Level4			= "Worlds\thiefmission2"
++Level5			= "Worlds\m05s05"
+ 
+ [Mission9]
+ //	H.A.R.M.'s Dire Promise
+@@ -995,7 +997,7 @@
+ DefaultWeapons	= "P38,Perfume Stun Gas,Delisle"
+ AllowedWeapons	= "Revolver,Perfume Stun Gas,Sterling,Lipstick Timed Bomb,Delisle,Luger"
+ RequiredWeapons	= ""
+-OneTimeWeapons	= ""
++OneTimeWeapons	= "Crossbow,Rocket Launcher"
+ DeniedWeapons	= "Space Lasergun,Space Fists,Space Atomic Lasergun"
+ DefaultGadgets	= "Barrette,Poodle"
+ AllowedGadgets	= "Poodle"
+@@ -1028,7 +1030,8 @@
+ Rank6			= "Ar 1"
+ Level0			= "Worlds\m07s01"
+ Level1			= "Worlds\m07s02"
+-Level2			= "Worlds\m07s03"
++Level2			= "Worlds\m07s03a"
++Level3			= "Worlds\m07s03b"
+ 
+ [Mission13]
+ //	Further Investigation Required
+@@ -1443,11 +1446,11 @@
+ DefaultGadgets	= "Coin,Lighter,Barrette,Decay Powder,Zipcord"
+ AllowedGadgets	= ""
+ RequiredGadgets	= ""
+-OneTimeGadgets	= ""
++OneTimeGadgets	= "Thief Lock Pick,Thief Safe Cracker"
+ DeniedGadgets	= "Space Code Breaker"
+ AllowedAmmo		= "Lighter,Welder"
+ RequiredAmmo	= ""
+-OneTimeAmmo		= ""
++OneTimeAmmo		= "Safe Cra Gadget"
+ DeniedAmmo		= ""
+ AllowedMods		= "AK47 Scope,Dragunov Nightvision Scope,Walther SMG Silencer"
+ DefaultMods		= "P38 Silencer"
+@@ -1470,9 +1473,10 @@
+ Rank5			= "S 1"
+ Rank6			= "D 1"
+ Level0			= "Worlds\m13s01"
+-Level1			= "Worlds\m13s02"
+-Level2			= "Worlds\m13s03"
+-Level3			= "Worlds\m13s04"
++Level1			= "Worlds\thiefmission3"
++Level2			= "Worlds\m13s02"
++Level3			= "Worlds\m13s03"
++Level4			= "Worlds\m13s04"
+ 
+ [Mission23]
+ //	Escape - Mission 14

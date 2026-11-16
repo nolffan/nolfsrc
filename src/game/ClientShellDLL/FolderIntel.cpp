@@ -8,13 +8,17 @@
 #include "ClientRes.h"
 #include "GameClientShell.h"
 #include "MsgIds.h"
+#ifdef NOLFSRC_MODERN
+#include "cres/p8.h"	// M-P8-05
+#endif
 
 extern CGameClientShell* g_pGameClientShell;
 namespace
 {
 #ifdef NOLFSRC_MODERN
-	// M-P9-05: the Thief mod's handbags, moneybags, money, wages and diamond
-	// (its FX.txt makes ScaleFX250-254 their popups)
+	// M-P9-05: the Thief mod's diamond, wages, handbags, moneybags and money,
+	// whose popups its FX.txt makes ScaleFX250-254; M-P8-05: the PS2 thief
+	// levels' handbags, moneybags and money, at the mod's numbers (252-254)
 	const int kNumSFXTypes = 19;
 #else
 	const int kNumSFXTypes = 14;
@@ -69,6 +73,18 @@ namespace
 #endif
 	};
 	int nSFXCounts[kNumSFXTypes];
+#ifdef NOLFSRC_MODERN
+	// M-P8-05: the name when the first has no text (no mod): the PS2 build's
+	int nSFXAltNameIDs[kNumSFXTypes] =
+	{
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0,
+		0,
+		IDS_P8_INTEL_HANDBAG,
+		IDS_P8_INTEL_MONEYBAG,
+		IDS_P8_INTEL_MONEY,
+	};
+#endif
 }
 
 
@@ -166,6 +182,9 @@ void CFolderIntel::BuildIntelList()
 		g_pGameClientShell->GetIntelItemMgr()->GetItem(m_nMissionNum,i,pItem);
 		int nNameID = 0;
 		int nCount = 0;
+#ifdef NOLFSRC_MODERN
+		int nAltNameID = 0;
+#endif
 		if (pItem->nID)
 		{
 			for (int n =0;!nNameID && n < kNumSFXTypes;n++)
@@ -175,6 +194,9 @@ void CFolderIntel::BuildIntelList()
 					nSFXCounts[n]++;
 					nNameID = nSFXNameIDs[n];
 					nCount = nSFXCounts[n];
+#ifdef NOLFSRC_MODERN
+					nAltNameID = nSFXAltNameIDs[n];
+#endif
 					
 				}
 			}
@@ -183,6 +205,13 @@ void CFolderIntel::BuildIntelList()
 		{
 			m_intelArray.Add(pItem);
 			HSTRING hStr = g_pLTClient->FormatString(nNameID,nCount);
+#ifdef NOLFSRC_MODERN
+			if (nAltNameID && (!hStr || !g_pLTClient->GetStringData(hStr)[0]))
+			{
+				if (hStr) g_pLTClient->FreeString(hStr);
+				hStr = g_pLTClient->FormatString(nAltNameID,nCount);
+			}
+#endif
 			CLTGUITextItemCtrl *pCtrl = AddTextItem(hStr,0,0,LTFALSE,pFont);
 			g_pLTClient->FreeString(hStr);
 			pCtrl->SetParam1(m_intelArray.GetSize());

@@ -542,6 +542,10 @@ BOOL LaunchGame(char* sCmdLine, BOOL bMultiplayer)
 	if (GetFileAttributes("nolfsrcdisc.rez") != (DWORD)-1)
 		csCmd += " -rez nolfsrcdisc.rez";
 	csCmd += " -rez nolfsrc.rez";
+	// the PS2 levels (MODERN.md, P8), made from the player's PS2 disc by a
+	// build with PS2=1: after ours, before a mod's
+	if (GetFileAttributes("nolfsrcps2.rez") != (DWORD)-1)
+		csCmd += " -rez nolfsrcps2.rez";
 #endif
 
 	if (bMultiplayer)
