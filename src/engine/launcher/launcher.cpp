@@ -706,11 +706,34 @@ BOOL LaunchGame(char* sCmdLine, BOOL bMultiplayer)
 	}
 
 	CloseHandle(pi.hThread);
-	if (s_bDirectLaunch)
+
+	// M-P1-31: stay until the game exits, from the launcher's window as
+	// well as from the direct start. Steam (its overlay, Remote Play) takes
+	// the game to have ended when the program it started exits. The
+	// launcher's dialog is closed by now, but the wait still pumps
+	// messages, so the thread answers anything sent to it meanwhile.
+	for (;;)
 	{
-		if (WaitForSingleObject(pi.hProcess, INFINITE) == WAIT_OBJECT_0)
-			GetExitCodeProcess(pi.hProcess, &s_nGameExitCode);
+		DWORD nWait = MsgWaitForMultipleObjects(1, &pi.hProcess, FALSE, INFINITE, QS_ALLINPUT);
+		if (nWait != WAIT_OBJECT_0 + 1) break;    // the game exited, or the wait failed
+
+		MSG msg;
+		BOOL bQuit = FALSE;
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			if (msg.message == WM_QUIT)
+			{
+				PostQuitMessage((int)msg.wParam);
+				bQuit = TRUE;
+				break;
+			}
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		if (bQuit) break;
 	}
+	if (s_bDirectLaunch && WaitForSingleObject(pi.hProcess, 0) == WAIT_OBJECT_0)
+		GetExitCodeProcess(pi.hProcess, &s_nGameExitCode);
 	CloseHandle(pi.hProcess);
 #else
 	if (!CreateProcess(NULL, "lithtech.exe -cmdfile nolfcmds.txt", NULL, NULL, FALSE,
