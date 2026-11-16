@@ -170,7 +170,10 @@ grep -q '^EXT .*	binkw32\.dll$' "$GAME/MANIFEST.txt" 2>/dev/null && MIDDLEWARE=o
 # the modern build's own launcher names it
 MODERN=
 grep -q '	NOLFLauncher\.exe$' "$GAME/MANIFEST.txt" 2>/dev/null && MODERN=modern
-CMDS="$(bash "$REPO/build/nolfcmds.sh" $MIDDLEWARE $MODERN | tr -d '\r\n')"
+# and a build with the PS2 levels has their archive
+PS2=
+[ -n "$MODERN" ] && [ -f "$GAME/nolfsrcps2.rez" ] && PS2=ps2
+CMDS="$(bash "$REPO/build/nolfcmds.sh" $MIDDLEWARE $MODERN $PS2 | tr -d '\r\n')"
 SCREEN=1024x768
 if [ -n "${PLAYTEST_RES:-}" ]; then
     RW=${PLAYTEST_RES%x*}; RH=${PLAYTEST_RES#*x}

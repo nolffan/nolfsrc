@@ -64,7 +64,8 @@
 #                         game's, with lithtools' lithrez (build/lithrez.sh),
 #                         and its edits of the discs' data (src/modern/data/,
 #                         ext/tools/moddata.py) into nolfsrcdisc.rez, before
-#                         it.
+#                         it; with PS2=1, the PS2 levels made from the PS2
+#                         disc (build/ps2/) into nolfsrcps2.rez, after it.
 #   5. audit              every PE file in out/nolf-legacy-release/ listed with its origin;
 #                         the build fails if any is unaccounted for or if a
 #                         .rez archive still holds one.
@@ -115,16 +116,22 @@ mkdir -p "$OUT/Save"
 MODERN=
 case "${NOLFSRC_CFLAGS:-}" in *NOLFSRC_MODERN*) MODERN=modern ;; esac
 [ -n "$MODERN" ] || mkdir -p "$OUT/custom"
+# The PS2 levels (MODERN.md, P8; make modern PS2=1): nolfsrcps2.rez, made
+# from the player's PS2 disc (step 4d), after nolfsrc.rez
+PS2=
+[ -n "$MODERN" ] && [ -n "${NOLFSRC_PS2:-}" ] && PS2=ps2
 # nolfcmds.txt: the command file the engine starts with, as a fresh build
 # writes it (the launcher rewrites it; build/playtest.sh uses it),
 # build/nolfcmds.sh.
-bash build/nolfcmds.sh "${NOLF_MIDDLEWARE:-retail}" $MODERN > "$OUT/nolfcmds.txt"
+bash build/nolfcmds.sh "${NOLF_MIDDLEWARE:-retail}" $MODERN $PS2 > "$OUT/nolfcmds.txt"
 # startup.txt: the rez stack NolfServ.exe, the dedicated server, loads (the
 # retail one's names, Rez0-Rez8, then ours last, as nolfcmds.txt has them
 # for the engine: custom/, with our game DLLs; in the modern build
-# nolfsrcdisc.rez and nolfsrc.rez). `resources` copies the retail file
-# again whenever this one differs in size, so the lines are added afresh
-# each time.
+# nolfsrcdisc.rez and nolfsrc.rez, and nolfsrcps2.rez with the PS2 levels).
+# `resources` copies the retail file again whenever this one differs in
+# size, so the lines are added afresh each time. (A modern build drops the
+# PS2 line when it builds without the PS2 levels, and adds it with them.)
+[ -n "$MODERN" ] && sed -i '/^Rez11 *=/Id' "$OUT/startup.txt"
 if ! grep -qi '^Rez9 *=' "$OUT/startup.txt"; then
     if [ -n "$MODERN" ]; then
         printf 'Rez9 = "nolfsrcdisc.rez"\r\nRez10 = "nolfsrc.rez"\r\n' >> "$OUT/startup.txt"
@@ -132,6 +139,7 @@ if ! grep -qi '^Rez9 *=' "$OUT/startup.txt"; then
         printf 'Rez9 = "custom"\r\n' >> "$OUT/startup.txt"
     fi
 fi
+[ -n "$PS2" ] && printf 'Rez11 = "nolfsrcps2.rez"\r\n' >> "$OUT/startup.txt"
 # linux-run.sh: start the game with the host's Wine, through our NOLF.exe;
 # linux-server.sh: a dedicated server, NolfServ.exe (build/game-scripts/;
 # usage in their headers).
@@ -158,6 +166,10 @@ python3 build/retailextract.py lithtechres "$RETAIL" src/engine/lithtech/res
 step "2c. Game of the Year text: the retail CRES.dll in $RETAIL -> src/game/ClientRes/goty/"
 python3 build/retailextract.py goty "$RETAIL" src/game/ClientRes/goty
 
+step "2d. the PS2 levels' text (modern build, make modern PS2=1): the PS2 disc in ext/rez/isos/ps2/ -> src/game/ClientRes/goty/ps2.rc"
+if [ -n "$MODERN" ]; then bash build/ps2/ps2build.sh strings src/game/ClientRes/goty/ps2.rc
+else rm -f src/game/ClientRes/goty/ps2.rc; fi
+
 step "3. compile: libraries, game DLLs, engine (build/compile.sh: build/build.mk, ${NOLFSRC_JOBS:-$(nproc)} jobs)"
 GAME_CONFIG=final bash build/compile.sh all
 for f in src/engine/ltmsg/Release/ltmsg.dll src/engine/sres/Release/sres.dll \
@@ -179,11 +191,14 @@ if [ -n "$MODERN" ]; then
     # else -- a player's own files, or Custom/*.rez for the launcher's
     # custom archives -- stays, and so does custom/ then. Never for a legacy
     # game directory, whose game DLLs live there.
+    # (and what a modern build before nolfsrcps2.rez installed there for the
+    # PS2 levels, by custom/PS2-DATA.txt's list)
+    bash build/ps2/ps2build.sh oldcustom "$OUT"
     python3 build/retailextract.py oldcustom "$OUT"
 else
     # our archives, which only the modern build has (a legacy directory
     # built while the legacy build had them too)
-    rm -f "$OUT/nolfsrc.rez" "$OUT/nolfsrcdisc.rez"
+    rm -f "$OUT/nolfsrc.rez" "$OUT/nolfsrcdisc.rez" "$OUT/nolfsrcps2.rez"
 fi
 # The manifest's rows for files no longer here, and for our archives and
 # their entries (written again below), go.
@@ -256,10 +271,27 @@ else
         --out "$STAGE/nolfsrcdisc" --list "$OUT/MODERN-DATA.txt" \
         --skip nolfsrc.rez --skip nolfsrcdisc.rez
 
-    step "4c. archives: $STAGE/ -> nolfsrc.rez, nolfsrcdisc.rez (lithtools' lithrez)"
-    # A file in both would be ours twice, and one would silently win.
-    dup="$(cd "$STAGE" && find . -type f | sed 's|^\./[^/]*/||' | tr '[:upper:]' '[:lower:]' | sort | uniq -d)"
-    [ -z "$dup" ] || { echo "error: in both nolfsrc.rez's and nolfsrcdisc.rez's inputs: $dup" >&2; exit 1; }
+    if [ -n "$PS2" ]; then
+        step "4c. the PS2 levels (MODERN.md, P8): the PS2 disc in ext/rez/isos/ps2/ -> nolfsrcps2.rez, $OUT"
+        # Made from the player's PS2 disc, so never in the public archive
+        # (build/package.sh makes none of this game directory), and an
+        # archive of its own: nolfsrcdisc.rez stays what the public install
+        # scripts make from the PC discs. Its attribute files are the ones
+        # of nolfsrcdisc.rez with the PS2 recipes on top, and override them.
+        mkdir -p "$STAGE/nolfsrcps2"
+        bash build/ps2/ps2build.sh install "$OUT" "$STAGE/nolfsrcps2"
+    fi
+
+    step "4d. archives: $STAGE/ -> nolfsrc.rez, nolfsrcdisc.rez${PS2:+, nolfsrcps2.rez} (lithtools' lithrez)"
+    # A file in two of them would be ours twice, and one would silently win
+    # -- except nolfsrcps2.rez's attribute files, which are nolfsrcdisc.rez's
+    # with the PS2 edits.
+    dups() {  # dups <staged directory>...
+        (cd "$STAGE" && find "$@" -type f 2>/dev/null) | sed 's|^[^/]*/||' |
+            tr '[:upper:]' '[:lower:]' | sort | uniq -d
+    }
+    dup="$(dups nolfsrc nolfsrcdisc; dups nolfsrc nolfsrcps2)"
+    [ -z "$dup" ] || { echo "error: in two of our archives' inputs: $dup" >&2; exit 1; }
     bash build/lithrez.sh
     # One fixed time (27 April 2001, the 1.003 update's readme's date) on every
     # entry, so that every build of the same inputs makes the same bytes.
@@ -275,6 +307,11 @@ else
         pack "$STAGE/nolfsrcdisc" nolfsrcdisc.rez "packed by lithrez: the src/modern/data recipes on the discs' data"
     else
         rm -f "$OUT/nolfsrcdisc.rez"
+    fi
+    if [ -n "$PS2" ]; then
+        pack "$STAGE/nolfsrcps2" nolfsrcps2.rez "packed by lithrez: the PS2 levels, from the PS2 disc"
+    else
+        rm -f "$OUT/nolfsrcps2.rez"
     fi
 fi
 

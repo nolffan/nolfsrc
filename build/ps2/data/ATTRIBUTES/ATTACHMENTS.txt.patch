@@ -1,0 +1,23 @@
+--- a/ATTRIBUTES/ATTACHMENTS.txt
++++ b/ATTRIBUTES/ATTACHMENTS.txt
+@@ -555,6 +555,20 @@
+ Type			= 0
+ Model			= "attachments\models\rag.abc"
+ Skin			= "attachments\skins\rag.dtx"
++
++[Attachment74]
++
++Name			= "Britishpolicehat"
++Type			= 0
++Model			= "Attachments\Models\BritishPoliceHat.abc"
++Skin			= "Attachments\Skins\MaleBystander_Action_BritHat.dtx"
++
++[Attachment75]
++
++Name			= "ScottishpoliceHat"
++Type			= 0
++Model			= "Attachments\Models\BritishPoliceHat.abc"
++Skin			= "Attachments\Skins\MaleBystander_Action_ScotHat.dtx"
+ 
+ 
+ /*************************************************************************

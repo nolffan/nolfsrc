@@ -309,7 +309,9 @@ $(eval $(call compile,$(CRES)/Release/main.obj,$(CRES),main.cpp,$(ENV_GAME),$(CL
 CRES_RC := $(CRES)/goty/cres_goty.rc
 # (a printf format: \\ is one backslash)
 hash := \#
-CRES_RC_FMT := $(hash)include "..\\ClientRes.rc"\r\n$(hash)include "goty.rc"\r\n$(foreach r,$(if $(MODERN),$(notdir $(wildcard src/modern/cres/*.rc))),$(hash)include "..\\..\\..\\modern\\cres\\$(r)"\r\n)
+# The modern build adds the PS2 levels' text (goty/ps2.rc) when build/all.sh
+# made it from the PS2 disc (MODERN.md, P8).
+CRES_RC_FMT := $(hash)include "..\\ClientRes.rc"\r\n$(hash)include "goty.rc"\r\n$(foreach r,$(if $(MODERN),$(notdir $(wildcard src/modern/cres/*.rc))),$(hash)include "..\\..\\..\\modern\\cres\\$(r)"\r\n)$(if $(MODERN),$(if $(wildcard $(CRES)/goty/ps2.rc),$(hash)include "ps2.rc"\r\n))
 $(CRES_RC): FORCE
 	@test -f $(CRES)/goty/goty.rc -a -f $(CRES)/goty/credits.txt || \
 	  { echo "error: $(CRES)/goty/ is missing -- build/all.sh writes it" >&2; exit 1; }

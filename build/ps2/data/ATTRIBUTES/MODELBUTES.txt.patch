@@ -1,0 +1,13 @@
+--- a/ATTRIBUTES/MODELBUTES.txt
++++ b/ATTRIBUTES/MODELBUTES.txt
+@@ -653,6 +653,10 @@
+ [Style16]
+ 
+ Name			= "Style8"
++
++[Style17]
++
++Name			= "Thief"
+ 
+ /* 
+ ** Skeleton [node group] Attributes

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The game directory's nolfcmds.txt, as a fresh build writes it:
 #
-#   build/nolfcmds.sh <retail|open> [modern]
+#   build/nolfcmds.sh <retail|open> [modern [ps2]]
 #
 # The retail NOLF.exe launcher writes nolfcmds.txt and runs
 # "lithtech.exe -cmdfile nolfcmds.txt"; build/playtest.sh does the same with this one.
@@ -18,4 +18,6 @@ MOVIES=" +DisableMovies 1"
 [ "${1:-retail}" = open ] && MOVIES=""
 OURS="-rez custom"
 [ "${2:-}" = modern ] && OURS="-rez nolfsrcdisc.rez -rez nolfsrc.rez"
+# the PS2 levels (`ps2`, make modern PS2=1), from the PS2 disc: after ours
+[ "${2:-}" = modern ] && [ "${3:-}" = ps2 ] && OURS="$OURS -rez nolfsrcps2.rez"
 printf -- '-rez nolf.rez -rez nolf2.rez -rez nolfu003.rez -rez nolfgoty.rez %s ++screenwidth 640 ++screenheight 480 ++bitdepth 16 ++windowed 1%s\r\n' "$OURS" "$MOVIES"

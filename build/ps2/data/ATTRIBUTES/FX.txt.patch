@@ -1,0 +1,114 @@
+--- a/ATTRIBUTES/FX.txt
++++ b/ATTRIBUTES/FX.txt
+@@ -12575,6 +12575,111 @@
+ MinRotVel		= 0
+ MaxRotVel		= 0
+ 
++/*
++** ScaleFX261 - Popup MoneyBag model (PS2 ScaleFX262)
++*/
++[ScaleFX261]
++
++Name			= "MoneyBagPopup"
++Type			= 0
++File			= "Interface\Models\MoneyBag.abc"
++Skin			= "Props\Skins\MoneyBag.dtx"
++InitialScale	= <0.0134, 0.0134, 0.0134>
++FinalScale		= <0.0134, 0.0134, 0.0134>
++UseColors		= 0
++InitialColor	= <128.0, 128.0, 128.0>
++FinalColor		= <128.0, 128.0, 128.0>
++InitialAlpha	= 1.0
++FinalAlpha		= 1.0
++DirOffset		= 1
++DirROffset		= 0
++DirUOffset		= 0.20
++Velocity		= <0.000000, 0.000000, 0.000000>
++LifeTime		= 1000000.00000
++DelayTime		= 0.0
++Loop			= 1
++AlignToSurface	= 0
++NoZ				= 0
++ReallyClose		= 1
++Additive		= 0
++Multiply		= 0
++Chromakey		= 0
++Rotate			= 0
++FaceCamera		= 0
++RotationAxis	= 1
++MinRotVel		= 1.0
++MaxRotVel		= 1.0
++
++/*
++** ScaleFX262 - Popup HandBag model (PS2 ScaleFX263)
++*/
++[ScaleFX262]
++
++Name			= "HandBagPopup"
++Type			= 0
++File			= "Interface\Models\Purses_01.abc"
++Skin			= "Props\Skins\Purses_01.dtx"
++InitialScale	= <0.0111, 0.0111, 0.0111>
++FinalScale		= <0.0111, 0.0111, 0.0111>
++UseColors		= 0
++InitialColor	= <128.0, 128.0, 128.0>
++FinalColor		= <128.0, 128.0, 128.0>
++InitialAlpha	= 1.0
++FinalAlpha		= 1.0
++DirOffset		= 1
++DirROffset		= 0
++DirUOffset		= 0.20
++Velocity		= <0.000000, 0.000000, 0.000000>
++LifeTime		= 1000000.00000
++DelayTime		= 0.0
++Loop			= 1
++AlignToSurface	= 0
++NoZ				= 0
++ReallyClose		= 1
++Additive		= 0
++Multiply		= 0
++Chromakey		= 0
++Rotate			= 0
++FaceCamera		= 0
++RotationAxis	= 1
++MinRotVel		= 1.0
++MaxRotVel		= 1.0
++
++/*
++** ScaleFX263 - Popup Paper Money model (PS2 ScaleFX264)
++*/
++[ScaleFX263]
++
++Name			= "PaperMoneyPopup"
++Type			= 0
++File			= "Interface\Models\Change_01.abc"
++Skin			= "Interface\Skins\Change_01.dtx"
++InitialScale	= <0.0371, 0.0371, 0.0371>
++FinalScale		= <0.0371, 0.0371, 0.0371>
++UseColors		= 0
++InitialColor	= <128.0, 128.0, 128.0>
++FinalColor		= <128.0, 128.0, 128.0>
++InitialAlpha	= 1.0
++FinalAlpha		= 1.0
++DirOffset		= 1
++DirROffset		= 0
++DirUOffset		= 0.20
++Velocity		= <0.000000, 0.000000, 0.000000>
++LifeTime		= 1000000.00000
++DelayTime		= 0.0
++Loop			= 1
++AlignToSurface	= 0
++NoZ				= 0
++ReallyClose		= 1
++Additive		= 0
++Multiply		= 0
++Chromakey		= 0
++Rotate			= 0
++FaceCamera		= 0
++RotationAxis	= 1
++MinRotVel		= 1.0
++MaxRotVel		= 1.0
++
+ /************************************************************************
+ **
+ ** PSHOWERFX
