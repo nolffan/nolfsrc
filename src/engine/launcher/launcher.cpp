@@ -537,7 +537,8 @@ BOOL LaunchGame(char* sCmdLine, BOOL bMultiplayer)
 	// discs' data (nolfsrcdisc.rez, which the install scripts make), then
 	// nolfsrc.rez -- the game code built from source, and our own data.
 	// The player's custom archives (Custom\*.rez, GetCustomRezCommands)
-	// still follow, so a mod overrides them.
+	// still follow, so a mod overrides them -- all but the game DLLs, which
+	// the engine takes from nolfsrc.rez wherever it is (M-P9-01).
 	if (GetFileAttributes("nolfsrcdisc.rez") != (DWORD)-1)
 		csCmd += " -rez nolfsrcdisc.rez";
 	csCmd += " -rez nolfsrc.rez";

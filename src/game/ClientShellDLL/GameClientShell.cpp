@@ -63,6 +63,10 @@
 // M-P7: controller support
 #include "cshell/p7_pad.h"
 #endif
+#ifdef NOLFSRC_MODERN
+// M-P9: mods made for the Modernizer (the Thief mod)
+#include "cshell/p9_mods.h"
+#endif
 
 #ifdef STRICT
 	WNDPROC g_pfnMainWndProc = NULL;
@@ -1362,6 +1366,10 @@ uint32 CGameClientShell::OnEngineInitialized(RMode *pMode, LTGUID *pAppGuid)
 	// M-P5-12, M-P5-13: QuickSwitch and the ToggleZoom action
 	P5_OnEngineInitialized();
 #endif
+#ifdef NOLFSRC_MODERN
+	// M-P9-08: UsePS2Music
+	P9_OnEngineInitialized();
+#endif
 	// Check for playdemo....
 
     if (hVar = g_pLTClient->GetConsoleVar("playdemo"))
@@ -1623,6 +1631,10 @@ void CGameClientShell::OnEnterWorld()
 void CGameClientShell::OnExitWorld()
 {
     g_pLTClient->PauseSounds();
+#ifdef NOLFSRC_MODERN
+	// M-P9-08
+	P9_StopLevelMusic();
+#endif
 
     m_bInWorld      = LTFALSE;
     m_bStartedLevel = LTFALSE;
@@ -4813,6 +4825,10 @@ void CGameClientShell::OnMessage(uint8 messageID, HMESSAGEREAD hMessage)
 
 		case MID_MUSIC:
 		{
+#ifdef NOLFSRC_MODERN
+			// M-P9-08: the PS2 track plays in place of the server's music
+			if (P9_IsPS2MusicPlaying()) break;
+#endif
 			if (m_Music.IsInitialized())
 			{
 				m_Music.ProcessMusicMessage(hMessage);
@@ -6269,6 +6285,12 @@ LTBOOL CGameClientShell::DoLoadWorld(char* pWorldFile, char* pCurWorldSaveFile,
 		g_pInterfaceMgr->SetLoadLevelPhoto(szPhoto);
 
 	}
+#ifdef NOLFSRC_MODERN
+
+	// M-P9-06, M-P9-08: a mod's thief level's loading screen; the world's
+	// PS2 track
+	P9_OnLoadWorld(pWorldFile, m_bIsCustomLevel ? -1 : m_nCurrentLevel);
+#endif
 
 	// Change to the loading level state...
 
@@ -6862,6 +6884,11 @@ void CGameClientShell::FirstUpdate()
 		//m_InterfaceMgr.RestoreGameMusic();
 		//m_Music.Play();
 	}
+#ifdef NOLFSRC_MODERN
+
+	// M-P9-08: the level's PS2 track instead, when it is wanted and there
+	P9_StartLevelMusic();
+#endif
 
 
 	// Force us to re-evaluate what container we're in.  We call

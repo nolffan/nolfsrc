@@ -435,6 +435,155 @@ int  fs_GetFilePathQ42E(void* pTree, char* pFilename, char* pOutPath,
                         uint32 nOutLen);                        // 0x00420e80
 int  fm_CopyFileQ42E(void* pFileMgr, char* pSrc, char* pDest);  // 0x00404950
 
+#ifdef NOLFSRC_MODERN
+// M-P9-01: the game's own DLLs are the ones in our nolfsrc.rez, whatever a
+// mod archive listed after it carries. A mod packaged for the NOLF
+// Modernizer (the Thief mod) ships its own cshell.dll, object.lto and
+// cres.dll, built for the retail lithtech.exe; loaded by this engine they
+// crash. The engine searches its trees newest first, so the mod's copies
+// are found before ours. These functions ask one tree only, through the
+// engine's own tree list and stream code.
+//
+// The file manager's first member is the list of mounted trees, one node
+// per -rez argument (clientwin.cpp's CluFileMgr::m_TreeList and
+// CluTreeNode). Each tree keeps the name it was opened by at +0x20, after
+// its critical section (filemgr.cpp's COpenTree; the client opens its trees
+// with the same fs_OpenTree). The names are views of ours.
+struct P9TreeNode
+{
+	LTLink m_Link;                           // 0x00
+	void*  m_pTree;                          // 0x0c
+};
+
+struct P9Tree
+{
+	int              m_nKind;                // 0x00  1: a directory
+	void*            m_pArchive;             // 0x04
+	CRITICAL_SECTION m_CS;                   // 0x08
+	char             m_szName[1];            // 0x20  the -rez argument
+};
+
+// fsstream.cpp's pair, under the names they are defined with
+class COpenFileTree;
+ILTStream* fs_OpenStreamInTree(COpenFileTree* pTree, char* pFilename,
+                               int nFlag);                      // 0x00420ec0
+int        fs_CopyStreamToFile(ILTStream* pStream,
+                               const char* pszDestFile);        // 0x00421670
+
+// The tree mounted from nolfsrc.rez (in any directory), or null.
+static void* P9_OwnTree(CClientMgrQ42D* pMgr)
+{
+	LTLink* pHead = (LTLink*)pMgr->m_pFileMgr;
+	LTLink* pCur;
+
+	if (!pHead)
+		return LTNULL;
+
+	for (pCur = pHead->m_pNext; pCur != pHead; pCur = pCur->m_pNext)
+	{
+		void*       pTree = ((P9TreeNode*)pCur->m_pData)->m_pTree;
+		const char* pName = ((P9Tree*)pTree)->m_szName;
+		const char* pBase = pName;
+		const char* p;
+
+		for (p = pName; *p; p++)
+		{
+			if (*p == '\\' || *p == '/' || *p == ':')
+				pBase = p + 1;
+		}
+
+		if (_stricmp(pBase, "nolfsrc.rez") == 0)
+			return pTree;
+	}
+
+	return LTNULL;
+}
+
+// Copy pTree's own pFilename to pTempPath\pDestName, or (when that name is
+// in use) to a unique name there, as sub_42e110 copies the rez stack's.
+// 1: pOutPath names the copy; 0: pTree has no such file, or it did not copy.
+static int P9_FileFromTree(void* pTree, char* pTempPath, char* pFilename,
+                           char* pDestName, char* pOutPath, uint32 nOutLen)
+{
+	char       sUnique[MAX_PATH];
+	ILTStream* pStream;
+	int        bCopied = 0;
+	int        nLen;
+
+	pStream = fs_OpenStreamInTree((COpenFileTree*)pTree, pFilename, 0);
+	if (!pStream)
+		return 0;
+
+	nLen = _snprintf(pOutPath, nOutLen, "%s%s", pTempPath, pDestName);
+	if (nLen >= 0 && (uint32)nLen < nOutLen)
+		bCopied = fs_CopyStreamToFile(pStream, pOutPath);
+
+	if (!bCopied && GetTempFileNameA(pTempPath, pDestName, 0, sUnique) &&
+	    strlen(sUnique) < nOutLen)
+	{
+		bCopied = fs_CopyStreamToFile(pStream, sUnique);
+		if (bCopied)
+			strcpy(pOutPath, sUnique);
+	}
+
+	pStream->Release();
+
+	return bCopied;
+}
+
+// 1: pOutPath is our nolfsrc.rez's pFilename, copied out to pTempPath;
+// 0: no nolfsrc.rez, or it has no such file (the retail lookup decides).
+static int P9_OwnGameFile(CClientMgrQ42D* pMgr, char* pTempPath,
+                          char* pFilename, char* pOutPath, uint32 nOutLen)
+{
+	void* pOurs = P9_OwnTree(pMgr);
+
+	return pOurs && P9_FileFromTree(pOurs, pTempPath, pFilename, pFilename,
+	                                pOutPath, nOutLen);
+}
+
+// M-P9-02: a mod's own cres.dll (the one the rez stack would have given),
+// as resources only -- LOAD_LIBRARY_AS_DATAFILE runs none of its code --
+// for the text of the string ids ours lacks or holds only as a retail
+// placeholder (CLTClient::FormatString). The first member is the module
+// handle, as the engine's resource-module records have it.
+struct P9ModStrings
+{
+	HINSTANCE m_hInst;
+};
+static P9ModStrings s_P9ModStrings;
+void*        g_pP9ModStrings = LTNULL;
+
+static void P9_LoadModStrings(CClientMgrQ42D* pMgr, char* pTempPath)
+{
+	CFileIdentQ42E ident;
+	CFileRecQ42E*  pRec;
+	void*          pOurs = P9_OwnTree(pMgr);
+	char           sMod[MAX_PATH];
+
+	if (!pOurs)
+		return;
+
+	// the retail lookup: the first tree, newest first, with a cres.dll
+	ident.m_nID   = 0;
+	ident.m_nType = 0;
+	ident.m_pName = "cres.dll";
+
+	pRec = fm_GetFileRecQ42E(pMgr->m_pFileMgr, &ident, 5);
+	if (!pRec || pRec->m_pTree == pOurs)
+		return;                                 // no mod's cres.dll above ours
+
+	// copied under a name of its own: %TEMP%\cres.dll is ours, loaded
+	if (!P9_FileFromTree(pRec->m_pTree, pTempPath, "cres.dll", "modcres.dll",
+	                     sMod, sizeof(sMod)))
+		return;
+
+	s_P9ModStrings.m_hInst = LoadLibraryExA(sMod, LTNULL, LOAD_LIBRARY_AS_DATAFILE);
+	if (s_P9ModStrings.m_hInst)
+		g_pP9ModStrings = &s_P9ModStrings;
+}
+
+#endif
 // 0x0042e110 -- 287 bytes.  The client's counterpart of counter.cpp's
 // sub_1000e05b: get a named file onto disk where the loader can open it
 // by path.  The lookup is by name (type 0, id 0) with flag 5.
@@ -450,6 +599,12 @@ int sub_42e110(CClientMgrQ42D* pMgr, char* pTempPath, char* pFilename,
 	ident.m_nID   = 0;
 	ident.m_nType = 0;
 	ident.m_pName = pFilename;
+#ifdef NOLFSRC_MODERN
+
+	// M-P9-01: cshell.dll, cres.dll, cresl.dll out of nolfsrc.rez first
+	if (P9_OwnGameFile(pMgr, pTempPath, pFilename, pOutPath, nOutLen))
+		return 0;
+#endif
 
 	pRec = fm_GetFileRecQ42E(pMgr->m_pFileMgr, &ident, 5);
 	if (pRec && fs_GetTreeTypeQ42E(pRec->m_pTree) == 1)
@@ -590,6 +745,11 @@ LTRESULT InitClientShellDE(CClientMgrQC5* pMgr)
 		sub_42e110((CClientMgrQ42D*)pMgr, sTempPath, "cresl.dll", sFilename,
 		           sizeof(sFilename));
 		sub_10001583(sFilename, (CModuleRef**)&pMgr->m_hLocResModule);
+#ifdef NOLFSRC_MODERN
+
+		// M-P9-02: a mod's strings, beside ours
+		P9_LoadModStrings((CClientMgrQ42D*)pMgr, sTempPath);
+#endif
 
 		sub_10034f9b((CModuleFuncs*)pMgr->m_pShellModule, &pCreate, &pDelete);
 

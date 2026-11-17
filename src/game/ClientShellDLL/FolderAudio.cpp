@@ -9,6 +9,11 @@
 
 #include "GameClientShell.h"
 #include "GameSettings.h"
+#ifdef NOLFSRC_MODERN
+// M-P9-08: the PS2 soundtrack
+#include "cshell/p9_mods.h"
+#include "cres/p9.h"
+#endif
 
 #define MUSIC_MIN_VOL		-5000
 #define MUSIC_MAX_VOL		5000
@@ -42,6 +47,9 @@ CFolderAudio::CFolderAudio()
     m_pSoundVolumeCtrl=LTNULL;
     m_pMusicVolumeCtrl=LTNULL;
     m_pSoundQualityCtrl=LTNULL;
+#ifdef NOLFSRC_MODERN
+	m_bPS2Music = LTFALSE;
+#endif
 
 }
 
@@ -82,6 +90,17 @@ LTBOOL CFolderAudio::Build()
 
 	m_pMusicVolumeCtrl = AddSlider(IDS_SOUND_MUSICVOL, IDS_HELP_MUSICVOL, kGap, kWidth, &m_nMusicVolume);
 	m_pMusicVolumeCtrl->Enable( (dwAdvancedOptions & AO_MUSIC) );
+#ifdef NOLFSRC_MODERN
+
+	// M-P9-08: offered only when a mod brings the PS2 soundtrack
+	if (P9_HavePS2Music())
+	{
+		CToggleCtrl* pPS2 = AddToggle(IDS_P9_PS2MUSIC, IDS_P9_HELP_PS2MUSIC, kGap, &m_bPS2Music);
+		pPS2->SetOnString(IDS_ON);
+		pPS2->SetOffString(IDS_OFF);
+		pPS2->Enable( (dwAdvancedOptions & AO_MUSIC) );
+	}
+#endif
 
 	if ( m_pSoundVolumeCtrl )
 	{
@@ -173,6 +192,10 @@ void CFolderAudio::LoadSoundSettings()
 
 	m_bOldMusicOn = m_bMusicOn = (m_nMusicVolume != MUSIC_MIN_VOL);
 	m_bOldSoundQuality = m_bSoundQuality = pSettings->GetBoolVar("sound16bit");
+#ifdef NOLFSRC_MODERN
+	// M-P9-08
+	m_bPS2Music = ( GetConsoleInt("UsePS2Music",0) > 0 );
+#endif
     UpdateData(LTFALSE);
 
 }
@@ -218,6 +241,12 @@ void CFolderAudio::SaveSoundSettings()
 		pSettings->ImplementSoundQuality();
 		m_bOldSoundQuality = m_bSoundQuality;
 	}
+#ifdef NOLFSRC_MODERN
+
+	// M-P9-08: on or off, or the music louder or quieter, at once
+	WriteConsoleInt("UsePS2Music",(int)m_bPS2Music);
+	P9_OnMusicSettingsChanged();
+#endif
 
 	// Enable/Disable the volume controls based on m_bSoundOn and m_bMusicOn
 	//EnableDisableControls();

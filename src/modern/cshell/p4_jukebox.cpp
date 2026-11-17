@@ -27,6 +27,7 @@
 #include "GameSettings.h"
 #include "GameClientShell.h"
 #include "cres/p4.h"
+#include "cshell/p9_mods.h"
 
 extern CGameClientShell* g_pGameClientShell;
 
@@ -126,6 +127,11 @@ LTBOOL CP4JukeboxButeMgr::Init(ILTCSBase *pInterface, const char* szAttributeFil
 		char szDir[64];
 		m_buteMgr.GetString(szTag, "Directory", "", szDir, sizeof(szDir));
 		_snprintf(pTheme->szDirectory, sizeof(pTheme->szDirectory) - 1, "Music\\%s", szDir);
+		// M-P9-08: (the Modernizer's file ends a directory in "\\", which
+		// ButeMgr keeps as two backslashes)
+		int nDirLen = strlen(pTheme->szDirectory);
+		while (nDirLen > 0 && pTheme->szDirectory[nDirLen - 1] == '\\')
+			pTheme->szDirectory[--nDirLen] = '\0';
 		m_buteMgr.GetString(szTag, "ControlFile", "", pTheme->szControlFile, sizeof(pTheme->szControlFile));
 
 		// Listed only if its music is in the game's data (the Game of the
@@ -155,6 +161,46 @@ LTBOOL CP4JukeboxButeMgr::Init(ILTCSBase *pInterface, const char* szAttributeFil
 			m_buteMgr.GetString(szTag, szAtt, szDefault, pPiece->szLabel, sizeof(pPiece->szLabel));
 
 			pTheme->nPieces++;
+		}
+
+		// M-P9-03: a mod packaged for the NOLF Modernizer (the Thief mod)
+		// brings its Jukebox.txt in place of ours: the pieces are not the
+		// theme's Intensity<k>/Label<k> but [Song<n>] sections, each naming
+		// its Theme (the [Theme<n>] number), IntensityLevel and Name, n = 0,
+		// 1, 2, ... to the first missing. M-P9-08: a theme with IsWAV set is
+		// WAV files instead, a song's FileName in the theme's Directory (the
+		// PS2 soundtrack), listed if its first song is in the data.
+		pTheme->bIsWAV = m_buteMgr.GetBool(szTag, "IsWAV", false) ? LTTRUE : LTFALSE;
+		LTBOOL bSongs = (pTheme->nPieces == 0);
+		for (int nSong = 0; bSongs; nSong++)
+		{
+			char szSong[32];
+			sprintf(szSong, "Song%d", nSong);
+			if (!m_buteMgr.Exist(szSong) || pTheme->nPieces >= P4_JUKEBOX_MAX_PIECES) break;
+			if (m_buteMgr.GetInt(szSong, "Theme", -1) != m_nThemes ||
+				m_buteMgr.Exist(szSong, "FileName") != (pTheme->bIsWAV != LTFALSE))
+				continue;
+
+			P4JukeboxPiece *pPiece = &pTheme->aPieces[pTheme->nPieces];
+			pPiece->nIntensity = m_buteMgr.GetInt(szSong, "IntensityLevel", 0);
+			m_buteMgr.GetString(szSong, "FileName", "", pPiece->szFile, sizeof(pPiece->szFile));
+
+			char szDefault[32];
+			sprintf(szDefault, "%d", pPiece->nIntensity);
+			m_buteMgr.GetString(szSong, "Name", szDefault, pPiece->szLabel, sizeof(pPiece->szLabel));
+
+			pTheme->nPieces++;
+		}
+
+		if (pTheme->bIsWAV && szDir[0] && pTheme->nPieces > 0)
+		{
+			_snprintf(szCtrl, sizeof(szCtrl) - 1, "%s\\%s", pTheme->szDirectory, pTheme->aPieces[0].szFile);
+			pStream = LTNULL;
+			if (pInterface->OpenFile(szCtrl, &pStream) == LT_OK && pStream)
+			{
+				pStream->Release();
+				pTheme->bAvailable = LTTRUE;
+			}
 		}
 
 		m_nThemes++;
@@ -348,6 +394,36 @@ void CP4FolderJukebox::PlayPiece(int nPiece)
 	const P4JukeboxTheme *pTheme = m_Butes.GetTheme(m_nShownTheme);
 	if (!pTheme || nPiece < 0 || nPiece >= pTheme->nPieces) return;
 
+	// M-P9-08: a WAV piece plays as a looping sound, with the DirectMusic
+	// stopped (it needs no DirectMusic); any other piece stops the WAV
+	P9_PlayJukeboxWAV(LTNULL);
+	if (pTheme->bIsWAV)
+	{
+		if (!g_pInterfaceMgr->GetSettings()->MusicEnabled() ||
+			!(g_pInterfaceMgr->GetAdvancedOptions() & AO_MUSIC))
+		{
+			if (m_pNowPlaying) m_pNowPlaying->SetString(IDS_P4_JUKEBOX_NO_MUSIC);
+			return;
+		}
+		CMusic *pMusic = g_pGameClientShell->GetMusic();
+		if (pMusic && pMusic->IsInitialized()) pMusic->Stop();
+		m_bChangedMusic = LTTRUE;
+
+		char szFile[160];
+		_snprintf(szFile, sizeof(szFile) - 1, "%s\\%s", pTheme->szDirectory, pTheme->aPieces[nPiece].szFile);
+		szFile[sizeof(szFile) - 1] = '\0';
+		if (!P9_PlayJukeboxWAV(szFile))
+		{
+			m_nPlayingTheme = -1;
+			if (m_pNowPlaying) m_pNowPlaying->SetString(IDS_P4_JUKEBOX_CANT_PLAY);
+			return;
+		}
+		m_nPlayingTheme	= m_nShownTheme;
+		m_nPlayingPiece	= nPiece;
+		UpdateNowPlaying();
+		return;
+	}
+
 	CMusic *pMusic = GetUsableMusic();
 	if (!pMusic)
 	{
@@ -390,6 +466,7 @@ void CP4FolderJukebox::RestoreMusic()
 {
 	if (!m_bChangedMusic) return;
 	m_bChangedMusic	= LTFALSE;
+	P9_PlayJukeboxWAV(LTNULL);	// M-P9-08
 	m_nPlayingTheme	= -1;
 	m_nPlayingPiece	= -1;
 

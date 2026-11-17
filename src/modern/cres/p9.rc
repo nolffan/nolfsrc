@@ -1,0 +1,10 @@
+// p9.rc -- the modern build's P9 strings (mods made for the Modernizer).
+// Wording written for this project.
+
+#include "p9.h"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_P9_PS2MUSIC             "PS2 soundtrack"
+    IDS_P9_HELP_PS2MUSIC        "Play the PlayStation 2 release's music, from the installed mod, in place of each level's own."
+END

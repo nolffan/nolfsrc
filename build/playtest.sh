@@ -89,6 +89,13 @@
 #                         settings (e.g. "+connect 127.0.0.1:27888" to join
 #                         a server; the line's end is no place for a value,
 #                         the engine takes the newline as part of it)
+#   PLAYTEST_REZ="<rez>..."  more archives after the game's own (after
+#                         nolfsrc.rez in a modern build, after custom in a
+#                         legacy one), as the launcher's custom list adds a
+#                         mod's (linked into the run, `-rez <name>` each,
+#                         last one searched first; put before the ++
+#                         settings, as the end of the command line is not a
+#                         safe place for a file name)
 # The default keys (defctrls.cfg): WASD move, arrows turn, Space jump,
 # C duck, F / mouse 1 fire, R reload, Shift_L next weapon, 1-0 weapons,
 # E activate, F6 quicksave, F9 quickload, Escape menu.
@@ -170,6 +177,17 @@ if [ -n "${PLAYTEST_RES:-}" ]; then
     CMDS="$(echo "$CMDS" | sed -E "s/\+\+screenwidth [0-9]+/++screenwidth $RW/; s/\+\+screenheight [0-9]+/++screenheight $RH/; s/\+\+bitdepth [0-9]+/++bitdepth 32/")"
     SCREEN="$(( RW + 200 > 1024 ? RW + 200 : 1024 ))x$(( RH + 200 > 768 ? RH + 200 : 768 ))"
 fi
+REZ=""
+for r in ${PLAYTEST_REZ:-}; do
+    ln -s "$(abs "$r")" "$RUN/$(basename "$r")" || exit 2
+    REZ="$REZ -rez $(basename "$r")"
+done
+# (after the game's own archives, before the ++ settings: never last on the
+# line, where the engine takes the line's end as part of the name)
+case "$CMDS" in
+    *" ++"*) CMDS="${CMDS%% ++*}$REZ ++${CMDS#* ++}" ;;
+    *) CMDS="$CMDS$REZ" ;;
+esac
 if [ -n "${PLAYTEST_ARGS:-}" ]; then
     case "$CMDS" in
         *" ++"*) CMDS="${CMDS%% ++*} $PLAYTEST_ARGS ++${CMDS#* ++}" ;;

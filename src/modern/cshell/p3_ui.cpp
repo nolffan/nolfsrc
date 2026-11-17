@@ -9,6 +9,7 @@
 #include "FolderMgr.h"
 #include "FXStructs.h"
 #include "cshell/p3_ui.h"
+#include "cshell/p9_mods.h"
 
 VarTrack g_vtP3UIScale;
 VarTrack g_vtP3ShowFramerate;
@@ -252,6 +253,11 @@ int P3_MainFolder(int nFolderID)
 
 	SYSTEMTIME st;
 	GetLocalTime(&st);
+
+	// M-P9-09: from midnight to six in the morning, young Cate, when a mod
+	// brings her (the Thief mod's rule)
+	if (st.wHour < 6 && P9_HaveThiefMenu())
+		return FOLDER_ID_MAIN_THIEF;
 
 	// 15 to 31 December, both included
 	if (st.wMonth == 12 && st.wDay >= 15)

@@ -39,6 +39,10 @@ BEGIN_CLASS(KeyPad)
 	ADD_STRINGPROP(DisabledCmd, "")
 	ADD_STRINGPROP_FLAG(PickSound, "Guns\\Snd\\Code_dec\\activate.wav", PF_FILENAME)
 	ADD_REALPROP_FLAG(PickSoundRadius, 500.0f, 0)
+#ifdef NOLFSRC_MODERN
+	// M-P9-04: a PS2 thief level's safe, opened with the Thief Safe Cracker
+	ADD_BOOLPROP_FLAG(ThiefCodeBreaker, LTFALSE, 0)
+#endif
 END_CLASS_DEFAULT(KeyPad, Prop, NULL, NULL)
 
 // ----------------------------------------------------------------------- //
@@ -59,6 +63,9 @@ KeyPad::KeyPad() : Prop()
 	m_fMinPickTime			= 0.0f;
 	m_fMaxPickTime			= 0.0f;
 	m_bSpaceCodeBreaker		= LTFALSE;
+#ifdef NOLFSRC_MODERN
+	m_bThiefSafe			= LTFALSE;
+#endif
 
 	m_pDebrisOverride = "Metal small";
 }
@@ -265,6 +272,14 @@ LTBOOL KeyPad::ReadProp(ObjectCreateStruct *pInfo)
 	{
 		m_bSpaceCodeBreaker = genProp.m_Bool;
 	}
+#ifdef NOLFSRC_MODERN
+
+	// M-P9-04: a thief level's safe, as the Thief mod's levels mark them
+    if (g_pLTServer->GetPropGeneric("ThiefCodeBreaker", &genProp) == LT_OK)
+	{
+		m_bThiefSafe = genProp.m_Bool;
+	}
+#endif
 
 	return LTTRUE;
 }
@@ -314,8 +329,22 @@ void KeyPad::SetupDisabledState()
     g_pLTServer->GetObjectPos(m_hObject, &vPos);
 
 	theStruct.m_Pos = vPos;
+#ifdef NOLFSRC_MODERN
+	// M-P9-04: the safe cracker works the dial of a thief level's safe
+	if (m_bThiefSafe)
+	{
+		SAFE_STRCPY(theStruct.m_Filename, "Guns\\Models_HH\\PS2SafeCracker_hh.abc");
+		SAFE_STRCPY(theStruct.m_SkinName, "Guns\\Skins_PV\\PS2SafeCracker_pv.dtx");
+	}
+	else
+	{
+		SAFE_STRCPY(theStruct.m_Filename, "Guns\\Models_HH\\Codedec_hh.abc");
+		SAFE_STRCPY(theStruct.m_SkinName, "Guns\\Skins_HH\\Codedec_hh.dtx");
+	}
+#else
 	SAFE_STRCPY(theStruct.m_Filename, "Guns\\Models_HH\\Codedec_hh.abc");
 	SAFE_STRCPY(theStruct.m_SkinName, "Guns\\Skins_HH\\Codedec_hh.dtx");
+#endif
 
 	theStruct.m_Flags = FLAG_VISIBLE | FLAG_GOTHRUWORLD;
 	theStruct.m_ObjectType  = OT_MODEL;
@@ -459,7 +488,13 @@ void KeyPad::SpawnGadget()
 			// Spawn the weapon using the id because the name has a space
 			// in it (which screws up parsing)...
 
+#ifdef NOLFSRC_MODERN
+			// M-P9-04: a thief safe gives back the Thief Safe Cracker
+            const char* pGadgetName = m_bSpaceCodeBreaker ? "Space Code Breaker" :
+				(m_bThiefSafe ? "Thief Safe Cracker" : "Code Breaker");
+#else
             const char* pGadgetName = m_bSpaceCodeBreaker ? "Space Code Breaker" : "Code Breaker";
+#endif
 
             WEAPON* pWeapon = g_pWeaponMgr->GetWeapon((char*)pGadgetName);
 			if (pWeapon)
@@ -493,7 +528,13 @@ void KeyPad::Save(HMESSAGEWRITE hWrite)
     g_pLTServer->WriteToMessageFloat(hWrite, m_fMinPickTime);
     g_pLTServer->WriteToMessageFloat(hWrite, m_fMaxPickTime);
     g_pLTServer->WriteToMessageFloat(hWrite, m_fPickSoundRadius);
+#ifdef NOLFSRC_MODERN
+	// M-P9-04: the thief-safe flag rides in bit 1 of this byte, so the save
+	// layout (and older saves) stay as they were
+    g_pLTServer->WriteToMessageByte(hWrite, (m_bSpaceCodeBreaker ? 1 : 0) | (m_bThiefSafe ? 2 : 0));
+#else
     g_pLTServer->WriteToMessageByte(hWrite, m_bSpaceCodeBreaker);
+#endif
     g_pLTServer->WriteToMessageByte(hWrite, !!(m_hPickSound));
 }
 
@@ -518,7 +559,13 @@ void KeyPad::Load(HMESSAGEREAD hRead)
     m_fMinPickTime          = g_pLTServer->ReadFromMessageFloat(hRead);
     m_fMaxPickTime          = g_pLTServer->ReadFromMessageFloat(hRead);
     m_fPickSoundRadius      = g_pLTServer->ReadFromMessageFloat(hRead);
+#ifdef NOLFSRC_MODERN
+	uint8 nCodeBreaker      = g_pLTServer->ReadFromMessageByte(hRead);
+	m_bSpaceCodeBreaker     = (LTBOOL) (nCodeBreaker & 1);
+	m_bThiefSafe            = (LTBOOL) !!(nCodeBreaker & 2);
+#else
 	m_bSpaceCodeBreaker     = (LTBOOL) g_pLTServer->ReadFromMessageByte(hRead);
+#endif
 	LTBOOL bPlayingSound    = (LTBOOL) g_pLTServer->ReadFromMessageByte(hRead);
 
 
