@@ -45,7 +45,11 @@ the old directory's `Save` folder into the new one.
 
 Once the game is installed, `sha256sum -c SHA256SUMS` in its directory checks
 every file of it (all but your settings, `autoexec.cfg`, which the game
-rewrites).
+rewrites). The releases are built without any retail data. Thus they do not
+know the SHA-256 of the few programs that the installer completes with the
+icons and art from your discs (`lithtech.exe`, `NOLF.exe` and some more).
+The installer checks their size, and adds their SHA-256 to `SHA256SUMS`
+when it writes them.
 
 ## What you need
 

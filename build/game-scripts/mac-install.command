@@ -23,9 +23,16 @@
 # nothing else is changed. It can be run again: a file already in place is
 # checked and kept.
 #
+# A release built without the retail game (as the CI builds it) does not
+# know the SHA-256 of the binaries that it completes with the discs' art
+# (their F line has "-"): this script checks their size, and adds their
+# SHA-256 to SHA256SUMS.
+#
 # It needs only the Perl every Mac has (/usr/bin/perl, with its own modules).
 # The list of files, at the end of this script, says for each one which
-# bytes of which disc it is made of (build/mkinstall.py).
+# bytes of which disc it is made of, and for the binaries that have the
+# discs' art, which bytes of their install/*.noart copy in this release
+# (build/mkinstall.py).
 use strict;
 use warnings;
 use Cwd qw(abs_path);
@@ -74,10 +81,12 @@ my @data;
 # runs (saves, logs, settings, screenshots) nor a disc image -- which is
 # what copying the release over another installation leaves. Finder's
 # .DS_Store and the ._ files macOS writes on other disks are let be too.
+my %sum;       # SHA256SUMS: path -> SHA-256
+my $SUMS = "$HERE/SHA256SUMS";
 {
-    my $sums = "$HERE/SHA256SUMS";
+    my $sums = $SUMS;
     -f $sums or fail('SHA256SUMS is missing: run the script in the folder the release unpacked to');
-    my (%sum, %write, @bad, @extra);
+    my (%write, @bad, @extra);
     open my $fh, '<', $sums or fail("cannot read $sums");
     while (my $l = <$fh>) {
         $l =~ s/\r?\n\z//;
@@ -300,6 +309,19 @@ sub ok {   # ok(path, size, sha): is the file there, and right?
     my ($p, $size, $sha) = @_;
     return -f $p && -s $p == $size && sha256_file($p) eq $sha;
 }
+# record_sum(path, sha): a file whose SHA-256 the list does not give,
+# written: its line in SHA256SUMS (in place of an earlier one)
+sub record_sum {
+    my ($rel, $sha) = @_;
+    open my $in, '<', $SUMS or fail("cannot read $SUMS");
+    my @keep = grep { !(length($_) > 66 && substr($_, 66) eq $rel) } map { s/\r?\n\z//r } <$in>;
+    close $in;
+    open my $o, '>', "$SUMS.part" or fail("cannot write $SUMS.part");
+    print $o "$_\n" for @keep, "$sha  $rel";
+    close $o or fail("cannot write $SUMS.part");
+    rename("$SUMS.part", $SUMS) or fail("cannot write $SUMS");
+    $sum{$rel} = $sha;
+}
 my %stream;
 for my $n (keys %disc) { open($stream{$n}, '<:raw', $disc{$n}) or fail("$disc{$n}: cannot read it"); }
 my ($written, $kept, $skip, $out, $name, $dest, $part, $size, $sha) = (0, 0, 1);
@@ -310,7 +332,9 @@ for (@data) {
         ($name, $size, $sha) = @p[1 .. 3];
         $dest = "$HERE/$name";
         $part = "$dest.part";
-        $skip = ($p[4] eq 'once' && -e $dest) || ok($dest, $size, $sha);
+        $skip = $sha eq '-'
+            ? (exists $sum{$name} && ok($dest, $size, $sum{$name}))  # known once written
+            : (($p[4] eq 'once' && -e $dest) || ok($dest, $size, $sha));
         if ($skip) { $kept++; next; }
         print "$name\n";
         make_path(dirname($dest));
@@ -337,14 +361,27 @@ for (@data) {
     } elsif ($tag eq 'L') {
         next if $skip;
         print $out decode_base64($p[1]) or fail("$part: cannot write it (is the disk full?)");
+    } elsif ($tag eq 'A') {
+        next if $skip;
+        my ($f, $off, $left) = @p[1 .. 3];
+        open(my $in, '<:raw', "$HERE/$f") or fail("$f: cannot read it");
+        sysseek($in, $off, 0) or fail("$f: cannot seek");
+        while ($left > 0) {
+            my $got = sysread($in, my $b, $left < (1 << 20) ? $left : (1 << 20));
+            defined $got && $got > 0 or fail("$f ended early");
+            print $out $b or fail("$part: cannot write it (is the disk full?)");
+            $left -= $got;
+        }
+        close $in;
     } elsif ($tag eq 'E') {
         next if $skip;
         close $out or fail("$part: cannot write it (is the disk full?)");
-        if (!ok($part, $size, $sha)) {
+        if ($sha eq '-' ? -s $part != $size : !ok($part, $size, $sha)) {
             unlink $part;
             fail("$name came out wrong (a disk error?); the files before it are in place");
         }
         rename($part, $dest) or fail("$dest: cannot move it into place");
+        record_sum($name, sha256_file($dest)) if $sha eq '-';
         $written++;
     }
 }

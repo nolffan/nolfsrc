@@ -22,9 +22,16 @@
 # checks every file it writes; nothing else is changed. It can be run again: a file already in place is checked and kept.
 # Then play with ./linux-run.sh.
 #
+# A release built without the retail game (as the CI builds it) does not
+# know the SHA-256 of the binaries that it completes with the discs' art
+# (their F line has "-"): this script checks their size, and adds their
+# SHA-256 to SHA256SUMS. Then `sha256sum -c SHA256SUMS` checks the install.
+#
 # It needs bash, dd, sha256sum, base64, head and stat (GNU coreutils; a
 # Steam Deck has them). The list of files, at the end of this script, says
-# for each one which bytes of which disc it is made of (build/mkinstall.py).
+# for each one which bytes of which disc it is made of, and for the
+# binaries that have the discs' art, which bytes of their install/*.noart
+# copy in this release (build/mkinstall.py).
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SELF="$HERE/$(basename "${BASH_SOURCE[0]}")"
@@ -41,9 +48,10 @@ data() { sed -n '/^__NOLF_INSTALL_DATA__$/,$p' "$SELF" | tail -n +2; }
 # and nothing may be here that is neither, nor what the game writes as it
 # runs (saves, logs, settings, screenshots) nor a disc image -- which is
 # what copying the release over another installation leaves.
+declare -A SUM            # SHA256SUMS: path -> SHA-256
 check_dir() {
     local sums="$HERE/SHA256SUMS" sha rel n=0
-    local -A SUM WRITE
+    local -A WRITE
     local -a bad=() extra=()
     [ -f "$sums" ] || {
         echo "linux-install.sh: SHA256SUMS is missing: run the script in the directory the release unpacked to" >&2
@@ -219,11 +227,24 @@ ok() {  # ok <path> <size> <sha>: is the file there, and right?
     [ -f "$1" ] && [ "$(stat -c %s "$1")" = "$2" ] &&
         [ "$(sha256sum < "$1" | cut -d' ' -f1)" = "$3" ]
 }
+# record_sum <path> <sha>: a file whose SHA-256 the list does not give,
+# written: its line in SHA256SUMS (in place of an earlier one)
+record_sum() {
+    local sums="$HERE/SHA256SUMS" line
+    while IFS= read -r line; do
+        [ "${line:66}" = "$1" ] || printf '%s\n' "$line"
+    done < "$sums" > "$sums.part"
+    printf '%s  %s\n' "$2" "$1" >> "$sums.part"
+    mv -f "$sums.part" "$sums"
+    SUM[$1]=$2
+}
 written=0 kept=0
 while read -r tag a b c d; do
     case "$tag" in
     F)  name=$a; dest="$HERE/$a"; size=$b; sha=$c; flag=$d; part="$dest.part"; skip=0
         if [ "$flag" = once ] && [ -e "$dest" ]; then skip=1
+        elif [ "$sha" = - ]; then       # known once written: SHA256SUMS has it then
+            [ -n "${SUM[$a]:-}" ] && ok "$dest" "$size" "${SUM[$a]}" && skip=1
         elif ok "$dest" "$size" "$sha"; then skip=1
         fi
         if [ $skip = 1 ]; then kept=$((kept + 1)); else
@@ -235,13 +256,19 @@ while read -r tag a b c d; do
             skip="$b" count="$c" oflag=append conv=notrunc status=none ;;
     Z)  [ $skip = 1 ] || head -c "$a" /dev/zero >> "$part" ;;
     L)  [ $skip = 1 ] || printf '%s' "$a" | base64 -d >> "$part" ;;
+    A)  [ $skip = 1 ] || dd if="$HERE/$a" of="$part" bs=1M iflag=skip_bytes,count_bytes \
+            skip="$b" count="$c" oflag=append conv=notrunc status=none ;;
     E)  [ $skip = 1 ] && continue
-        if ! ok "$part" "$size" "$sha"; then
+        if [ "$sha" = - ] && [ "$(stat -c %s "$part")" = "$size" ]; then
+            mv -f "$part" "$dest"
+            record_sum "$name" "$(sha256sum < "$dest" | cut -d' ' -f1)"
+        elif [ "$sha" != - ] && ok "$part" "$size" "$sha"; then
+            mv -f "$part" "$dest"
+        else
             rm -f "$part"
             echo "linux-install.sh: $name came out wrong (a disk error?); the files before it are in place" >&2
             exit 1
         fi
-        mv -f "$part" "$dest"
         written=$((written + 1)) ;;
     esac
 done < <(data | sed -n '/^F /,$p')

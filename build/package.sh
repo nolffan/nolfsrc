@@ -1,29 +1,37 @@
 #!/usr/bin/env bash
 # The game directory as one file, to copy to the machine that plays it:
 #
-#   build/package.sh out/nolf-<legacy|modern>-<release|debug>
+#   build/package.sh out/nolf-<legacy|modern>-<release|debug> [<name>]
 #
-# writes two archives, each unpacking to <name>/ (then <name>/linux-run.sh --
-# see its header; Wine needed there):
+# writes two archives, each unpacking to <name>/ (by default the game
+# directory's own name; then <name>/linux-run.sh -- see its header; Wine
+# needed there):
 #
 #   out/<name>-private.tar.gz   the whole directory, the retail game's data
 #                               included: for your own machines, and anyone
 #                               developing on the build
-#   out/<name>-public.tar.gz    the same without anything that came from the
+#   out/<name>-public.tar.gz    the same without any bytes that came from the
 #                               discs, which its linux-install.sh /
 #                               windows-install.bat / mac-install.command
 #                               copy out of the player's
 #                               own disc images (build/mkinstall.py): the one
-#                               to give to other people. Its SHA256SUMS lists
+#                               to give to other people. The binaries we
+#                               built with the retail art in them are in it
+#                               as install/<path>.noart, without that art,
+#                               which the scripts add. Its SHA256SUMS lists
 #                               every file of the archive and every file the
 #                               scripts write; they refuse a directory that is
-#                               not the archive unpacked. It needs the
-#                               installed retail game (build/discs.py,
-#                               out/retail/); without it it is skipped.
+#                               not the archive unpacked.
 #
 # NOLF_ARCHIVES (default "private public") says which to write; with
-# "public" alone the private one is not made, and no retail game is an
-# error, not a skip.
+# "public" alone the private one is not made.
+#
+# A game directory built without the retail game (NODISCS=1: it has
+# NOT-PLAYABLE.txt, and it is out/<name>-nodiscs/) has no private archive:
+# it is skipped, or an error if NOLF_ARCHIVES asks for it. Its public archive
+# is the same as one built with the retail game, but that the SHA-256 of the
+# binaries with the retail art is not in it: the install scripts add it to
+# SHA256SUMS once they have written them (build/mkinstall.py).
 #
 # build/all.sh runs it for the release build (step 6) and build/variant.sh
 # for each variant, once its data and symbols are in place.
@@ -39,29 +47,41 @@
 # place, so a failed run never leaves a truncated one; the <name>.tar.gz and
 # plain .tar older builds made are removed.
 set -e
-OUT="${1:?usage: build/package.sh <game directory>}"
+OUT="${1:?usage: build/package.sh <game directory> [<name>]}"
 OUT="${OUT%/}"
-NAME="$(basename "$OUT")"
+DIR="$(basename "$OUT")"
+NAME="${2:-$DIR}"
 PARENT="$(dirname "$OUT")"
 PKG="$PARENT/$NAME-private.tar.gz"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ARCHIVES=" ${NOLF_ARCHIVES:-private public} "
+NODISCS=
+[ -f "$OUT/NOT-PLAYABLE.txt" ] && NODISCS=1
 
 # The fresh files, staged beside the directory and renamed into it.
 STAGE=".pkg-$NAME"
 rm -rf "$PARENT/$STAGE"
 mkdir -p "$PARENT/$STAGE"
 trap 'rm -rf "$PARENT/$STAGE"' EXIT
-cp "$OUT/defaults.cfg" "$PARENT/$STAGE/autoexec.cfg"
+# <DIR>/... is <NAME>/... in the archives, and so is the stage
+NAMES=(--transform="s|^$STAGE/|$NAME/|")
+[ "$DIR" = "$NAME" ] || NAMES+=(--transform="s|^$DIR/|$NAME/|" --transform="s|^$DIR\$|$NAME|")
 
 rm -f "$PARENT/$NAME.tar" "$PARENT/$NAME.tar.gz"
-if [[ $ARCHIVES == *" private "* ]]; then
+if [[ $ARCHIVES == *" private "* ]] && [ -n "$NODISCS" ]; then
+    if [ -n "${NOLF_ARCHIVES:-}" ]; then
+        echo "   $PKG: $OUT was built without the retail game, but NOLF_ARCHIVES asks for it" >&2
+        exit 1
+    fi
+    echo "   $PKG: skipped (built without the retail game)"
+elif [[ $ARCHIVES == *" private "* ]]; then
+    cp "$OUT/defaults.cfg" "$PARENT/$STAGE/autoexec.cfg"
     tar -C "$PARENT" -h -cf - \
-        --exclude="$NAME/Save/*" --exclude="$NAME/autoexec.cfg" --exclude="$NAME/nolfcmds.txt" \
-        --exclude="$NAME/NetHost.txt" \
+        --exclude="$DIR/Save/*" --exclude="$DIR/autoexec.cfg" --exclude="$DIR/nolfcmds.txt" \
+        --exclude="$DIR/NetHost.txt" \
         --exclude='*.log' --exclude=run-cmds.txt --exclude=cd --exclude='*.part' \
-        --transform="s|^$STAGE/|$NAME/|" \
-        "$NAME" "$STAGE/autoexec.cfg" |
+        "${NAMES[@]}" \
+        "$DIR" "$STAGE/autoexec.cfg" |
         gzip -6 > "$PKG.part"
     mv "$PKG.part" "$PKG"
     echo "   $PKG: $(du -h "$PKG" | cut -f1) (unpacks to $NAME/)"
@@ -70,31 +90,24 @@ fi
 
 # The public archive: the scripts beside the rest, the disc files left out.
 PUB="$PARENT/$NAME-public.tar.gz"
-rc=0
-python3 "$HERE/mkinstall.py" "$OUT" "$PARENT/$STAGE" || rc=$?
-if [ $rc = 3 ] && [ -n "${NOLF_ARCHIVES:-}" ]; then
-    echo "   $PUB: no installed retail game, but NOLF_ARCHIVES asks for it" >&2
-    exit 1
-elif [ $rc = 3 ]; then
-    echo "   $PUB: skipped (no installed retail game)"
-    rm -f "$PUB"
-elif [ $rc != 0 ]; then
-    exit $rc
-else
-    sed "s|^|$NAME/|" "$PARENT/$STAGE/disc-files.txt" > "$PARENT/$STAGE/exclude.txt"
-    tar -C "$PARENT" -h -cf "$PARENT/$STAGE/public.tar" \
-        --exclude="$NAME/Save/*" --exclude="$NAME/nolfcmds.txt" --exclude="$NAME/NetHost.txt" \
-        --exclude='*.log' --exclude=run-cmds.txt --exclude=cd --exclude='*.part' \
-        --anchored --no-wildcards --exclude-from="$PARENT/$STAGE/exclude.txt" \
-        --transform="s|^$STAGE/|$NAME/|" \
-        "$NAME" "$STAGE/linux-install.sh" "$STAGE/windows-install.bat" \
-        "$STAGE/mac-install.command"
-    # Last, SHA256SUMS: every file of the archive and every file the install
-    # scripts write, but autoexec.cfg, which the game rewrites. The scripts
-    # check the directory against it before they install, and
-    # `sha256sum -c SHA256SUMS` checks an install.
-    python3 - "$PARENT/$STAGE/public.tar" "$PARENT/$STAGE/disc-sums.txt" \
-        > "$PARENT/$STAGE/SHA256SUMS" <<'PY'
+python3 "$HERE/mkinstall.py" "$OUT" "$PARENT/$STAGE"
+sed "s|^|$DIR/|" "$PARENT/$STAGE/disc-files.txt" > "$PARENT/$STAGE/exclude.txt"
+echo "$DIR/NOT-PLAYABLE.txt" >> "$PARENT/$STAGE/exclude.txt"
+INSTALL=()
+[ -d "$PARENT/$STAGE/install" ] && INSTALL=("$STAGE/install")
+tar -C "$PARENT" -h -cf "$PARENT/$STAGE/public.tar" \
+    --exclude="$DIR/Save/*" --exclude="$DIR/nolfcmds.txt" --exclude="$DIR/NetHost.txt" \
+    --exclude='*.log' --exclude=run-cmds.txt --exclude=cd --exclude='*.part' \
+    --anchored --no-wildcards --exclude-from="$PARENT/$STAGE/exclude.txt" \
+    "${NAMES[@]}" \
+    "$DIR" "$STAGE/linux-install.sh" "$STAGE/windows-install.bat" \
+    "$STAGE/mac-install.command" "${INSTALL[@]}"
+# Last, SHA256SUMS: every file of the archive and every file the install
+# scripts write whose SHA-256 is known (disc-sums.txt), but autoexec.cfg,
+# which the game rewrites. The scripts check the directory against it before
+# they install, and `sha256sum -c SHA256SUMS` checks an install.
+python3 - "$PARENT/$STAGE/public.tar" "$PARENT/$STAGE/disc-sums.txt" \
+    > "$PARENT/$STAGE/SHA256SUMS" <<'PY'
 import hashlib, sys, tarfile
 lines = []
 with tarfile.open(sys.argv[1]) as t:
@@ -109,8 +122,7 @@ if len(set(n.lower() for n in names)) != len(names):
 for l in sorted(lines, key=lambda l: l[66:].lower()):
     sys.stdout.write(l + "\n")
 PY
-    tar -C "$PARENT" -rf "$PARENT/$STAGE/public.tar" --transform="s|^$STAGE/|$NAME/|" "$STAGE/SHA256SUMS"
-    gzip -6 < "$PARENT/$STAGE/public.tar" > "$PUB.part"
-    mv "$PUB.part" "$PUB"
-    echo "   $PUB: $(du -h "$PUB" | cut -f1) (unpacks to $NAME/; its data from the discs)"
-fi
+tar -C "$PARENT" -rf "$PARENT/$STAGE/public.tar" --transform="s|^$STAGE/|$NAME/|" "$STAGE/SHA256SUMS"
+gzip -6 < "$PARENT/$STAGE/public.tar" > "$PUB.part"
+mv "$PUB.part" "$PUB"
+echo "   $PUB: $(du -h "$PUB" | cut -f1) (unpacks to $NAME/; its data from the discs)"
