@@ -344,29 +344,43 @@ TARGETS = [
          purecall=0x101449ed),
 
     # ---- resources: scored resource by resource, left out of the total -----
+    # `art`: the resources made from the retail game's own art and text at
+    # build time (build/all.sh, steps 2b and 2c). A build without the retail
+    # game has placeholders there (build/retailextract.py placeholders), so
+    # the check without it (build/progress.sh ci) leaves them out.
+    #
     # CRes.dll: string tables, dialogs, bitmaps and text, and nothing but
-    # the CRT's DLL entry code -- so its resources are what is scored.
+    # the CRT's DLL entry code -- so its resources are what is scored. Its
+    # art: the Game of the Year string blocks and credits (goty/).
     dict(label="CRes.dll", what="the game's resources", kind="resources",
          shipped=REFERENCE + "/CRes.dll", stem="cres",
-         built="src/game/ClientRes/Release/CRes.dll"),
+         built="src/game/ClientRes/Release/CRes.dll",
+         art=[r"^rsrc:6/18(7[6-9]|8[01])/", r"^rsrc:TEXT/CREDITS/"]),
     # The engine images' resources (version blocks, dialogs, string tables,
     # icons; ltmsg.dll's engine messages), each a target of its own beside
     # the image's code.
+    # (the icon's two images, its group, and the console font)
     dict(label="lithtech.exe:rsrc", what="the engine's resources", kind="resources",
          shipped=REFERENCE + "/lithtech.exe", stem="lithtech-rsrc",
-         built="src/engine/lithtech/Release/lithtech.exe"),
+         built="src/engine/lithtech/Release/lithtech.exe",
+         art=[r"^rsrc:3/[12]/", r"^rsrc:14/128/", r"^rsrc:12345/140/"]),
     dict(label="server.dll:rsrc", what="the server's resources", kind="resources",
          shipped=REFERENCE + "/server.dll", stem="server-rsrc",
          built="src/engine/server/Release/server.dll"),
     dict(label="d3d.ren:rsrc", what="the renderer's resources", kind="resources",
          shipped=REFERENCE + "/d3d.ren", stem="d3d-rsrc",
          built="src/engine/d3d/Release/d3d.ren"),
+    # (the splash bitmap, its palette, the music, the icon and the two cursors)
     dict(label="NOLF.exe:rsrc", what="the launcher's resources", kind="resources",
          shipped=REFERENCE + "/NOLF.exe", stem="nolf-rsrc",
-         built="src/engine/launcher/Release/NOLF.exe"),
+         built="src/engine/launcher/Release/NOLF.exe",
+         art=[r"^rsrc:1/[12]/", r"^rsrc:12/WEB(HAND|CLICK)/", r"^rsrc:14/ICON/",
+              r"^rsrc:2/GAME1/", r"^rsrc:3/[34]/", r"^rsrc:(PALETTE|WAVE)/GAME1/"]),
+    # (the two icons, their groups, and the wizard bitmap)
     dict(label="NolfServ.exe:rsrc", what="the dedicated server's resources", kind="resources",
          shipped=REFERENCE + "/NolfServ.exe", stem="nolfserv-rsrc",
-         built="src/engine/nolfserv/Release/NolfServ.exe"),
+         built="src/engine/nolfserv/Release/NolfServ.exe",
+         art=[r"^rsrc:3/[123]/", r"^rsrc:14/(128|133)/", r"^rsrc:2/139/"]),
     dict(label="ltmsg.dll:rsrc", what="the engine's messages", kind="resources",
          shipped=REFERENCE + "/ltmsg.dll", stem="ltmsg",
          built="src/engine/ltmsg/Release/ltmsg.dll"),
