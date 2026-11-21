@@ -326,11 +326,10 @@ first.
 The files hold no retail bytes: addresses, lengths, offsets, symbols of
 ours, and hashes. Together they are about 6.5 MB.
 
-A build without the retail game has placeholder art
-(`build/retailextract.py placeholders` writes a file `PLACEHOLDER` beside
-it). Then the check leaves out the resources that `targets.py` names as each
-target's `art`: the art and the Game of the Year text, 27 resources. All
-the code is checked.
+A build without the retail game has the same art as one with it: the
+retail art and the Game of the Year text that our binaries are compiled
+with are committed in `assets/art/`. Thus the check covers every recorded
+resource and all the code.
 
 Know these limits:
 

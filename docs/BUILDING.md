@@ -68,12 +68,12 @@ parts of it by hand.
 |---|---|---|
 | 1. resources | game data from the retail game: the four `.rez` archives, configs, text, movies -- with the retail game DLLs inside the archives overwritten with zeros. The modern build then replaces `defaults.cfg` and `defctrls.cfg` with its own, from `assets/modern/gamedir/` | `out/nolf-legacy-release/` |
 | 2. third-party runtime | Miles Sound System (`mss32.dll` and its `.flt` / `.m3d` / `.asi` / `.as6` providers) and Bink (`binkw32.dll`) from the retail game: licensed middleware with no source, which the engine imports | `out/nolf-legacy-release/` |
-| 2b. launcher, server and engine art | (without the retail game: placeholders of the same shapes, "The CI build") the splash bitmap, palette, music, icon and cursors `launcher.rc` compiles into `NOLF.exe`, read out of the retail `NOLF.exe`'s resources; the icons and wizard bitmap `nolfserv.rc` compiles into `NolfServ.exe`, out of the retail `NolfServ.exe`'s; the icon and console font `lithtech.rc` compiles into `lithtech.exe`, out of the retail `lithtech.exe`'s. The text resources (dialogs, string tables, version blocks) are `.rc` source in the repository: `launcher.rc`, `nolfserv.rc`, `lithtech.rc`, `server/server.rc`, `d3d/d3d.rc`, `ltmsg.rc`; MFC's own resources come from the toolchain's `afxres.rc` | `src/engine/launcher/res/`, `src/engine/nolfserv/res/`, `src/engine/lithtech/res/` |
-| 2c. Game of the Year text | the strings of the Game of the Year content (the "Rest and Relaxation" mission) and the GOTY credits, which Monolith's v1.003 source of `CRes.dll` lacks, read out of the retail GOTY `CRES.dll` (in `NOLFGOTY.REZ`); compiled into our `CRes.dll` beside `ClientRes.rc`, so its resources are the retail ones | `src/game/ClientRes/goty/` |
+| 2b. launcher, server and engine art | the splash bitmap, palette, music, icon and cursors `launcher.rc` compiles into `NOLF.exe`, which are the retail `NOLF.exe`'s; the icons and wizard bitmap `nolfserv.rc` compiles into `NolfServ.exe`, the retail `NolfServ.exe`'s; the icon and console font `lithtech.rc` compiles into `lithtech.exe`, the retail `lithtech.exe`'s. They are committed in `assets/art/` (`assets/README.md`), and this step copies them. A build with the retail game first checks them against the retail binaries' resources (`make art-check`; `make art` writes them again). The text resources (dialogs, string tables, version blocks) are `.rc` source in the repository: `launcher.rc`, `nolfserv.rc`, `lithtech.rc`, `server/server.rc`, `d3d/d3d.rc`, `ltmsg.rc`; MFC's own resources come from the toolchain's `afxres.rc` | `src/engine/launcher/res/`, `src/engine/nolfserv/res/`, `src/engine/lithtech/res/` |
+| 2c. Game of the Year text | the strings of the Game of the Year content (the "Rest and Relaxation" mission) and the GOTY credits, which Monolith's v1.003 source of `CRes.dll` lacks, which are the retail GOTY `CRES.dll`'s (in `NOLFGOTY.REZ`): committed in `assets/art/goty/` and copied and checked as in step 2b; compiled into our `CRes.dll` beside `ClientRes.rc`, so its resources are the retail ones | `src/game/ClientRes/goty/` |
 | 3. compile | `build/compile.sh`: every compile and link, by `build/build.mk` (below) -- the lithshared libraries (`RegMgr` twice, as Monolith built it for each game DLL: the Release build for `NOLF.exe` and `Object.lto`, the Debug build, `RegMgr_Debug.lib`, for `CShell.dll`, which the Game of the Year `CShell.dll` linked; and `ButeMgr` twice, without MFC for the game DLLs and with it for `NolfServ.exe`); the game DLLs `CRes.dll`, `CShell.dll`, `Object.lto`; the engine, `ltmsg.dll`, `sres.dll`, `NOLF.exe` (the launcher), `NolfServ.exe` (the dedicated server), `server.dll`, `lithtech.exe`, `d3d.ren` | `src/lithshared/out/*.lib`, `src/game/*/Release`, `Final_Release`, `src/engine/*/Release` |
 | 4. assemble | the built binaries into the game directory; the game DLLs and `sres.dll` go in `custom/`, the rez directory the engine searches last (and that `startup.txt`, the rez list of the dedicated server `NolfServ.exe`, gets as its last entry; `build/all.sh` writes this file: the retail file's nine names, then ours). The modern build instead packs them, with our own data files from `assets/modern/rez/` (`assets/README.md`), into `nolfsrc.rez` by lithtools' `lithrez` (`build/lithrez.sh`, with a fixed time, so every build of the same inputs is the same bytes), the archive it loads last of the game's (staged in `out/stage/<game directory>/`). `assets/modern/rez/` includes the retail files that the modern build changes, which the recipes of `src/modern/data/` make; `build/moderndata.py check` makes sure that they are the same. What an older modern build left is removed: the game DLLs in `custom/`, and `nolfsrcdisc.rez`, `MODERN-DATA.txt` and the `.retail` copies of the configs | `out/nolf-legacy-release/` |
 | 5. audit | every PE file in `out/nolf-legacy-release/` listed with its origin (`out/nolf-legacy-release/MANIFEST.txt`; in the modern build each DLL in `nolfsrc.rez` has a row `built <source>`, `nolfsrc.rez:<name>`); the build fails if one is unaccounted for, or if a `.rez` archive other than ours still holds one | |
-| 6. package | `out/nolf-legacy-release/` as a compressed tar, whole (`-private`), and without the bytes from the discs plus the scripts that install them from the player's disc images and a `SHA256SUMS` of every file, which they check the directory against first (`-public`; `build/package.sh`, `build/mkinstall.py`). The bytes from the discs are the game data, and the retail art of steps 2b and 2c in our binaries: the public archive has those binaries as `install/<path>.noart`, without the art, and the scripts add it | `out/nolf-legacy-release-private.tar.gz`, `out/nolf-legacy-release-public.tar.gz` |
+| 6. package | `out/nolf-legacy-release/` as a compressed tar, whole (`-private`), and without the disc data plus the scripts that install it from the player's disc images and a `SHA256SUMS` of every file, which they check the directory against first (`-public`; `build/package.sh`, `build/mkinstall.py`) | `out/nolf-legacy-release-private.tar.gz`, `out/nolf-legacy-release-public.tar.gz` |
 
 Every binary in `out/nolf-legacy-release/` is built from this repository except the 35
 Miles and Bink files of step 2; the audit prints them all. The steps are
@@ -246,20 +246,17 @@ pre-release "nightly", and a `v*` tag on a release of that tag (the
 workflow's header has the details). The CI never makes a private archive.
 
 `make NODISCS=1 [variant]` (`build/all.sh` with `NOLF_NODISCS=1`) compiles
-every binary as `make` does, with these differences:
+every binary as `make` does. The binaries are the same as in a build with
+the retail game, because the retail art that they are compiled with is
+committed (`assets/art/`). These are the differences:
 
 * Steps 1 and 2 copy no game data and no Miles or Bink. They write only
   the manifest's rows of those files, from `build/retail-files.txt` and
   `build/retail-ranges.txt`. The modern build makes its open middleware as
-  always, and does not check `assets/modern/` against the recipes (`make
-  progress` does).
-* Steps 2b and 2c write placeholder art and text
-  (`build/retailextract.py placeholders`). Each placeholder has the shape
-  of the retail file that `build/retail-ranges.txt` gives: the same size,
-  the same images of the same sizes, the same strings of the same lengths,
-  but blank images, silence and text of ours. Thus each binary has the
-  same layout as in a build with the retail game. Only the bytes of the
-  art differ.
+  always.
+* The checks against the retail game do not occur: `assets/art/` against
+  the retail binaries, and `assets/modern/` against the recipes (`make
+  progress` does both).
 * The game directory is `out/<name>-nodiscs/`, with `NOT-PLAYABLE.txt` in
   it. It does not play: `linux-run.sh`, `linux-server.sh` and
   `build/playtest.sh` refuse it.
@@ -267,27 +264,15 @@ every binary as `make` does, with these differences:
   the playable form. Unpack it and run its install script with your disc
   images, as for any public archive ("Playing your build").
 
-The public archive is the same as that of a build with the retail game,
-except for one thing. The install scripts copy each binary that has retail
-art from its `.noart` copy in the archive and the art from the discs, but
-the SHA-256 of the result is not known before the install. Its line in the
-scripts' list has `-` in place of the SHA-256. The scripts check the size
-of such a file, and then add its SHA-256 to `SHA256SUMS`. Every other file
-has its SHA-256 in `SHA256SUMS` from the start. The discs' bytes are always
-checked: a script accepts only disc images with the known SHA-256.
-
-A later `make` with your disc images writes the retail art again and
-rebuilds what changed.
+The public archive is the same as that of a build with the retail game:
+the same files, and the same install scripts.
 
 `build/retail-ranges.txt` is metadata of the retail game, and no game data:
-which files are PE images, where the retail game DLLs are in the four
-archives and the SHA-256 of each archive with them zeroed, the shape of
-each art file, and the offset, size and SHA-256 of each art resource in its
-retail binary. `make retail-ranges` writes it again from the retail game;
-this is necessary only when the build takes other art from it. Every build
-with the retail game checks it: the art files and the PE list in steps 1,
-2b and 2c, and the rest when `build/mkinstall.py` makes the install
-scripts.
+which files are PE images, and where the retail game DLLs are in the four
+archives, with the SHA-256 of each archive after they are zeroed. `make
+retail-ranges` writes it again from the retail game. A build with the
+retail game checks it: the PE list in step 1, and the archives when
+`build/mkinstall.py` makes the install scripts.
 
 `make progress-ci` is described in `progress/README.md`, "The check without
 the retail game". `make ci` runs the legacy release build and that check on

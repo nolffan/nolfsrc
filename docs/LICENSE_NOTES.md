@@ -12,6 +12,7 @@ This file says which is which; it is not legal advice and grants nothing.
 | `src/MONOLITH-README.txt` | Monolith's readme for that release | as `src/game/` |
 | `progress/reference/LT2/lithshared/libs/` | **Monolith Productions**: the prebuilt lithshared libraries of the same release (Release and Debug builds), unmodified; never built into anything, only compared against by `make progress` (`progress/reference/README.md`) | as `src/game/` |
 | `assets/modern/` (the files `assets/modern/MODERN-DATA.txt` lists) | **Monolith Productions** / Fox Interactive / Sierra: retail game data files of the Game of the Year Edition that the modern build changes, made from the retail files by the recipes of `src/modern/data/` (`build/moderndata.py`). These changes are bug fixes, and changes as a mod makes them: attribute files, a few textures and a model, and `defaults.cfg` and `defctrls.cfg`. They are committed as fixes, as Monolith's prebuilt libraries in `progress/reference/` are, and the modern build's `nolfsrc.rez` and public archive carry them. No unchanged retail file is committed; the game's other data comes only from the player's discs (below) | Monolith's: the game's end-user licence. Monolith encouraged mods of the game; the terms of its source release (`src/MONOLITH-README.txt`, section IV) also apply to add-ons |
+| `assets/art/` | **Monolith Productions**: the retail art and text that our binaries are compiled with, as the retail binaries' resources hold them: the launcher's splash bitmap, palette, music, icon and two cursors (`NOLF.exe`), the dedicated server's two icons and its setup wizard's bitmap (`NolfServ.exe`), the engine's icon and console font (`lithtech.exe`), and the Game of the Year strings and credits text (the GOTY `CRES.dll`). About 0.5 MB. They are unchanged. They are committed so that every build, also one without the discs, compiles binaries that are complete; `make art` makes them from the retail binaries, and every build with the discs checks them (`assets/README.md`). Our binaries, and thus the public archives, carry them | Monolith's: the game's end-user licence |
 | `assets/modern/` (the other files) | written for this project: the jukebox's track list and two sprite files; the two Cate models are links into `ext/nolf1-modernizer` (below) | no licence is declared |
 | `src/lithshared/` | the LithTech shared libraries. Much of it (`stdlith/`, `CryptMgr/`, `RegMgr/`, `MFCStub/`, the `ButeMgr/` parser, `lith/`) is adapted from Monolith's later public source release for *No One Lives Forever 2*; the rest was written or reconstructed for this project, including `ztools/`, `rezmgr/` and `gamespy/` (a stand-in for the GameSpy middleware). `zlib/` is zlib | Monolith's code under the terms of the release it came from; zlib under the zlib licence; the rest as `src/engine/` |
 | `src/engine/` | the LithTech engine (`lithtech.exe`, `server.dll`, `d3d.ren`), the `NOLF.exe` launcher, the `NolfServ.exe` dedicated server, `ltmsg.dll` and `sres.dll`: written for this project, reconstructed from the retail binaries so that it compiles back to them. It implements Monolith's engine and interfaces, and `launcher.rc` / `nolfserv.rc` / `ltmsg.rc` reproduce the retail resource scripts (dialogs and strings). `NolfServ.exe` also compiles the game's `src/game/Shared/NetDefs.cpp` (Monolith's) and links the static MFC of the toolchain | written for this project; no licence is declared |
@@ -19,6 +20,21 @@ This file says which is which; it is not legal advice and grants nothing.
 | `ext/openmiles` (submodule) | **OpenMiles**, a clean-room reimplementation of the Miles Sound System, upstream at github.com/maci0/openmiles; our fork, github.com/nolffan/openmiles (branch `miles6-fixes`: upstream's release with our fixes, GPL-3.0-only as the code they change); vendors miniaudio and TinySoundFont | GPL-3.0-only (its vendored libraries: MIT, MIT-0, zlib); see its `LICENSE` and `deps/README.md` |
 | `ext/ffmpeg` (submodule) | **FFmpeg**, upstream at github.com/FFmpeg/FFmpeg | LGPL-2.1-or-later as the modern build configures it (no GPL or non-free parts enabled); see its `LICENSE.md` |
 | `ext/nolf1-modernizer` (submodule) | **NOLF Modernizer** by HeyThereCoffeee (haekb), upstream at github.com/haekb/nolf1-modernizer. The modern build uses two of its files, the seasonal main menus' Cate models (`ASSETS/CHARS/MODELS/INTHERO_CASUAL.abc`, `INTHERO_WINTER.abc`, linked from `assets/modern/rez/`), which the modern build's `nolfsrc.rez` carries; none of its code | no licence of its own: its readme says it remains under Monolith's end-user licence for the v1.003 source release, as `src/game/` |
+
+## The retail data in this repository
+
+This repository holds three sets of retail data, and no other:
+
+* `assets/modern/`: the retail data files that the modern build changes
+  (bug fixes, and changes as a mod makes them).
+* `assets/art/`: the retail art and text that our binaries are compiled
+  with (icons, the launcher's splash bitmap and sound, the dedicated
+  server's wizard bitmap, the console font, the Game of the Year strings
+  and credits text).
+* `progress/reference/`: Monolith's prebuilt lithshared libraries from the
+  v1.003 source release, for comparison only.
+
+All other game data comes from the player's own discs.
 
 ## Not in this repository, taken from the retail game at build time
 
@@ -31,10 +47,6 @@ The build takes these from the Game of the Year Edition as
 | the game data: `.rez` archives, configs, text, movies (but the changed files of `assets/modern/`, above) | Monolith Productions / Fox Interactive / Sierra | `out/nolf-legacy-release/` |
 | `mss32.dll` and its `.flt`, `.m3d`, `.asi`, `.as6` providers | Miles Sound System, RAD Game Tools | `out/nolf-legacy-release/` (the only binaries in the game not built from source) |
 | `binkw32.dll` | Bink Video, RAD Game Tools | `out/nolf-legacy-release/` |
-| the launcher's bitmap, palette, music, icon and cursors | Monolith, from the retail `NOLF.exe`'s resources | `src/engine/launcher/res/` (gitignored), compiled into our `NOLF.exe` |
-| the dedicated server's two icons and its setup wizard's bitmap | Monolith, from the retail `NolfServ.exe`'s resources | `src/engine/nolfserv/res/` (gitignored), compiled into our `NolfServ.exe` |
-| the engine's icon and its console font (a PCX image) | Monolith, from the retail `lithtech.exe`'s resources | `src/engine/lithtech/res/` (gitignored), compiled into our `lithtech.exe` |
-| the Game of the Year strings and credits | Monolith, from the retail GOTY `CRES.dll`'s resources | `src/game/ClientRes/goty/` (gitignored), compiled into our `CRes.dll` |
 
 `make progress` also extracts the retail `lithtech.exe`, `server.dll`,
 `d3d.ren`, `NOLF.exe`, `NolfServ.exe` and `ltmsg.dll`, and the Game of the Year `CShell.dll`, `Object.lto`

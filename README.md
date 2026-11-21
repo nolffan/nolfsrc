@@ -35,9 +35,13 @@ Monolith Productions.
 (and the Miles and Bink sound/video runtime, the only binaries not built
 from source) from the retail Game of the Year Edition, which the build
 installs from your own images of its two discs (bring your own: see below).
-The exception is a small set of retail data files that the modern build
-changes (about 2.6 MB: bug fixes, and changes as a mod makes them;
-`assets/README.md`). They are committed and go into its `nolfsrc.rez`. The modern
+There are two exceptions, both committed in `assets/` (`assets/README.md`):
+a small set of retail data files that the modern build changes (about 2.6
+MB: bug fixes, and changes as a mod makes them), which go into its
+`nolfsrc.rez`; and the retail art and text that our binaries are compiled
+with (about 0.5 MB: the icons, the launcher's splash bitmap and sound, the
+dedicated server's wizard bitmap, the console font, and the Game of the
+Year strings and credits). The modern
 build replaces that runtime with open-source builds from `ext/`: OpenMiles
 for Miles, and our own Bink player on FFmpeg.
 
