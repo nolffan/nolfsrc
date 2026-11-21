@@ -127,6 +127,7 @@ make progress-update   # record the score in progress/ (and its README.md table)
 make progress-ci  # the check without the retail game: the build against
                   #   progress/hashes/ ("The CI build", below)
 make ci           # make NODISCS=1, then make progress-ci: what the CI runs
+                  #   for the legacy release build
 make retail       # install the retail game from your disc images (every build
                   #   runs it)
 make shell        # a shell in the build container, at /repo
@@ -212,8 +213,7 @@ extracts the game data again (about 1.1 GB); later runs take as long as
 what changed takes to rebuild. Each is packaged like the release game, as
 `out/<directory>-private.tar.gz` and `-public.tar.gz`
 (`out/nolf-modern-release-private.tar.gz`, ...); `NOLF_ARCHIVES=public
-make ...` writes only the public one, and fails rather than skip it without
-the installed retail game. The modern build's changes to retail data files
+make ...` writes only the public one. The modern build's changes to retail data files
 are committed in `assets/modern/`, made from the recipes of
 `src/modern/data/`: `make modern-data` writes them again from the retail
 game, and `make modern-data-check` (also part of `make modern` and `make
@@ -223,35 +223,75 @@ or open `NOLFLauncher.exe` for the modern launcher. Modern `NOLF.exe` uses
 the same settings and game commands as the launcher and stays running until
 `lithtech.exe` exits. For a scripted test, use `build/playtest.sh out/nolf-modern-release 'Worlds\T01S01'`.
 
-The variants, the public archives and the releases need the retail game, so
-you build them locally. The CI does not have the retail game: see "The CI
+Every variant can also be built without the retail game: see "The CI
 build" below.
 
 ### The CI build: without the retail game
 
 The GitHub Actions workflow `.github/workflows/ci.yml` runs on every push to
-`master` and every pull request. It has no disc images, so it does `make
-ci`:
+`master`, every `v*` tag and every pull request. It has no disc images and
+no retail data. It builds the four variants, each in a job of its own named
+for the variant, with `NOLF_ARCHIVES=public`:
 
 ```sh
-make NODISCS=1    # the legacy release build without the retail game
-make progress-ci  # the byte check without the retail binaries
+make NODISCS=1               # nolf-legacy-release, then make progress-ci
+make NODISCS=1 debug         # nolf-legacy-debug
+make NODISCS=1 modern        # nolf-modern-release
+make NODISCS=1 modern-debug  # nolf-modern-debug
 ```
 
-`make NODISCS=1` (`build/all.sh` with `NOLF_NODISCS=1`) compiles every
-binary as `make` does. It does not take the game data or Miles and Bink
-(steps 1 and 2), and it makes no archives (step 6). In steps 2b and 2c it
-writes placeholder art and text (`build/retailextract.py placeholders`):
-files with the same names, formats, sizes and image counts as the retail
-art, but blank. Thus the code of each binary is the same as in a full
-build; only those resources differ. The game directory is
-`out/nolf-legacy-nodiscs/`, and it does not play. A later `make` with your
-disc images writes the retail art again and rebuilds what changed. Only the
-legacy release build can be built without the retail game.
+Each job uploads its public archive, `out/<name>-public.tar.gz`, as a
+workflow artifact. A push to `master` puts the two modern archives on the
+pre-release "nightly", and a `v*` tag on a release of that tag (the
+workflow's header has the details). The CI never makes a private archive.
+
+`make NODISCS=1 [variant]` (`build/all.sh` with `NOLF_NODISCS=1`) compiles
+every binary as `make` does, with these differences:
+
+* Steps 1 and 2 copy no game data and no Miles or Bink. They write only
+  the manifest's rows of those files, from `build/retail-files.txt` and
+  `build/retail-ranges.txt`. The modern build makes its open middleware as
+  always, and does not check `assets/modern/` against the recipes (`make
+  progress` does).
+* Steps 2b and 2c write placeholder art and text
+  (`build/retailextract.py placeholders`). Each placeholder has the shape
+  of the retail file that `build/retail-ranges.txt` gives: the same size,
+  the same images of the same sizes, the same strings of the same lengths,
+  but blank images, silence and text of ours. Thus each binary has the
+  same layout as in a build with the retail game. Only the bytes of the
+  art differ.
+* The game directory is `out/<name>-nodiscs/`, with `NOT-PLAYABLE.txt` in
+  it. It does not play: `linux-run.sh`, `linux-server.sh` and
+  `build/playtest.sh` refuse it.
+* Step 6 makes only the public archive, `out/<name>-public.tar.gz`. This is
+  the playable form. Unpack it and run its install script with your disc
+  images, as for any public archive ("Playing your build").
+
+The public archive is the same as that of a build with the retail game,
+except for one thing. The install scripts copy each binary that has retail
+art from its `.noart` copy in the archive and the art from the discs, but
+the SHA-256 of the result is not known before the install. Its line in the
+scripts' list has `-` in place of the SHA-256. The scripts check the size
+of such a file, and then add its SHA-256 to `SHA256SUMS`. Every other file
+has its SHA-256 in `SHA256SUMS` from the start. The discs' bytes are always
+checked: a script accepts only disc images with the known SHA-256.
+
+A later `make` with your disc images writes the retail art again and
+rebuilds what changed.
+
+`build/retail-ranges.txt` is metadata of the retail game, and no game data:
+which files are PE images, where the retail game DLLs are in the four
+archives and the SHA-256 of each archive with them zeroed, the shape of
+each art file, and the offset, size and SHA-256 of each art resource in its
+retail binary. `make retail-ranges` writes it again from the retail game;
+this is necessary only when the build takes other art from it. Every build
+with the retail game checks it: the art files and the PE list in steps 1,
+2b and 2c, and the rest when `build/mkinstall.py` makes the install
+scripts.
 
 `make progress-ci` is described in `progress/README.md`, "The check without
-the retail game". You can run both on your own machine (`make ci`), also
-when you have the disc images.
+the retail game". `make ci` runs the legacy release build and that check on
+your own machine, also when you have the disc images.
 
 ### The modern build: `NOLFSRC_MODERN`
 

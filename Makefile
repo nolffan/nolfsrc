@@ -41,7 +41,9 @@ NOLF_SOURCE ?= progress/reference
 SRC_MOUNT := $(if $(NOLF_SOURCE),-v $(realpath $(NOLF_SOURCE)):/nolfsource:ro -e NOLF_SOURCE=/nolfsource)
 
 # Your disc images, if they are not in isos/: NOLF_ISOS=<directory>
-# (mounted read-only). NODISCS=1: build without the retail game (`make ci`).
+# (mounted read-only). NODISCS=1: build without the retail game, any variant
+# (`make ci`; build/all.sh): into out/<name>-nodiscs/, which does not play,
+# and out/<name>-public.tar.gz, which installs from your disc images.
 # NOLF_MAC_DIR=<directory>: the Mac release, for development only (make shell).
 NOLF_ISOS ?=
 NOLF_MAC_DIR ?=
@@ -60,7 +62,7 @@ TOOLCHAIN_FILES = ext/toolchains/msvc-6.00-9782/VC98/Bin/CL.EXE \
 	ext/toolchains/msvc-6.00-8447/BIN/cl.exe \
 	ext/toolchains/icl-4.0/BIN/icl.exe
 
-.PHONY: all game debug modern modern-debug image retail ci progress-ci check-nodiscs check-tools check-lithtools check-ext check-toolchain modern-data modern-data-check test test-modern test-compare test-renderers progress progress-update shell clean distclean help
+.PHONY: all game debug modern modern-debug image retail retail-ranges ci progress-ci check-tools check-lithtools check-ext check-toolchain modern-data modern-data-check test test-modern test-compare test-renderers progress progress-update shell clean distclean help
 
 all: game
 
@@ -99,19 +101,20 @@ help:
 	@echo
 	@echo "Variables: TEST_LEVELS=\"$(TEST_LEVELS)\", TEST_RES=<WxH>, JOBS=<n> (parallel compiles; default one per CPU)"
 	@echo "           NOLF_ARCHIVES=\"private public\" (the archives build/package.sh writes)"
-	@echo "           NOLF_ISOS=<dir> (your disc images, if not in isos/), NODISCS=1 (see make ci)"
+	@echo "           NOLF_ISOS=<dir> (your disc images, if not in isos/), NODISCS=1 (without"
+	@echo "           them: out/<name>-nodiscs/, which does not play, and out/<name>-public.tar.gz)"
 	@echo "           NOLF_SOURCE=<dir> (Monolith's prebuilt libraries for make progress;"
 	@echo "           default progress/reference), COMPLETE=1, COVERED=1, ACCEPT_LOSSES=1 (progress/README.md)"
 
 game: check-toolchain retail
 	$(DOCKER_RUN) bash build/all.sh
 
-debug: check-nodiscs check-toolchain retail
+debug: check-toolchain retail
 	$(DOCKER_RUN) bash build/variant.sh $@
 
 # the modern build also builds OpenMiles and its Bink player from ext/
 # (build/ext.sh)
-modern modern-debug: check-nodiscs check-toolchain check-lithtools check-ext retail
+modern modern-debug: check-toolchain check-lithtools check-ext retail
 	$(DOCKER_RUN) bash build/variant.sh $@
 
 # The modern build's changed retail files, assets/modern/: written again from
@@ -122,10 +125,6 @@ modern-data: check-tools retail
 
 modern-data-check: check-tools retail
 	$(DOCKER_RUN) python3 build/moderndata.py check
-
-# Only the legacy release build can be built without the retail game.
-check-nodiscs:
-	@[ "$(NODISCS)" != 1 ] || { echo "error: NODISCS=1 builds only the legacy release game (make NODISCS=1)" >&2; exit 1; }
 
 # IMAGE_BUILD=0: use $(IMAGE) as it is (CI builds it with a layer cache
 # first, .github/workflows/ci.yml).

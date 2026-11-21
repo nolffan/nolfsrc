@@ -94,9 +94,11 @@ and functions not written yet. `ext/tools/guides/` explains the method, from rea
 retail machine code to the compiler quirks that decide the last few bytes;
 `make progress` (after `make`) shows where things stand and catches a change
 that breaks a function that matched before. The CI has no retail game: it
-checks the build against hashes that `make progress-update` records
-(`make ci`; see `progress/README.md`). It cannot find new matches, so run
-`make progress-update` with your disc images before you send a change.
+builds the four variants and their public archives without it, and checks
+the build against hashes that `make progress-update` records (`make ci`;
+see `progress/README.md` and `docs/BUILDING.md`, "The CI build"). It cannot
+find new matches, so run `make progress-update` with your disc images
+before you send a change.
 
 ## Credits
 

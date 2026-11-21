@@ -53,6 +53,10 @@
 # minutes) and kept after that. Last, the game directory is packaged as
 # out/<name>-private.tar.gz and -public.tar.gz, like the release build's
 # (build/package.sh).
+#
+# NOLF_NODISCS=1 (make NODISCS=1 <variant>): without the retail game, as
+# build/all.sh says. The game directory is then out/<name>-nodiscs/, which
+# does not play, and only out/<name>-public.tar.gz is made.
 set -e
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO"
@@ -97,7 +101,9 @@ nolfsrc_tree_layout "$TREE"
 export NOLFSRC_CFLAGS="$CFLAGS"
 export NOLFSRC_LDFLAGS="$LDFLAGS"
 export NOLFSRC_RCFLAGS="$RCFLAGS"
-export NOLF_GAME_OUT="$REPO/out/$NAME"
+GAMEDIR="out/$NAME"
+[ "${NOLF_NODISCS:-0}" = 1 ] && GAMEDIR="out/$NAME-nodiscs"
+export NOLF_GAME_OUT="$REPO/$GAMEDIR"
 # the retail game this checkout installed (build/retail.sh), not the tree's
 source "$REPO/build/retail.sh"
 export NOLF_RETAIL="$(retail_root)"
@@ -107,7 +113,7 @@ bash "$TREE/build/all.sh"
 
 case "$VARIANT" in *debug)
     echo
-    echo "== symbols: each built binary's .pdb (and .map) beside it in out/$NAME/"
+    echo "== symbols: each built binary's .pdb (and .map) beside it in $GAMEDIR/"
     # MANIFEST.txt has `built <source>\t<installed path>` for every binary we
     # built; its .pdb is the link output's name with .pdb, and the debugger
     # looks for it by that name in the binary's own directory.
@@ -127,6 +133,13 @@ case "$VARIANT" in *debug)
     done ;;
 esac
 echo
-echo "== package: out/$NAME/ -> out/$NAME-private.tar.gz, -public.tar.gz"
-bash "$TREE/build/package.sh" "out/$NAME"
-echo "== done: out/$NAME/ -- play it with out/$NAME/linux-run.sh"
+if [ "${NOLF_NODISCS:-0}" = 1 ]; then
+    echo "== package: $GAMEDIR/ -> out/$NAME-public.tar.gz (no private archive without the retail game)"
+    bash "$TREE/build/package.sh" "$GAMEDIR" "$NAME"
+    echo "== done: $GAMEDIR/ -- built without the retail game, it does not play (NOT-PLAYABLE.txt);"
+    echo "   out/$NAME-public.tar.gz, installed from your disc images, does"
+else
+    echo "== package: out/$NAME/ -> out/$NAME-private.tar.gz, -public.tar.gz"
+    bash "$TREE/build/package.sh" "out/$NAME"
+    echo "== done: out/$NAME/ -- play it with out/$NAME/linux-run.sh"
+fi

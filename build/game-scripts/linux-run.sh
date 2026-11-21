@@ -64,6 +64,8 @@ case "${1:-}" in
 --help|-h) sed -n '2,/^set -e$/{/^set -e$/d;p}' "./${0##*/}" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 HERE="$(pwd)"
+# a game directory built without the retail game (NODISCS=1) does not play
+if [ -f NOT-PLAYABLE.txt ]; then cat NOT-PLAYABLE.txt >&2; exit 1; fi
 WINEPREFIX="${WINEPREFIX:-$HOME/.wine-nolf}"
 WINEDEBUG="${WINEDEBUG:-fixme-all}"
 export WINEPREFIX WINEDEBUG
