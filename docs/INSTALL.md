@@ -30,8 +30,11 @@ included, is kept for archive purposes and is not attached to releases. To
 get it, build it ([`BUILDING.md`](BUILDING.md)); each build on GitHub
 Actions also keeps it as an artifact for a while.
 
-No game files are included. Each archive has an installer script that copies
-the game's data from your own disc images and checks every file it writes.
+No unchanged game files are included. Each archive has an installer script
+that copies the game's data from your own disc images and checks every file
+it writes. The modern build's archive includes the few game files that it
+changes (bug fixes, and changes as a mod makes them), in `nolfsrc.rez` and
+as `defaults.cfg` and `defctrls.cfg`.
 
 **Each release is the whole game, not a patch.** Unpack it into a new, empty
 directory, never over an earlier release or another installation of the
@@ -207,8 +210,8 @@ If you get stuck in the level geometry, `mpclip` lets you fly out.
 |---|---|
 | `autoexec.cfg` | Your settings and key bindings, rewritten when the game exits. Delete it to start from the defaults (`defaults.cfg`). |
 | `Save/` | Saved games. |
-| `nolfsrc.rez` | This project's archive: the game's code, built from source, and the modern build's own new files (the jukebox's list, the seasonal main menus). It loads after the game's own archives, so it overrides them. |
-| `nolfsrcdisc.rez` | The modern build's changes to the game's own data (weapon and layout tables, a few textures), which the installer makes from your discs. |
+| `nolfsrc.rez` | This project's archive: the game's code, built from source, the modern build's own new files (the jukebox's list, the seasonal main menus) and its changes to the game's own data (weapon and layout tables, a few textures). It loads after the game's own archives, so it overrides them. |
+| `defaults.cfg`, `defctrls.cfg` | The default settings and controls. The modern build has its own (for example, the mouse wheel changes weapons); the archive includes them. |
 | `Custom/` | Mods: a `.rez` archive here can be picked in the launcher's custom archives, and loads after `nolfsrc.rez`. |
 | `launcher.ini` | The launcher's settings (its Advanced options, the custom archives to load, the command line), in the modern build; the original kept them in the Windows registry. |
 | `modern.log` | The modern build's log, emptied each run. Attach it when you report a problem. |

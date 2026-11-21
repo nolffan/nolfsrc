@@ -66,12 +66,12 @@ parts of it by hand.
 
 | Step | What | Output |
 |---|---|---|
-| 1. resources | game data from the retail game: the four `.rez` archives, configs, text, movies -- with the retail game DLLs inside the archives overwritten with zeros | `out/nolf-legacy-release/` |
+| 1. resources | game data from the retail game: the four `.rez` archives, configs, text, movies -- with the retail game DLLs inside the archives overwritten with zeros. The modern build then replaces `defaults.cfg` and `defctrls.cfg` with its own, from `assets/modern/gamedir/` | `out/nolf-legacy-release/` |
 | 2. third-party runtime | Miles Sound System (`mss32.dll` and its `.flt` / `.m3d` / `.asi` / `.as6` providers) and Bink (`binkw32.dll`) from the retail game: licensed middleware with no source, which the engine imports | `out/nolf-legacy-release/` |
 | 2b. launcher, server and engine art | the splash bitmap, palette, music, icon and cursors `launcher.rc` compiles into `NOLF.exe`, read out of the retail `NOLF.exe`'s resources; the icons and wizard bitmap `nolfserv.rc` compiles into `NolfServ.exe`, out of the retail `NolfServ.exe`'s; the icon and console font `lithtech.rc` compiles into `lithtech.exe`, out of the retail `lithtech.exe`'s. The text resources (dialogs, string tables, version blocks) are `.rc` source in the repository: `launcher.rc`, `nolfserv.rc`, `lithtech.rc`, `server/server.rc`, `d3d/d3d.rc`, `ltmsg.rc`; MFC's own resources come from the toolchain's `afxres.rc` | `src/engine/launcher/res/`, `src/engine/nolfserv/res/`, `src/engine/lithtech/res/` |
 | 2c. Game of the Year text | the strings of the Game of the Year content (the "Rest and Relaxation" mission) and the GOTY credits, which Monolith's v1.003 source of `CRes.dll` lacks, read out of the retail GOTY `CRES.dll` (in `NOLFGOTY.REZ`); compiled into our `CRes.dll` beside `ClientRes.rc`, so its resources are the retail ones | `src/game/ClientRes/goty/` |
 | 3. compile | `build/compile.sh`: every compile and link, by `build/build.mk` (below) -- the lithshared libraries (`RegMgr` twice, as Monolith built it for each game DLL: the Release build for `NOLF.exe` and `Object.lto`, the Debug build, `RegMgr_Debug.lib`, for `CShell.dll`, which the Game of the Year `CShell.dll` linked; and `ButeMgr` twice, without MFC for the game DLLs and with it for `NolfServ.exe`); the game DLLs `CRes.dll`, `CShell.dll`, `Object.lto`; the engine, `ltmsg.dll`, `sres.dll`, `NOLF.exe` (the launcher), `NolfServ.exe` (the dedicated server), `server.dll`, `lithtech.exe`, `d3d.ren` | `src/lithshared/out/*.lib`, `src/game/*/Release`, `Final_Release`, `src/engine/*/Release` |
-| 4. assemble | the built binaries into the game directory; the game DLLs and `sres.dll` go in `custom/`, the rez directory the engine searches last (and that `startup.txt`, the rez list of the dedicated server `NolfServ.exe`, gets as its last entry). The modern build instead packs them, with our own data files from `assets/modern/rez/` (`assets/README.md`), into `nolfsrc.rez` by lithtools' `lithrez` (`build/lithrez.sh`, with a fixed time, so every build of the same inputs is the same bytes), the archive it loads last of the game's, and applies its game-data recipes (`src/modern/data/`) to the discs' data, into a second archive, `nolfsrcdisc.rez`, loaded just before `nolfsrc.rez` (staged in `out/stage/<game directory>/`); what a modern build from before `nolfsrc.rez` left in its `custom/` is removed | `out/nolf-legacy-release/` |
+| 4. assemble | the built binaries into the game directory; the game DLLs and `sres.dll` go in `custom/`, the rez directory the engine searches last (and that `startup.txt`, the rez list of the dedicated server `NolfServ.exe`, gets as its last entry). The modern build instead packs them, with our own data files from `assets/modern/rez/` (`assets/README.md`), into `nolfsrc.rez` by lithtools' `lithrez` (`build/lithrez.sh`, with a fixed time, so every build of the same inputs is the same bytes), the archive it loads last of the game's (staged in `out/stage/<game directory>/`). `assets/modern/rez/` includes the retail files that the modern build changes, which the recipes of `src/modern/data/` make; `build/moderndata.py check` makes sure that they are the same. What an older modern build left is removed: the game DLLs in `custom/`, and `nolfsrcdisc.rez`, `MODERN-DATA.txt` and the `.retail` copies of the configs | `out/nolf-legacy-release/` |
 | 5. audit | every PE file in `out/nolf-legacy-release/` listed with its origin (`out/nolf-legacy-release/MANIFEST.txt`; in the modern build each DLL in `nolfsrc.rez` has a row `built <source>`, `nolfsrc.rez:<name>`); the build fails if one is unaccounted for, or if a `.rez` archive other than ours still holds one | |
 | 6. package | `out/nolf-legacy-release/` as a compressed tar, whole (`-private`), and without the disc data plus the scripts that install it from the player's disc images and a `SHA256SUMS` of every file, which they check the directory against first (`-public`; `build/package.sh`, `build/mkinstall.py`) | `out/nolf-legacy-release-private.tar.gz`, `out/nolf-legacy-release-public.tar.gz` |
 
@@ -213,7 +213,11 @@ what changed takes to rebuild. Each is packaged like the release game, as
 `out/<directory>-private.tar.gz` and `-public.tar.gz`
 (`out/nolf-modern-release-private.tar.gz`, ...); `NOLF_ARCHIVES=public
 make ...` writes only the public one, and fails rather than skip it without
-the installed retail game. Play them as the release game, from the directory the
+the installed retail game. The modern build's changes to retail data files
+are committed in `assets/modern/`, made from the recipes of
+`src/modern/data/`: `make modern-data` writes them again from the retail
+game, and `make modern-data-check` (also part of `make modern` and `make
+progress`) makes sure that they agree (`src/modern/data/README.md`). Play them as the release game, from the directory the
 table gives: `out/nolf-modern-release/linux-run.sh` (starts the game directly),
 or open `NOLFLauncher.exe` for the modern launcher. Modern `NOLF.exe` uses
 the same settings and game commands as the launcher and stays running until
@@ -466,7 +470,7 @@ dedicated server (`NolfServ.exe`; without a display it runs under
 The `-private` archives hold the retail game's data (1.1 GB of it), so they
 are for your own machines and for others developing on the build. To give
 the game to anyone else, give them the `-public` archive instead
-(`out/nolf-modern-release-public.tar.gz`, about 5 MB): the same directory
+(`out/nolf-modern-release-public.tar.gz`, about 6 MB): the same directory
 without anything from the discs, and three scripts that copy it out of their
 own disc images of the Game of the Year Edition (Europe). An image can be a
 plain `.iso`, a raw `.bin` (or its `.cue`), or a `.zip` that holds them; a
@@ -517,7 +521,7 @@ it is already installed, give DirectSound back to Wine:
   which reading data from `.rez` archives requires.
 * `out/nolf-legacy-release/nolfcmds.txt` is the command file the playtest starts the
   engine with (`linux-run.sh`'s launcher writes its own): the rez stack of the retail GOTY install with
-  `custom/` last (the modern build: `nolfsrcdisc.rez` and `nolfsrc.rez`), a
+  `custom/` last (the modern build: `nolfsrc.rez`), a
   640x480 window, and the intro movies off (they stall under some Wine
   setups). In the modern build a mod's archives load after `nolfsrc.rez`:
   the launcher's custom archives (`Custom\*.rez`) come last on its command

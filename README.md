@@ -31,10 +31,13 @@ blocks. See [`docs/LICENSE_NOTES.md`](docs/LICENSE_NOTES.md) for what is whose.
 This project, and its modern build in particular, is not made or supported by
 Monolith Productions.
 
-**No game data is included.** The build takes the game's data (and the Miles
-and Bink sound/video runtime, the only binaries not built from source) from
-the retail Game of the Year Edition, which the build installs from your own
-images of its two discs (bring your own: see below). The modern
+**No unchanged game data is included.** The build takes the game's data
+(and the Miles and Bink sound/video runtime, the only binaries not built
+from source) from the retail Game of the Year Edition, which the build
+installs from your own images of its two discs (bring your own: see below).
+The exception is a small set of retail data files that the modern build
+changes (about 2.6 MB: bug fixes, and changes as a mod makes them;
+`assets/README.md`). They are committed and go into its `nolfsrc.rez`. The modern
 build replaces that runtime with open-source builds from `ext/`: OpenMiles
 for Miles, and our own Bink player on FFmpeg.
 
