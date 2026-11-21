@@ -8,16 +8,15 @@ cabinets and update).
 
 A game directory holds the retail game's data as well as what we built: the
 four .rez archives, the movies, the text and config files of the play disc,
-and the retail Miles and Bink files (legacy builds). It also holds the
-retail art and text that some of our binaries are compiled with (their
-icons, bitmaps, sounds and the Game of the Year strings: build/all.sh, steps
-2b and 2c): lithtech.exe, NOLF.exe, NolfServ.exe, the modern build's
-NOLFLauncher.exe, and CRes.dll (custom/cres.dll, or in the modern build's
-nolfsrc.rez). The public archive (build/package.sh) leaves all the discs'
-bytes out, and three scripts put them back from the player's own copies of
-the two discs -- the Game of the Year Edition (Europe), as .iso images or as
-raw .bin/.cue images (or a .zip of one), which the scripts convert to the
-.iso first:
+and the retail Miles and Bink files (legacy builds). Our binaries ship in
+the archive, the game DLLs in custom/ or the modern build's nolfsrc.rez, and
+so do our startup.txt, the modern build's own defaults.cfg and defctrls.cfg
+and the retail files it changes (assets/modern/; their manifest rows do not
+name the discs). The public archive (build/package.sh) leaves the discs'
+data out, and three scripts put it back from the player's own copies of the
+two discs -- the Game of the Year Edition (Europe), as .iso images or as raw
+.bin/.cue images (or a .zip of one), which the scripts convert to the .iso
+first:
 
   linux-install.sh       bash, dd, sha256sum, base64 (coreutils)
   windows-install.bat    cmd running the PowerShell it carries (5.1, as every
@@ -28,17 +27,14 @@ raw .bin/.cue images (or a .zip of one), which the scripts convert to the
 
 Neither reads the ISO 9660 filesystem. A disc is recognised by its size and
 SHA-256 (those of the .iso: a .bin is converted, then checked), and then
-every file is known: this writes each one as a list of byte ranges --
+every file is known: this writes each one as a list of byte ranges of the
+disc images --
 
   C <disc> <offset> <length>   bytes of that disc image
   Z <length>                   zeros (the retail game DLLs blanked inside the
                                .rez archives: build/all.sh's `resources`)
   L <base64>                   bytes of ours (the modern build's
                                autoexec.cfg, its defaults.cfg)
-  A <path> <offset> <length>   bytes of a file of the archive: for a binary
-                               of ours with retail art in it, its copy
-                               without the art, install/<path>.noart (the
-                               art ranges are zeros there)
 
 -- and the file's size and SHA-256, which the script checks before it moves
 the file into place. So the result is the game directory as built, byte for
@@ -47,19 +43,10 @@ byte.
 This script needs neither the retail game nor a disc image. The ranges come
 from two lists: build/retail-files.txt (where each retail file is on which
 disc, its size and SHA-256) and build/retail-ranges.txt (the zeroed DLLs in
-each archive and the archive's SHA-256 after that; and the offset, size and
-SHA-256 of each art resource in its retail binary). Where the art is in our
-binary is read from our binary: its resources have the sizes of the retail
-ones.
-
-A game directory built without the retail game (NODISCS=1; it has the file
-NOT-PLAYABLE.txt) has no data and placeholder art. The scripts made from it
-are the same, but for one thing: the SHA-256 of a binary with retail art in
-it is not known until the script has written it. Its F line then has `-` for
-the SHA-256: the script checks its size, and adds its SHA-256 to SHA256SUMS
-(the discs' bytes are checked already: each disc's SHA-256). A game
-directory built with the retail game is checked against the lists here: each
-file the scripts write must be in it as the scripts write it.
+each archive, and the archive's SHA-256 after that). A game directory built
+with the retail game is checked against them: each file the scripts write
+must be in it as they write it. One built without it (NODISCS=1: it has the
+file NOT-PLAYABLE.txt) has no game data to check, and gives the same scripts.
 
 The list goes at the end of each script, after a marker line (in the Perl
 one, after its __END__); the scripts' code is
@@ -67,11 +54,11 @@ build/game-scripts/linux-install.sh, windows-install.ps1 (the .bat's header
 is written here) and mac-install.command.
 
 Writes <outdir>/linux-install.sh, <outdir>/windows-install.bat,
-<outdir>/mac-install.command, <outdir>/install/ (the .noart files),
-<outdir>/disc-files.txt, the game directory's paths the scripts write (the
-archive leaves them out), and <outdir>/disc-sums.txt, the SHA-256 of each of
-those that has a known one, but autoexec.cfg, which the engine rewrites
-(build/package.sh puts them in the archive's SHA256SUMS).
+<outdir>/mac-install.command, <outdir>/disc-files.txt, the game directory's
+paths the scripts write (the archive leaves them out), and
+<outdir>/disc-sums.txt, the SHA-256 of each of those but autoexec.cfg, which
+the engine rewrites (build/package.sh puts them in the archive's
+SHA256SUMS).
 """
 import base64
 import hashlib
@@ -82,7 +69,6 @@ import sys
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(REPO, "ext", "tools"))
 sys.path.insert(0, os.path.join(REPO, "build"))
-from rezextract import Rez  # noqa: E402
 import discs as disclist  # noqa: E402
 import retailextract as rx  # noqa: E402
 
@@ -94,7 +80,6 @@ RAW_SECTOR = 2352
 LITERAL_LINE = 3 * 1024          # raw bytes per L record (4 KB of base64)
 LITERAL_MAX = 1 << 20            # more than this of ours means a wrong source
 NODISCS_MARK = "NOT-PLAYABLE.txt"   # build/all.sh, NOLF_NODISCS=1
-BASES = "install"                # the .noart files, in the archive
 
 
 def sha256(path):
@@ -121,10 +106,6 @@ class Ops:
     def zeros(self, n):
         if n > 0:
             self.ops.append(["Z", n])
-
-    def ours(self, path, off, n):
-        if n > 0:
-            self.ops.append(["A", path, off, n])
 
     def bytes(self, b):
         if not b:
@@ -162,49 +143,6 @@ def retail_ops(f, ranges):
     return ops, size, sha
 
 
-def art_ranges(game, built, retail, ranges):
-    """{game directory path: [(offset, size, disc, disc offset, SHA-256)]}:
-    where the retail art is in each binary we built with it (a binary in an
-    archive of ours: in that archive), and where on the discs it comes from."""
-    arts = {}
-    for src, dest in sorted(built):
-        kind = rx.ART_BUILT.get(os.path.basename(src))
-        if kind is None:
-            continue
-        container, _, entry = dest.partition(":")
-        path = os.path.join(game, container)
-        if entry:
-            rez = Rez(path)
-            hit = [(pos, n) for p, pos, n in rez.walk() if p.lower() == entry.lower()]
-            rez.f.close()
-            if len(hit) != 1:
-                sys.exit(f"mkinstall: no {entry} in {container}")
-            base, size = hit[0]
-        else:
-            base, size = 0, os.path.getsize(path)
-        with open(path, "rb") as fh:
-            fh.seek(base)
-            img = fh.read(size)
-        spans = rx.pe_resource_spans(img)
-        rfile = retail[kind.partition(":")[0].lower()]
-        for t, n, roff, rsize, rsha in ranges.res[kind]:
-            if (t, n) not in spans:
-                sys.exit(f"mkinstall: {dest}: no resource {t}/{n} (the art of {kind})")
-            o, sz = spans[(t, n)]
-            if sz != rsize:
-                sys.exit(f"mkinstall: {dest}: resource {t}/{n} is {sz} bytes, the retail "
-                         f"one {rsize}: its art is not the retail art's shape "
-                         "(build/retail-ranges.txt)")
-            arts.setdefault(container, []).append((base + o, sz, rfile.disc, rfile.off + roff, rsha,
-                                                   t in (rx.RT_GROUP_ICON, rx.RT_GROUP_CURSOR)))
-    for container, rs in arts.items():
-        rs.sort()
-        for a, b in zip(rs, rs[1:]):
-            if a[0] + a[1] > b[0]:
-                sys.exit(f"mkinstall: {container}: two art resources overlap")
-    return arts
-
-
 def main():
     if len(sys.argv) != 3:
         sys.exit(__doc__)
@@ -214,23 +152,17 @@ def main():
     ranges = rx.load_ranges()
     retail = {f.path.lower(): f for f in files}
 
-    # What in the game directory came from the discs, and from which file;
-    # and the binaries we built.
-    wanted, built = {}, set()             # game path -> File; (source, game path)
+    # What in the game directory came from the discs, and from which file.
+    wanted = {}                           # game path -> File
     for line in open(os.path.join(game, "MANIFEST.txt")):
-        line = line.rstrip("\n")
-        m = re.match(r"(data|THIRD-PARTY) nolf-eu-goty:(\S+).*\t(.+)$", line)
+        m = re.match(r"(data|THIRD-PARTY) nolf-eu-goty:(\S+).*\t(.+)$", line.rstrip("\n"))
         if m:
             wanted[m.group(3)] = retail[m.group(2).lower()]
-        m = re.match(r"built (\S+)\t(.+)$", line)
-        if m:
-            built.add((m.group(1), m.group(2)))
-    arts = art_ranges(game, built, retail, ranges)
-    for rel in list(wanted) + list(arts):
+    for rel in wanted:
         if re.search(r"[\s\"'`$\\%!]", rel):
             sys.exit(f"mkinstall: {rel}: a name the scripts do not quote")
 
-    # Each file the scripts write: (size, SHA-256 or None, flag, ops).
+    # Each file the scripts write: (size, SHA-256, flag, ops).
     out = {}
     for rel, f in wanted.items():
         ops, size, sha = retail_ops(f, ranges)
@@ -239,35 +171,6 @@ def main():
                             or sha256(path) != sha):
             sys.exit(f"mkinstall: {rel} in {game} is not what the scripts would write "
                      "(build/retail-files.txt, build/retail-ranges.txt)")
-        out[rel] = (size, sha, "-", ops)
-
-    # The binaries with retail art: our bytes from their .noart copy in
-    # the archive, the art from the discs.
-    for rel, rs in arts.items():
-        data = bytearray(open(os.path.join(game, rel), "rb").read())
-        real = [hashlib.sha256(data[o:o + n]).hexdigest() == sha for o, n, _d, _do, sha, _g in rs]
-        # (a group of icons or cursors is only their sizes: a placeholder's
-        # is the same)
-        if nodiscs and any(r for r, a in zip(real, rs) if not a[5]):
-            sys.exit(f"mkinstall: {rel}: retail art in a game directory built without the retail game")
-        real = sum(real)
-        if not nodiscs and real != len(rs):
-            sys.exit(f"mkinstall: {rel}: {len(rs) - real} of its {len(rs)} art resources are not "
-                     "the retail art (placeholders? build/retail-ranges.txt)")
-        sha = None if nodiscs else hashlib.sha256(data).hexdigest()
-        size = len(data)
-        base = f"{BASES}/{rel}.noart"
-        ops, pos = Ops(), 0
-        for o, n, disc, doff, _sha, _g in rs:
-            data[o:o + n] = bytes(n)
-            ops.ours(base, pos, o - pos)
-            ops.copy(disc, doff, n)
-            pos = o + n
-        ops.ours(base, pos, size - pos)
-        dest = os.path.join(outdir, base)
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        with open(dest, "wb") as fh:
-            fh.write(data)
         out[rel] = (size, sha, "-", ops)
 
     # autoexec.cfg is the shipped defaults.cfg (build/package.sh); the
@@ -287,9 +190,9 @@ def main():
     for rel in sorted(out, key=str.lower):
         size, sha, flag, ops = out[rel]
         literal += ops.literal
-        if sha and rel != "autoexec.cfg":
+        if rel != "autoexec.cfg":
             sums.append(f"{sha}  {rel}")
-        records.append(f"F {rel} {size} {sha or '-'} {flag}")
+        records.append(f"F {rel} {size} {sha} {flag}")
         records.extend(ops.lines())
         records.append("E")
     if literal > LITERAL_MAX:
@@ -328,11 +231,7 @@ def main():
             f.write(rel + "\n")
     with open(os.path.join(outdir, "disc-sums.txt"), "w", newline="\n") as f:
         f.write("".join(line + "\n" for line in sums))
-    later = sum(1 for v in out.values() if v[1] is None)
-    print(f"   install scripts: {len(out)} files from the discs ({len(arts)} of them our "
-          f"binaries with the retail art), {literal} bytes of ours"
-          + (f"; {later} SHA-256 known only once installed (built without the retail game)"
-             if later else ""))
+    print(f"   install scripts: {len(out)} files from the discs, {literal} bytes of ours")
 
 
 # cmd runs this; everything from the first #__NOLF_PS__ line on is never

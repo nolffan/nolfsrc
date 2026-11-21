@@ -7,3 +7,7 @@ src/game/ClientRes/intro.txt -text
 # kept byte for byte (CRLF text, binary textures and models).
 assets/modern/rez/** -text -diff
 assets/modern/gamedir/** -text
+# The retail art our binaries are compiled with (assets/art/,
+# build/retailextract.py art): kept byte for byte (goty.rc and credits.txt
+# have CRLF line endings).
+assets/art/** -text -diff

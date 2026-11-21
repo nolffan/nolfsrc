@@ -344,10 +344,9 @@ TARGETS = [
          purecall=0x101449ed),
 
     # ---- resources: scored resource by resource, left out of the total -----
-    # `art`: the resources made from the retail game's own art and text at
-    # build time (build/all.sh, steps 2b and 2c). A build without the retail
-    # game has placeholders there (build/retailextract.py placeholders), so
-    # the check without it (build/progress.sh ci) leaves them out.
+    # `art`: the resources made from the retail game's own art and text
+    # (build/all.sh, steps 2b and 2c: committed in assets/art/, so every
+    # build has them; `hashcheck.py check --no-art` leaves them out).
     #
     # CRes.dll: string tables, dialogs, bitmaps and text, and nothing but
     # the CRT's DLL entry code -- so its resources are what is scored. Its

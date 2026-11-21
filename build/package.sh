@@ -10,15 +10,12 @@
 #   out/<name>-private.tar.gz   the whole directory, the retail game's data
 #                               included: for your own machines, and anyone
 #                               developing on the build
-#   out/<name>-public.tar.gz    the same without any bytes that came from the
+#   out/<name>-public.tar.gz    the same without anything that came from the
 #                               discs, which its linux-install.sh /
 #                               windows-install.bat / mac-install.command
 #                               copy out of the player's
 #                               own disc images (build/mkinstall.py): the one
-#                               to give to other people. The binaries we
-#                               built with the retail art in them are in it
-#                               as install/<path>.noart, without that art,
-#                               which the scripts add. Its SHA256SUMS lists
+#                               to give to other people. Its SHA256SUMS lists
 #                               every file of the archive and every file the
 #                               scripts write; they refuse a directory that is
 #                               not the archive unpacked.
@@ -29,9 +26,8 @@
 # A game directory built without the retail game (NODISCS=1: it has
 # NOT-PLAYABLE.txt, and it is out/<name>-nodiscs/) has no private archive:
 # it is skipped, or an error if NOLF_ARCHIVES asks for it. Its public archive
-# is the same as one built with the retail game, but that the SHA-256 of the
-# binaries with the retail art is not in it: the install scripts add it to
-# SHA256SUMS once they have written them (build/mkinstall.py).
+# is the same as one built with the retail game (NOT-PLAYABLE.txt is left
+# out of it).
 #
 # build/all.sh runs it for the release build (step 6) and build/variant.sh
 # for each variant, once its data and symbols are in place.
@@ -93,19 +89,17 @@ PUB="$PARENT/$NAME-public.tar.gz"
 python3 "$HERE/mkinstall.py" "$OUT" "$PARENT/$STAGE"
 sed "s|^|$DIR/|" "$PARENT/$STAGE/disc-files.txt" > "$PARENT/$STAGE/exclude.txt"
 echo "$DIR/NOT-PLAYABLE.txt" >> "$PARENT/$STAGE/exclude.txt"
-INSTALL=()
-[ -d "$PARENT/$STAGE/install" ] && INSTALL=("$STAGE/install")
 tar -C "$PARENT" -h -cf "$PARENT/$STAGE/public.tar" \
     --exclude="$DIR/Save/*" --exclude="$DIR/nolfcmds.txt" --exclude="$DIR/NetHost.txt" \
     --exclude='*.log' --exclude=run-cmds.txt --exclude=cd --exclude='*.part' \
     --anchored --no-wildcards --exclude-from="$PARENT/$STAGE/exclude.txt" \
     "${NAMES[@]}" \
     "$DIR" "$STAGE/linux-install.sh" "$STAGE/windows-install.bat" \
-    "$STAGE/mac-install.command" "${INSTALL[@]}"
+    "$STAGE/mac-install.command"
 # Last, SHA256SUMS: every file of the archive and every file the install
-# scripts write whose SHA-256 is known (disc-sums.txt), but autoexec.cfg,
-# which the game rewrites. The scripts check the directory against it before
-# they install, and `sha256sum -c SHA256SUMS` checks an install.
+# scripts write, but autoexec.cfg, which the game rewrites. The scripts
+# check the directory against it before they install, and `sha256sum -c
+# SHA256SUMS` checks an install.
 python3 - "$PARENT/$STAGE/public.tar" "$PARENT/$STAGE/disc-sums.txt" \
     > "$PARENT/$STAGE/SHA256SUMS" <<'PY'
 import hashlib, sys, tarfile

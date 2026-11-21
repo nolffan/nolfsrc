@@ -11,25 +11,13 @@ the build takes out of the retail binaries, is this file's).
   build/retailextract.py openruntime <extdir> <gamedir>     the modern build's open
                                                             replacements for them
                                                             (build/ext.sh's output)
-  build/retailextract.py launcherres <retaildir> <resdir>   the launcher's art and
-                                                            sound, out of the retail
-                                                            NOLF.exe's resources
-  build/retailextract.py nolfservres <retaildir> <resdir>   the dedicated server's
-                                                            icons and wizard art, out
-                                                            of the retail
-                                                            NolfServ.exe's resources
-  build/retailextract.py lithtechres <retaildir> <resdir>   the engine's icon and
-                                                            console font, out of
-                                                            the retail
-                                                            lithtech.exe's resources
-  build/retailextract.py goty        <retaildir> <outdir>   the Game of the Year text
-                                                            our CRes.dll is built
-                                                            with, out of the retail
-                                                            one
-  build/retailextract.py placeholders                       placeholder art and text
-                                                            in place of the four
-                                                            above, for a build
-                                                            without the retail game
+  build/retailextract.py art install                        the committed art (assets/art/)
+                                                            into the directories
+                                                            the resource scripts
+                                                            include from
+  build/retailextract.py art write|check <retaildir>        assets/art/, from the
+                                                            retail binaries'
+                                                            resources
   build/retailextract.py ranges write|check <retaildir>     build/retail-ranges.txt,
                                                             from the retail game
   build/retailextract.py reference   <retaildir> <refdir>   the retail engine images
@@ -81,34 +69,38 @@ lithtech.exe.manifest that makes the game use them
 (src/modern/directmusic/README.md); without that directory it installs
 neither and says so.
 
-`launcherres` writes the six binary resources launcher.rc includes from
-src/engine/launcher/res/ -- the splash bitmap and its palette, the music,
-the icon and two cursors. They are Monolith's art and sound, not code, so
-they are not in this repository: they are read out of the resource section
-of the retail NOLF.exe (the image is parsed in memory, never
-written anywhere or run) and written back as the .bmp / .pal / .wav / .ico
-/ .cur files rc.exe compiles into our NOLF.exe.
+`art` is about the retail art and text that our binaries are compiled
+with. It is committed in assets/art/ (assets/README.md), one directory for
+each resource script that includes it:
 
-`nolfservres` does the same for the dedicated server, NolfServ.exe: the
-two icons and the setup wizard's bitmap nolfserv.rc includes from
-src/engine/nolfserv/res/. (Its other binary resources, a cursor and four
-bitmaps, are MFC's own, which nolfserv.rc takes from the toolchain's
-afxres.rc as the original did.)
+  launcher/  the six binary resources launcher.rc includes from
+             src/engine/launcher/res/ (NOLF.exe, and the modern build's
+             NOLFLauncher.exe): the splash bitmap and its palette, the
+             music, the icon and two cursors
+  nolfserv/  the dedicated server's two icons and the setup wizard's bitmap,
+             which nolfserv.rc includes from src/engine/nolfserv/res/ (its
+             other binary resources, a cursor and four bitmaps, are MFC's
+             own, from the toolchain's afxres.rc, as the original did)
+  lithtech/  the engine's icon and the console's font (a PCX image of the
+             character cells, resource type 12345, which clientconsole.cpp
+             loads), which lithtech.rc includes from src/engine/lithtech/res/
+             (its MFC resources also come from afxres.rc)
+  goty/      what the retail Game of the Year CRES.dll (in NOLFGOTY.REZ) has
+             and Monolith's v1.003 source of it does not: the string tables of
+             the Game of the Year content (string IDs 30000-30095: the "Rest
+             and Relaxation" mission's name, briefing, objectives, intel and
+             subtitles), as goty.rc, and its credits text, as credits.txt,
+             which build/build.sh compiles into our CRes.dll with the
+             release's own resource script
 
-`lithtechres` does the same for the engine, lithtech.exe: its icon and the
-console's font (a PCX image of the character cells, resource type 12345,
-which clientconsole.cpp loads) that lithtech.rc includes from
-src/engine/lithtech/res/. (Its other binary resources, a cursor and four
-bitmaps, are MFC's, which lithtech.rc takes from the toolchain's afxres.rc.)
-
-`goty` writes the two things the retail Game of the Year CRES.dll (in
-NOLFGOTY.REZ) has and Monolith's v1.003 source of it does not: the
-string tables of the Game of the Year content (string IDs 30000-30095: the
-"Rest and Relaxation" mission's name, briefing, objectives, intel and
-subtitles), as goty.rc, and its credits text, as credits.txt. build/build.sh
-compiles them into our CRes.dll with the release's own resource script, so its
-resources are the retail ones. The retail DLL is read in memory, never
-written anywhere or run; the text stays out of this repository.
+`art install` (build/all.sh, steps 2b and 2c, every build) copies them into
+those directories. `art write` (make art) writes assets/art/ again from the
+resources of the retail binaries: the images are parsed in memory, never
+run, and written back as the .bmp / .pal / .wav / .ico / .cur / .pcx / .rc /
+.txt files rc.exe compiles. `art check` (every build with the retail game,
+and make art-check) fails unless assets/art/ is what the retail game gives.
+So our binaries' resources are the retail ones in every build, with or
+without the discs.
 
 `reference` copies the retail lithtech.exe, server.dll, d3d.ren, NOLF.exe,
 NolfServ.exe and ltmsg.dll, the Game of the Year CShell.dll, Object.lto and CRes.dll out of
@@ -136,25 +128,12 @@ originals of the changed game-directory files, <file>.retail
 It refuses a directory whose manifest does not name NOLFLauncher.exe (the
 modern build's): a legacy build's game DLLs live in custom/.
 
-`placeholders` is for a build without the retail game (build/all.sh with
-NOLF_NODISCS=1, the CI build): it writes the files of `launcherres`,
-`nolfservres`, `lithtechres` and `goty` with the same names, formats and
-shapes as the retail files: the same sizes, the same images of the same
-sizes in each icon, the same strings of the same lengths. But the pixels
-are blank, the sound is silence and the text is placeholder text. The code
-and the layout of the binaries do not change; only the bytes of those
-resources do (progress/targets.py names them as each target's `art`). Each
-directory gets a file PLACEHOLDER, which the real extraction removes, and
-which build/progress.sh looks for.
-
 `ranges` writes (or checks) build/retail-ranges.txt: metadata of the
-retail game, which the placeholders and the public archive's install
-scripts (build/mkinstall.py) use in place of it. It holds no game data:
-the PE files of the install, the retail game DLLs inside the archives and
-each archive's SHA-256 with them zeroed, each art file's size, SHA-256 and
-shape, and each art resource's offset, size and SHA-256 in its retail
-binary. Each of the four extractions checks its files against it, and
-`resources` its list of PE files.
+retail game, which a build without it (NODISCS=1) and the public archive's
+install scripts (build/mkinstall.py) use in place of it. It holds no game
+data: the PE files of the install, and the retail game DLLs inside the
+archives with each archive's SHA-256 after they are zeroed. `resources`
+checks its list of PE files.
 
 `prune` drops the manifest's rows for files no longer in the directory, and
 for the binaries we built, our archives and their entries, which
@@ -561,31 +540,28 @@ def cursor_file(res, group):
     return head + body
 
 
-def write_res(resdir, out, origin, placeholder=False):
+def write_res(resdir, out, origin):
     """Write {file name: bytes} into resdir, leaving files already right
-    untouched (so make sees no change). A directory of placeholders
-    (`placeholders`) is marked by a file PLACEHOLDER; real ones are not."""
+    untouched (so make sees no change)."""
     resdir = Path(resdir)
     resdir.mkdir(parents=True, exist_ok=True)
     for name, data in out.items():
         dest = resdir / name
         if not dest.exists() or dest.read_bytes() != data:
             dest.write_bytes(data)
-    mark = resdir / "PLACEHOLDER"
-    if placeholder:
-        mark.write_text("placeholder art (build/retailextract.py placeholders), "
-                        "not the retail game's\n")
-    elif mark.exists():
-        mark.unlink()
-    print(f"== {origin} resources -> {resdir}/ ({', '.join(out)})")
+    # (an older build without the retail game marked its placeholders so)
+    if (resdir / "PLACEHOLDER").exists():
+        (resdir / "PLACEHOLDER").unlink()
+    print(f"== {origin} -> {resdir}/ ({', '.join(out)})")
 
 
 # --- the art and text of the retail binaries --------------------------------
 #
-# Each extraction reads one retail binary's resources and writes them as the
-# files a resource script of ours compiles. Each returns (its retail binary,
-# {file name: bytes}, {file name: shape}); a shape (art_shape) is what a
-# placeholder of the file needs to be compiled into the same layout.
+# Each extraction reads one retail binary's resources and gives them as the
+# files a resource script of ours compiles: (its retail binary, {file name:
+# bytes}). They are committed in assets/art/ (`art write`, make art), and
+# every build copies them into the directories the resource scripts include
+# from (`art install`).
 
 def launcher_art(r):
     p = r.find("NOLF.exe")
@@ -597,7 +573,7 @@ def launcher_art(r):
         "nolf.ico": icon_file(res, "ICON"),
         "webhand.cur": cursor_file(res, "WEBHAND"),
         "webclick.cur": cursor_file(res, "WEBCLICK"),
-    }, {}
+    }
 
 
 def nolfserv_art(r):
@@ -607,7 +583,7 @@ def nolfserv_art(r):
         "nolfserv.ico": icon_file(res, 128),      # IDR_MAINFRAME
         "selected.ico": icon_file(res, 133),      # IDI_SELECTED
         "wizard.bmp": bmp_file(res[(RT_BITMAP, 139)]),   # IDB_WIZARD
-    }, {}
+    }
 
 
 def lithtech_art(r):
@@ -616,7 +592,7 @@ def lithtech_art(r):
     return p, {
         "lithtech.ico": icon_file(res, 128),      # IDR_MAINFRAME
         "confont.pcx": res[(12345, 140)],         # the console font
-    }, {}
+    }
 
 
 # The GOTY string blocks: string IDs 30000-30095 are blocks 1876-1881 (a block
@@ -666,10 +642,9 @@ def goty_art(r):
     import struct
     _pos, img = rez_entry(r, "NOLFGOTY.REZ", "CRES.dll")
     res = pe_resources(img)
-    lines = ["// Generated by build/retailextract.py goty from the retail Game of the",
-             "// Year CRES.dll -- do not edit, not committed.", "",
+    lines = ["// Written by build/retailextract.py (make art) from the retail Game of",
+             "// the Year CRES.dll -- do not edit.", "",
              "STRINGTABLE DISCARDABLE", "BEGIN"]
-    lengths = []
     for blk in GOTY_STRING_BLOCKS:
         data = res.get((RT_STRING, blk))
         if data is None:
@@ -682,69 +657,61 @@ def goty_art(r):
             o += 2 * ln
             if ln:
                 lines.append("    %d %s" % ((blk - 1) * 16 + i, rc_string(s)))
-                lengths.append(f"{(blk - 1) * 16 + i}:{ln}")
     lines += ["END", ""]
     credits = res.get(("TEXT", "CREDITS"))
     if credits is None:
         sys.exit("retailextract: the retail CRES.dll has no CREDITS text")
     rc = "\r\n".join(lines).encode("cp1252")
-    return f"{r.find('NOLFGOTY.REZ')}:CRES.dll", {"goty.rc": rc, "credits.txt": credits}, \
-        {"goty.rc": "strings " + " ".join(lengths)}
+    return f"{r.find('NOLFGOTY.REZ')}:CRES.dll", {"goty.rc": rc, "credits.txt": credits}
 
 
-# The four extractions: the command, the directory it writes (each a
-# directory a resource script of ours includes from), what it is, its
-# function, the retail binary (build/retail-ranges.txt's name for it: an
-# archive's entry after a colon), and the resources of that binary that are
-# art -- what the extraction takes; with an icon's or a cursor's group, its
-# images too (art_resources).
+# The four extractions: the directory of assets/art/ that holds the files,
+# the directory a resource script of ours includes them from, what they
+# are, and the function.
 RT_CURSOR, RT_BITMAP, RT_ICON, RT_GROUP_CURSOR, RT_GROUP_ICON = 1, 2, 3, 12, 14
 ARTS = [
-    ("launcherres", "src/engine/launcher/res", "launcher", launcher_art, "NOLF.exe",
-     [(RT_GROUP_ICON, "ICON"), (RT_GROUP_CURSOR, "WEBHAND"), (RT_GROUP_CURSOR, "WEBCLICK"),
-      (RT_BITMAP, "GAME1"), ("PALETTE", "GAME1"), ("WAVE", "GAME1")]),
-    ("nolfservres", "src/engine/nolfserv/res", "dedicated server", nolfserv_art, "NolfServ.exe",
-     [(RT_GROUP_ICON, 128), (RT_GROUP_ICON, 133), (RT_BITMAP, 139)]),
-    ("lithtechres", "src/engine/lithtech/res", "engine", lithtech_art, "lithtech.exe",
-     [(RT_GROUP_ICON, 128), (12345, 140)]),
-    ("goty", "src/game/ClientRes/goty", "Game of the Year text", goty_art, "NOLFGOTY.REZ:CRES.dll",
-     [(RT_STRING, b) for b in GOTY_STRING_BLOCKS] + [("TEXT", "CREDITS")]),
+    ("launcher", "src/engine/launcher/res", "the launcher's art", launcher_art),
+    ("nolfserv", "src/engine/nolfserv/res", "the dedicated server's art", nolfserv_art),
+    ("lithtech", "src/engine/lithtech/res", "the engine's art", lithtech_art),
+    ("goty", "src/game/ClientRes/goty", "the Game of the Year text", goty_art),
 ]
-# The binaries we build that are compiled with that art (by the name of the
-# link output), and the retail binary whose art it is.
-ART_BUILT = {"NOLF.exe": "NOLF.exe", "NOLFLauncher.exe": "NOLF.exe",
-             "NolfServ.exe": "NolfServ.exe", "lithtech.exe": "lithtech.exe",
-             "CRes.dll": "NOLFGOTY.REZ:CRES.dll"}
+ART = REPO / "assets" / "art"
 
 
-def art_resources(keys, res):
-    """The (type, name) of each art resource: `keys`, and the images of each
-    icon or cursor group among them."""
-    import struct
-    out = []
-    for t, n in keys:
-        out.append((t, n))
-        if t in (RT_GROUP_ICON, RT_GROUP_CURSOR):
-            g = res[(t, n)]
-            for i in range(struct.unpack_from("<H", g, 4)[0]):
-                out.append((RT_ICON if t == RT_GROUP_ICON else RT_CURSOR,
-                            struct.unpack_from("<H", g, 6 + 14 * i + 12)[0]))
-    return out
+def committed_art(name):
+    """{file name: bytes} of assets/art/<name>/."""
+    d = ART / name
+    if not d.is_dir():
+        sys.exit(f"retailextract: no {d.relative_to(REPO)}/ -- the art is committed there")
+    return {f.name: f.read_bytes() for f in sorted(d.iterdir()) if f.is_file()}
 
 
-def cmd_art(kind, retaildir, resdir):
-    """One extraction: the art into resdir, checked against
-    build/retail-ranges.txt (which the placeholders are made from)."""
-    _k, key, what, make, _b, _keys = next(a for a in ARTS if a[0] == kind)
+def cmd_art(mode, retaildir=None):
+    """write: assets/art/ from the retail game; check: fail unless it is
+    what the retail game gives; install: assets/art/ into the directories
+    the resource scripts include from (every build)."""
+    if mode == "install":
+        for name, resdir, what, _make in ARTS:
+            write_res(REPO / resdir, committed_art(name), f"{what} (assets/art/{name}/)")
+        return
     r = Retail(retaildir)
-    label, out, _shapes = make(r)
-    art = load_ranges().art
-    for name, data in out.items():
-        want = art.get(f"{key}/{name}")
-        if want is None or want[:2] != (len(data), sha256_bytes(data)):
-            sys.exit(f"retailextract: {key}/{name} is not as build/retail-ranges.txt has it -- "
-                     "write that file again: make retail-ranges")
-    write_res(resdir, out, f"{r.name}:{label}")
+    bad = []
+    for name, _resdir, what, make in ARTS:
+        label, out = make(r)
+        d = ART / name
+        if mode == "write":
+            d.mkdir(parents=True, exist_ok=True)
+            for f in d.iterdir():
+                if f.is_file() and f.name not in out:
+                    f.unlink()
+            write_res(d, out, f"{what}: {r.name}:{label}")
+        elif committed_art(name) != out:
+            bad.append(f"assets/art/{name}/")
+    if bad:
+        sys.exit(f"retailextract: {', '.join(bad)} not what the retail game gives -- "
+                 "write it again: make art")
+    if mode == "check":
+        print("== assets/art/: the retail game's art, unchanged")
 
 
 # --- build/retail-ranges.txt ------------------------------------------------------
@@ -752,12 +719,11 @@ def cmd_art(kind, retaildir, resdir):
 RANGES_HEAD = """\
 ## Where the retail game's bytes go in a game directory, beyond the files
 ## that the build copies whole (build/retail-files.txt lists those). This
-## list holds no game data: only names, offsets, sizes, shapes and SHA-256
-## values. build/retailextract.py writes it from the installed retail game
-## (`make retail-ranges`), and checks it on every build with the retail
-## game. A build without the retail game (NODISCS=1) and the install
-## scripts of a public archive (build/mkinstall.py) use it in place of the
-## retail game.
+## list holds no game data: only names, offsets, sizes and SHA-256 values.
+## build/retailextract.py writes it from the installed retail game (`make
+## retail-ranges`). A build with the retail game checks it. A build without
+## the retail game (NODISCS=1) and the install scripts of a public archive
+## (build/mkinstall.py) use it in place of the retail game.
 ##
 ## PE <path>
 ##   A file of the install that is a PE image (the build does not copy it).
@@ -766,27 +732,8 @@ RANGES_HEAD = """\
 ##   over its data in the game directory's copy. The offset is in the archive.
 ## ZSUM <archive> <size> <SHA-256>
 ##   The game directory's copy of that archive, with those zeros.
-## ART <path> <size> <SHA-256> <shape>
-##   A file of art or text that the build takes out of a retail binary and
-##   compiles into ours. A placeholder (NODISCS=1) has the same shape: the
-##   same size, and the same images or strings of the same sizes. So the
-##   binaries compiled from it have the same layout.
-## RES <retail binary> <type> <name> <offset> <size> <SHA-256>
-##   The data of one resource of a retail binary that is art, and where it
-##   is: the offset is in the file of the install (for a binary inside an
-##   archive, <archive>:<entry>, in the archive). The binaries we compile
-##   with that art have the same resource, with the same size.
 ## The fields are separated by one TAB.
 """
-
-
-def sha256_bytes(b):
-    import hashlib
-    return hashlib.sha256(b).hexdigest()
-
-
-def _key(v):
-    return int(v) if v.isdigit() else v
 
 
 class Ranges:
@@ -794,8 +741,6 @@ class Ranges:
         self.pe = set()
         self.zero = {}        # archive -> [(offset, size, entry)]
         self.zsum = {}        # archive -> (size, sha)
-        self.art = {}         # path -> (size, sha, shape)
-        self.res = {}         # retail binary -> [(type, name, offset, size, sha)]
 
 
 def load_ranges(path=None):
@@ -812,10 +757,6 @@ def load_ranges(path=None):
             g.zero.setdefault(f[1], []).append((int(f[2]), int(f[3]), f[4]))
         elif f[0] == "ZSUM":
             g.zsum[f[1]] = (int(f[2]), f[3])
-        elif f[0] == "ART":
-            g.art[f[1]] = (int(f[2]), f[3], f[4])
-        elif f[0] == "RES":
-            g.res.setdefault(f[1], []).append((_key(f[2]), _key(f[3]), int(f[4]), int(f[5]), f[6]))
         else:
             sys.exit(f"retailextract: {path}: an unknown line: {line[:60]}")
     return g
@@ -838,78 +779,6 @@ def zeroed_sha(path, zeros):
     return h.hexdigest()
 
 
-def art_shape(name, data):
-    """What a placeholder of an art file keeps (see `placeholder`)."""
-    import struct
-    ext = name.rsplit(".", 1)[-1].lower()
-    if ext in ("ico", "cur"):
-        n = struct.unpack_from("<H", data, 4)[0]
-        at, parts = 6 + 16 * n, []
-        for i in range(n):
-            e = struct.unpack_from("<BBBBHHII", data, 6 + 16 * i)
-            if e[7] != at:
-                sys.exit(f"retailextract: {name}: its images are not in order")
-            dibbpp = struct.unpack_from("<H", data, e[7] + 14)[0]
-            parts.append(",".join(str(v) for v in e[:7] + (dibbpp,)))
-            at += e[6]
-        if at != len(data):
-            sys.exit(f"retailextract: {name}: bytes after its images")
-        return ext + " " + " ".join(parts)
-    if ext == "bmp":
-        _h, w, h, _p, bpp, _c, _s, _x, _y, used, _i = struct.unpack_from("<IiiHHIIiiII", data, 14)
-        return f"bmp {w},{h},{bpp},{used}"
-    if ext in ("wav", "txt"):
-        return {"wav": "wave", "txt": "text"}[ext]
-    return "raw"
-
-
-PLACEHOLDER_TEXT = b"Placeholder text: built without the retail game. "
-
-
-def placeholder(name, size, shape):
-    """A placeholder of an art file: its shape, and no retail content --
-    blank images, silence, text of ours. Of the same size, but a resource
-    script's (its strings' lengths are what is the same)."""
-    import struct
-    kind, _, rest = shape.partition(" ")
-    if kind in ("ico", "cur"):
-        imgs = [tuple(int(v) for v in s.split(",")) for s in rest.split()]
-        head = struct.pack("<HHH", 0, 1 if kind == "ico" else 2, len(imgs))
-        body, at = b"", 6 + 16 * len(imgs)
-        for w, h, cc, rsv, a, b, n, dibbpp in imgs:
-            head += struct.pack("<BBBBHHII", w, h, cc, rsv, a, b, n, at + len(body))
-            dib = struct.pack("<IiiHHIIiiII", 40, w or 256, 2 * (h or 256), 1, dibbpp,
-                              0, 0, 0, 0, 0, 0)
-            body += dib + bytes(n - len(dib))
-        out = head + body
-    elif kind == "bmp":
-        w, h, bpp, used = (int(v) for v in rest.split(","))
-        colors = used or (1 << bpp if bpp <= 8 else 0)
-        out = struct.pack("<2sIHHI", b"BM", size, 0, 0, 14 + 40 + 4 * colors) + \
-            struct.pack("<IiiHHIIiiII", 40, w, h, 1, bpp, 0, 0, 0, 0, used, 0)
-        out += bytes(size - len(out))
-    elif kind == "wave":
-        out = b"RIFF" + struct.pack("<I", size - 8) + b"WAVEfmt " + \
-            struct.pack("<IHHIIHH", 16, 1, 1, 22050, 44100, 2, 16) + b"data" + \
-            struct.pack("<I", size - 44) + bytes(size - 44)
-    elif kind == "text":
-        out = (PLACEHOLDER_TEXT * (size // len(PLACEHOLDER_TEXT) + 1))[:size]
-    elif kind == "strings":
-        lines = ["// Placeholder text (build/retailextract.py placeholders): the",
-                 "// retail Game of the Year strings are not here, only their lengths.", "",
-                 "STRINGTABLE DISCARDABLE", "BEGIN"]
-        for s in rest.split():
-            sid, ln = s.split(":")
-            lines.append('    %s "%s"' % (sid, "x" * int(ln)))
-        lines += ["END", ""]
-        return "\r\n".join(lines).encode("cp1252")
-    else:
-        out = bytes(size)
-    if len(out) != size:
-        sys.exit(f"retailextract: the placeholder of {name} is {len(out)} bytes, not {size}")
-    return out
-
-
 def make_ranges(r):
     """The lines of build/retail-ranges.txt, from the installed retail game."""
     lines = []
@@ -922,20 +791,6 @@ def make_ranges(r):
         for ename, pos, sz in hits:
             lines.append(f"ZERO\t{p}\t{pos}\t{sz}\t{ename}")
         lines.append(f"ZSUM\t{p}\t{r.size(p)}\t{zeroed_sha(r.root / p, [(pos, sz) for _e, pos, sz in hits])}")
-    for _k, key, _what, make, binary, keys in ARTS:
-        _label, out, shapes = make(r)
-        for name, data in sorted(out.items()):
-            shape = shapes.get(name) or art_shape(name, data)
-            lines.append(f"ART\t{key}/{name}\t{len(data)}\t{sha256_bytes(data)}\t{shape}")
-        if ":" in binary:
-            archive, entry = binary.split(":")
-            base, img = rez_entry(r, archive, entry)
-        else:
-            base, img = 0, r.read(r.find(binary))
-        spans = pe_resource_spans(img)
-        for t, n in art_resources(keys, pe_resources(img)):
-            o, sz = spans[(t, n)]
-            lines.append(f"RES\t{binary}\t{t}\t{n}\t{base + o}\t{sz}\t{sha256_bytes(img[o:o + sz])}")
     return lines
 
 
@@ -953,21 +808,6 @@ def cmd_ranges(retaildir, mode):
                  "write it again: make retail-ranges")
     else:
         print(f"== {path.relative_to(REPO)}: as the retail game gives it")
-
-
-# --- placeholders, for a build without the retail game --------------------------
-
-def cmd_placeholders():
-    """The art and text the four extractions write, as placeholders of
-    the shapes build/retail-ranges.txt gives (build/all.sh without the
-    retail game)."""
-    art = load_ranges().art
-    for _k, key, what, _make, _b, _keys in ARTS:
-        out = {p[len(key) + 1:]: placeholder(p, size, shape)
-               for p, (size, _sha, shape) in art.items() if p.startswith(key + "/")}
-        if not out:
-            sys.exit(f"retailextract: build/retail-ranges.txt has no art of {key}/")
-        write_res(key, out, f"placeholder {what}", placeholder=True)
 
 
 def cmd_reference(retaildir, refdir):
@@ -1094,7 +934,7 @@ def cmd_audit(gamedir):
 
 
 def main():
-    if len(sys.argv) < 3 and sys.argv[1:] != ["placeholders"]:
+    if len(sys.argv) < 3:
         sys.exit(__doc__)
     cmd = sys.argv[1]
     if cmd == "resources" and len(sys.argv) == 4:
@@ -1103,12 +943,12 @@ def main():
         cmd_thirdparty(sys.argv[2], sys.argv[3])
     elif cmd == "openruntime" and len(sys.argv) == 4:
         cmd_openruntime(sys.argv[2], sys.argv[3])
-    elif cmd in [a[0] for a in ARTS] and len(sys.argv) == 4:
-        cmd_art(cmd, sys.argv[2], sys.argv[3])
+    elif cmd == "art" and sys.argv[2:] == ["install"]:
+        cmd_art("install")
+    elif cmd == "art" and len(sys.argv) == 4 and sys.argv[2] in ("write", "check"):
+        cmd_art(sys.argv[2], sys.argv[3])
     elif cmd == "ranges" and len(sys.argv) == 4 and sys.argv[2] in ("write", "check"):
         cmd_ranges(sys.argv[3], sys.argv[2])
-    elif cmd == "placeholders" and len(sys.argv) == 2:
-        cmd_placeholders()
     elif cmd == "reference" and len(sys.argv) == 4:
         cmd_reference(sys.argv[2], sys.argv[3])
     elif cmd == "oldmodern" and len(sys.argv) == 3:

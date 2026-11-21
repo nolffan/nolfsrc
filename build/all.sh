@@ -16,17 +16,16 @@
 # run, linked or copied into the game, apart from the middleware of step 2.
 #
 # NOLF_NODISCS=1 builds without the retail game (the CI build, `make
-# NODISCS=1`, for any variant): the code of every binary as always, but
-# step 1 copies no game data and step 2 no Miles or Bink (both write only
-# the manifest's rows of those files, from build/retail-files.txt and
-# build/retail-ranges.txt), and steps 2b and 2c write placeholder art and
-# text of the retail art's shapes (build/retailextract.py placeholders). So
-# only the bytes of that art differ, and every binary has the layout it
-# has with the retail game. The game directory is out/<name>-nodiscs/, with
-# NOT-PLAYABLE.txt in it: it does not play. Step 6 makes only its public
-# archive, out/<name>-public.tar.gz, which is the playable form: unpacked,
-# its install scripts put the discs' data and art into it
-# (build/mkinstall.py).
+# NODISCS=1`, for any variant). Every binary is the same as with the retail
+# game: the art they are compiled with is committed (assets/art/). But
+# step 1 copies no game data and step 2 no Miles or Bink: both write only
+# the manifest's rows of those files (from build/retail-files.txt and
+# build/retail-ranges.txt). The game directory is out/<name>-nodiscs/, with
+# NOT-PLAYABLE.txt in it: without the .rez archives it does not play. Step
+# 6 makes only its public archive, out/<name>-public.tar.gz, which is the
+# playable form: unpacked, its install scripts copy the game data from the
+# player's discs into it (build/mkinstall.py). It is the same archive as a
+# build with the retail game makes.
 #
 # The steps, in order:
 #   1. resources          game data from the retail game: the four .rez archives
@@ -46,16 +45,19 @@
 #                         build/ext.sh, and no Miles provider files (plus
 #                         our opengl.ren, which ext.sh also builds).
 #   2b. launcher art      the splash bitmap, palette, music, icon and cursors
-#                         that launcher.rc compiles into NOLF.exe, read out of
-#                         the retail NOLF.exe's resource section
-#                         into src/engine/launcher/res/, the icons and
-#                         wizard bitmap nolfserv.rc compiles into NolfServ.exe,
-#                         from the retail NolfServ.exe into
-#                         src/engine/nolfserv/res/, and the icon and console
-#                         font lithtech.rc compiles into lithtech.exe, from
-#                         the retail lithtech.exe into src/engine/lithtech/res/
-#                         (data, not code; the retail images are parsed,
-#                         never copied or run).
+#                         that launcher.rc compiles into NOLF.exe, the icons
+#                         and wizard bitmap nolfserv.rc compiles into
+#                         NolfServ.exe, and the icon and console font
+#                         lithtech.rc compiles into lithtech.exe: the retail
+#                         art, committed in assets/art/ (made from the retail
+#                         binaries' resources by `make art`, and checked
+#                         against them in every build with the retail game),
+#                         copied into src/engine/{launcher,nolfserv,lithtech}/res/
+#                         (data, not code).
+#   2c. Game of the Year text  the GOTY strings and credits our CRes.dll is
+#                         compiled with (the retail GOTY CRES.dll's, which
+#                         Monolith's v1.003 source lacks), the same way, from
+#                         assets/art/goty/ into src/game/ClientRes/goty/.
 #   3. compile            every binary, by build/build.mk, all at once (one
 #                         job per CPU; NOLFSRC_JOBS=<n> to change it) and only
 #                         what changed since the last build (`make clean`
@@ -94,9 +96,8 @@
 #
 # Every other input is a committed source file (including the committed link
 # inputs src/engine/*/link/*, src/engine/d3d/d3ddata.cpp and
-# src/engine/launcher/libs/mss32.def). No step uses retail code: step 2b reads
-# only the launcher's and the server's art out of the retail NOLF.exe's and
-# NolfServ.exe's resources.
+# src/engine/launcher/libs/mss32.def). No step uses retail code: steps 2b
+# and 2c check the committed art against the retail binaries' resources.
 set -e
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -136,7 +137,7 @@ if [ -n "$NODISCS" ]; then
     mkdir -p "$OUT"
     cat > "$OUT/NOT-PLAYABLE.txt" <<EOF
 This directory was built without the retail game (NODISCS=1). It has no
-game data, and the binaries in it have placeholder art: it does not play.
+game data (no .rez archives, no movies, no Miles): it does not play.
 The playable form is its public archive, $(basename "$OUT" -nodiscs)-public.tar.gz
 beside it: unpack it into an empty directory, then run its install script
 with your two disc images (docs/INSTALL.md).
@@ -210,18 +211,11 @@ else
     python3 build/retailextract.py thirdparty "$RETAIL" "$OUT"
 fi
 
-if [ -n "$NODISCS" ]; then
-    step "2b, 2c. placeholder art and text of the retail art's shapes (build/retail-ranges.txt) -> src/engine/{launcher,nolfserv,lithtech}/res/, src/game/ClientRes/goty/"
-    python3 build/retailextract.py placeholders
-else
-    step "2b. launcher, server and engine art: resources of the retail NOLF.exe, NolfServ.exe and lithtech.exe in $RETAIL -> src/engine/{launcher,nolfserv,lithtech}/res/"
-    python3 build/retailextract.py launcherres "$RETAIL" src/engine/launcher/res
-    python3 build/retailextract.py nolfservres "$RETAIL" src/engine/nolfserv/res
-    python3 build/retailextract.py lithtechres "$RETAIL" src/engine/lithtech/res
-
-    step "2c. Game of the Year text: the retail CRES.dll in $RETAIL -> src/game/ClientRes/goty/"
-    python3 build/retailextract.py goty "$RETAIL" src/game/ClientRes/goty
-fi
+step "2b, 2c. the launcher's, the server's and the engine's art, and the Game of the Year text: assets/art/ -> src/engine/{launcher,nolfserv,lithtech}/res/, src/game/ClientRes/goty/"
+# (with the retail game: first checked against the retail binaries'
+# resources, as make art-check does)
+[ -n "$NODISCS" ] || python3 build/retailextract.py art check "$RETAIL"
+python3 build/retailextract.py art install
 
 step "3. compile: libraries, game DLLs, engine (build/compile.sh: build/build.mk, ${NOLFSRC_JOBS:-$(nproc)} jobs)"
 GAME_CONFIG=final bash build/compile.sh all

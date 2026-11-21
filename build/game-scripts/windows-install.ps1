@@ -8,11 +8,8 @@
 # the images in the game folder or the one above it; a raw .bin, .cue or
 # .zip converted to a temporary .iso first), check their sizes and SHA-256,
 # then write each file of the list at the end of the .bat from
-# its byte ranges -- C <disc> <offset> <length>, Z <length> zeros, L <base64>,
-# A <path> <offset> <length> bytes of a file of the release -- check its size
-# and SHA-256, and move it into place. A file whose SHA-256 the list does not
-# give ("-": a release built without the retail game) is checked by its
-# size, and its SHA-256 goes into SHA256SUMS.
+# its byte ranges -- C <disc> <offset> <length>, Z <length> zeros, L <base64>
+# -- check its size and SHA-256, and move it into place.
 param(
     [Parameter(Mandatory = $true)][string]$Self,
     [Parameter(ValueFromRemainingArguments = $true)][string[]]$Images
@@ -238,16 +235,6 @@ function Test-Done($path, $size, $sha) {
     return (Get-Sha256 $path) -eq $sha
 }
 
-# A file whose SHA-256 the list does not give, written: its line in
-# SHA256SUMS, in place of an earlier one.
-function Add-Sum($rel, $sha) {
-    $keep = @([IO.File]::ReadAllLines($sumsPath) | Where-Object { $_.Length -le 66 -or $_.Substring(66) -ne $rel })
-    $keep += "$sha  $rel"
-    [IO.File]::WriteAllText("$sumsPath.part", (($keep -join "`n") + "`n"))
-    Move-Item -LiteralPath "$sumsPath.part" -Destination $sumsPath -Force
-    $sums[$rel] = $sha
-}
-
 $streams = @{}
 foreach ($n in $discs.Keys) { $streams[$n] = [IO.File]::OpenRead($discs[$n].Path) }
 $buf = New-Object byte[] (1MB)
@@ -265,11 +252,7 @@ try {
                 $size = [int64]$p[2]
                 $sha = $p[3]
                 $part = "$dest.part"
-                if ($sha -eq '-') {         # known once written: SHA256SUMS has it then
-                    $skip = $sums.ContainsKey($name) -and (Test-Done $dest $size $sums[$name])
-                } else {
-                    $skip = (($p[4] -eq 'once') -and (Test-Path -LiteralPath $dest)) -or (Test-Done $dest $size $sha)
-                }
+                $skip = (($p[4] -eq 'once') -and (Test-Path -LiteralPath $dest)) -or (Test-Done $dest $size $sha)
                 if ($skip) { $kept++ } else {
                     Write-Host $name
                     $dir = Split-Path -Parent $dest
@@ -303,32 +286,15 @@ try {
                 $b = [Convert]::FromBase64String($p[1])
                 $out.Write($b, 0, $b.Length)
             }
-            'A' {
-                if ($skip) { continue }
-                $src = [IO.File]::OpenRead((Join-Path $here ($p[1].Replace('/', [IO.Path]::DirectorySeparatorChar))))
-                try {
-                    $src.Position = [int64]$p[2]
-                    $left = [int64]$p[3]
-                    while ($left -gt 0) {
-                        $n = $src.Read($buf, 0, [int][Math]::Min($left, [int64]$buf.Length))
-                        if ($n -le 0) { Fail "$($p[1]) ended early" }
-                        $out.Write($buf, 0, $n)
-                        $left -= $n
-                    }
-                } finally { $src.Close() }
-            }
             'E' {
                 if ($skip) { continue }
                 $out.Close()
                 $out = $null
-                if ($sha -eq '-') { $good = ([IO.FileInfo]$part).Length -eq $size }
-                else { $good = Test-Done $part $size $sha }
-                if (-not $good) {
+                if (-not (Test-Done $part $size $sha)) {
                     Remove-Item -LiteralPath $part -Force
                     Fail "$name came out wrong (a disk error?); the files before it are in place"
                 }
                 Move-Item -LiteralPath $part -Destination $dest -Force
-                if ($sha -eq '-') { Add-Sum $name (Get-Sha256 $dest) }
                 $written++
             }
         }

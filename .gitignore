@@ -22,7 +22,7 @@ src/engine/*/link/mss32dec.lib
 src/engine/d3d/link/d3dviews.obj
 src/engine/*/link/*.cmd
 src/engine/nolfserv/link/server.lib
-# generated from the disc at build time (build/all.sh steps 2b, 2c)
+# copied from assets/art/ at build time (build/all.sh steps 2b, 2c)
 src/engine/launcher/res/
 src/engine/nolfserv/res/
 src/engine/lithtech/res/

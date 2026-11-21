@@ -30,9 +30,8 @@
 #           fails if a function, a resource, a constant, a string, a vtable
 #           or a call recorded there is no longer what it was. It compiles
 #           nothing and finds no new match (only `update` records one). A
-#           build without the retail game (build/all.sh, NOLF_NODISCS=1) has
-#           placeholder art: the resources progress/targets.py names as `art`
-#           are then not checked
+#           build without the retail game (build/all.sh, NOLF_NODISCS=1) is
+#           checked whole: its art is the committed retail art (assets/art/)
 #   both    then ext/tools/datacheck.py: the text in our images' data against the
 #           retail images'; fails on a difference progress/data-known.txt
 #           does not list (update also drops the entries no longer needed);
@@ -56,15 +55,9 @@ mode="${1:-check}"
 case "$mode" in
     check|update) ;;
     ci)
-        # the build has placeholder art (build/retailextract.py placeholders)
-        art=
-        for d in src/engine/launcher/res src/engine/nolfserv/res \
-                 src/engine/lithtech/res src/game/ClientRes/goty; do
-            [ -f "$d/PLACEHOLDER" ] && art=--no-art
-        done
         rc=0
         echo "functions and resources (ext/tools/hashcheck.py, progress/hashes/):"
-        python3 ext/tools/hashcheck.py check $art || rc=1
+        python3 ext/tools/hashcheck.py check || rc=1
         echo
         python3 ext/tools/datacheck.py ci || rc=1
         echo

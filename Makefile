@@ -62,7 +62,7 @@ TOOLCHAIN_FILES = ext/toolchains/msvc-6.00-9782/VC98/Bin/CL.EXE \
 	ext/toolchains/msvc-6.00-8447/BIN/cl.exe \
 	ext/toolchains/icl-4.0/BIN/icl.exe
 
-.PHONY: all game debug modern modern-debug image retail retail-ranges ci progress-ci check-tools check-lithtools check-ext check-toolchain modern-data modern-data-check test test-modern test-compare test-renderers progress progress-update shell clean distclean help
+.PHONY: all game debug modern modern-debug image retail retail-ranges art art-check ci progress-ci check-tools check-lithtools check-ext check-toolchain modern-data modern-data-check test test-modern test-compare test-renderers progress progress-update shell clean distclean help
 
 all: game
 
@@ -89,11 +89,15 @@ help:
 	@echo "make progress-ci  the check without the retail game: the build against"
 	@echo "                progress/hashes/ (finds no new matches)"
 	@echo "make ci         what CI runs: make NODISCS=1 (the legacy release build without"
-	@echo "                the retail game: placeholder art, no data), then make progress-ci"
+	@echo "                the retail game: no game data), then make progress-ci"
 	@echo "make retail     install the retail game from your two disc images in isos/"
 	@echo "                (once; every build runs it), and check it"
-	@echo "make retail-ranges  write build/retail-ranges.txt from the retail game: where its"
-	@echo "                art and zeroed DLLs are (for NODISCS=1 and the install scripts)"
+	@echo "make retail-ranges  write build/retail-ranges.txt from the retail game: its PE"
+	@echo "                files and zeroed DLLs (for NODISCS=1 and the install scripts)"
+	@echo "make art        write the retail art our binaries are compiled with into"
+	@echo "                assets/art/ again, from the retail binaries"
+	@echo "make art-check  check that assets/art/ is the retail art (every build with"
+	@echo "                the retail game also does this)"
 	@echo "make shell      a shell in the build container (build/*.sh, ext/tools/ work there)"
 	@echo "make image      (re)build the docker image $(IMAGE)"
 	@echo "make clean      remove out/ and every build output in the source tree"
@@ -145,7 +149,7 @@ endif
 # NODISCS=1.
 retail: check-tools image
 ifeq ($(NODISCS),1)
-	@echo "== NODISCS=1: no retail game (the build has no game data and placeholder art)"
+	@echo "== NODISCS=1: no retail game (the build has no game data; its art is assets/art/)"
 else
 	@$(DOCKER_RUN) bash -c 'source build/retail.sh && retail_install && retail_verify'
 endif
@@ -155,6 +159,16 @@ endif
 # out of the retail game changes; every build with it checks the list
 retail-ranges: check-tools retail
 	$(DOCKER_RUN) bash -c 'source build/retail.sh && python3 build/retailextract.py ranges write "$$(retail_dir)"'
+
+# The retail art and text our binaries are compiled with, committed in
+# assets/art/: written again from the retail binaries' resources, or checked
+# against them (build/retailextract.py art; every build with the retail game
+# checks it)
+art: check-tools retail
+	$(DOCKER_RUN) bash -c 'source build/retail.sh && python3 build/retailextract.py art write "$$(retail_dir)"'
+
+art-check: check-tools retail
+	$(DOCKER_RUN) bash -c 'source build/retail.sh && python3 build/retailextract.py art check "$$(retail_dir)"'
 
 check-tools:
 	@[ -f ext/tools/progress.py ] || { echo "error: ext/tools/ is empty -- the build's helpers are the ext/tools/ submodule: run git submodule update --init (see ext/tools/README.md)" >&2; exit 1; }

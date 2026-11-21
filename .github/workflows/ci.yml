@@ -4,16 +4,16 @@
 # The runner has no disc images and no retail data, so every build is
 # `make NODISCS=1 <target>` (build/all.sh, NOLF_NODISCS=1):
 #
-#   * It compiles every binary from this repository as always. It takes no
-#     game data and no Miles or Bink, and it compiles placeholder art in
-#     place of the retail art: of the same shapes (build/retail-ranges.txt),
-#     so each binary has the layout it has with the retail game.
+#   * It compiles every binary from this repository as always, with the
+#     retail art that is committed in assets/art/. So every binary is the
+#     same as in a build with the retail game. It takes no game data and no
+#     Miles or Bink.
 #   * Its game directory, out/<name>-nodiscs/, does not play. Its public
 #     archive, out/<name>-public.tar.gz, does: the same archive as a build
 #     with the retail game makes (build/package.sh). Its install scripts
-#     copy the game's data, and the art of our binaries, out of the player's
-#     own disc images (build/mkinstall.py). The -private archives hold
-#     retail data: they are never made here.
+#     copy the game's data out of the player's own disc images
+#     (build/mkinstall.py). The -private archives hold retail data: they
+#     are never made here.
 #
 # Each variant is a job of its own, named for the variant, and uploads its
 # public archive as a workflow artifact (the .tar.gz itself, not a zip
