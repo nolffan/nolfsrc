@@ -1,7 +1,7 @@
 # The build image: Ubuntu 24.04 with its distro Wine (32-bit), Python 3, and
 # what the scripted playtest needs (Xvfb, xdotool, xwd, ImageMagick, Mesa),
-# what ext/rez/ needs to fetch the disc images and install the game from them
-# (curl; a C compiler, make and zlib for its vendored unshield), objdump
+# curl, a C compiler, make and zlib (general tools; the build itself does not
+# use them, and they stay so that the image does not change), objdump
 # (binutils), which the reconstruction tools disassemble with, and what the
 # modern build's open-source middleware in ext/ is built with (build/ext.sh):
 # Zig, pinned to the version ext/openmiles declares -- the compiler for

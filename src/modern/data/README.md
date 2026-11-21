@@ -3,7 +3,7 @@
 Some changes in the modern build (`make modern`, `NOLFSRC_MODERN`; see
 `BUILDING.md`, "Variant builds") need game data changed as well as code. The
 game data is not in this repository -- it comes from the retail game, which
-the `ext/rez/` submodule installs -- so a change is committed here as a recipe,
+`build/discs.py` installs from your disc images -- so a change is committed here as a recipe,
 and `ext/tools/moddata.py` applies it when the modern build is made
 (`build/all.sh`, step 4b). The results are packed into the game directory's
 `nolfsrcdisc.rez`, which the engine loads after the four retail `.rez`

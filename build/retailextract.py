@@ -36,16 +36,17 @@ the build takes out of the retail binaries, is this file's).
                                                             directory, with its
                                                             origin
 
-<retaildir> is the Game of the Year Edition (Europe) as the ext/rez/ submodule
-installs it from the two disc images (ext/rez/install-games.sh nolf-eu-goty:
-ext/rez/games/nolf-eu-goty/, see build/retail.sh). It is only read: nothing in it
-is run, and the build never writes to it.
+<retaildir> is the Game of the Year Edition (Europe) as build/discs.py
+installs it from your two disc images (out/retail/nolf-eu-goty/, see
+build/retail.sh). build/retail-files.txt lists its files and where each one
+is on the discs. The directory is only read: nothing in it is run, and the
+build never writes to it.
 
 `resources` is build/all.sh's first step. It copies every file of the play
 disc's Game/ directory that is not a Windows executable image (PE files are
 recognised by their content, the "MZ" header, not by their name), the movie
-files, and the four .rez archives the retail startup.txt stacks. (ext/rez/
-installs Game/ into the directory's top level, beside the .rez archives and
+files, and the four .rez archives the retail startup.txt stacks. (The install
+puts Game/ into the directory's top level, beside the .rez archives and
 EReg/, which the build does not use.) The archives
 are game data, but three of them also carry the retail game DLLs
 (CSHELL.dll, OBJECT.lto, CRES.dll, SRES.dll): those entries are overwritten
@@ -179,23 +180,21 @@ def is_third_party(name):
 
 
 class Retail:
-    """The installed retail game, read only. ext/rez/ records where each of its
-    files came from in its MANIFEST.txt (`<path>\t<image>.iso:<disc path>`);
-    `game(p)` is whether a file is one of the play disc's Game/ directory,
-    which ext/rez/ installs into the top level."""
+    """The installed retail game, read only. build/retail-files.txt lists
+    its files and where each one is on the discs; `game(p)` is whether a
+    file is one of the play disc's Game/ directory, which the install puts
+    into the top level."""
 
     def __init__(self, root):
         self.root = Path(root)
-        man = self.root / "MANIFEST.txt"
-        if not man.exists():
-            sys.exit(f"missing {man} -- install the retail game first "
-                     "(build/retail.sh)")
+        if not (self.root / ".retail-files").exists():
+            sys.exit(f"{self.root} is not an install of the retail game -- "
+                     "install it first (make retail, build/retail.sh)")
         self.name = self.root.name
-        self.origin = {}
-        for line in man.read_text().splitlines():
-            if "\t" in line and not line.startswith("#"):
-                rel, origin = line.split("\t", 1)
-                self.origin[rel] = origin.split(".iso:", 1)[-1]
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import discs
+        _d, files = discs.load()
+        self.origin = {f.path: f.dpath for f in files}
 
     def find(self, path):
         for p in self.origin:

@@ -3,6 +3,11 @@
 out/
 # worktrees made by ext/tools/agentwt.sh
 /.worktrees/
+# your own images of the two discs (build/discs.py; docs/BUILDING.md)
+/isos/
+# where the ext/rez/ submodule was: the old disc images and installs, left
+# on disk for you to keep or delete
+/ext/rez/
 src/engine/*/Release/
 src/lithshared/*/Release/
 src/lithshared/*/Debug/

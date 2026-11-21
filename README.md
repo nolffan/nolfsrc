@@ -33,8 +33,8 @@ Monolith Productions.
 
 **No game data is included.** The build takes the game's data (and the Miles
 and Bink sound/video runtime, the only binaries not built from source) from
-the retail Game of the Year Edition, which the `ext/rez/` submodule installs from
-the redump images of its two discs, fetched from archive.org. The modern
+the retail Game of the Year Edition, which the build installs from your own
+images of its two discs (bring your own: see below). The modern
 build replaces that runtime with open-source builds from `ext/`: OpenMiles
 for Miles, and our own Bink player on FFmpeg.
 
@@ -45,23 +45,28 @@ in [`progress/README.md`](progress/README.md), with how it is scored.
 
 ## Build
 
-You need Linux with Docker and the submodules:
+You need Linux with Docker, the submodules, and your own images of the two
+discs of the Game of the Year Edition (Europe):
 
-1. Fetch them: `git submodule update --init` (or clone with
+1. Fetch the submodules: `git submodule update --init` (or clone with
    `--recurse-submodules`). `ext/toolchains/` is the compilers (about 560 MB,
-   see `ext/toolchains/README.md`); `ext/rez/` fetches and installs the retail game
-   (see `ext/rez/README.md`); `ext/tools/` is the build's helpers and the
+   see `ext/toolchains/README.md`); `ext/tools/` is the build's helpers and the
    reconstruction tools and guides; `ext/openmiles` and `ext/ffmpeg` are the
    modern build's open-source middleware (about 130 MB), and
    `ext/nolf1-modernizer` the NOLF Modernizer, two of whose models the
    modern build uses (about 60 MB); `ext/lithtools` is our LithTech tools,
    whose `lithrez` packs the game's `nolfsrc.rez`.
-2. Run
+2. Put your two disc images in `isos/` (a `.iso`, a `.bin` with its `.cue`,
+   or a `.zip` of one; a hard link is good: `ln <image> isos/`), or set
+   `NOLF_ISOS=<directory>`. The first build installs the game from them
+   into `out/retail/` and checks every file. See
+   [`docs/BUILDING.md`](docs/BUILDING.md), "What you need".
+3. Run
 
 ```sh
 make            # -> out/nolf-legacy-release/ and its -private / -public .tar.gz
                 #    (about 3 minutes; the first time, also the docker image
-                #    and the retail game's download and install)
+                #    and the retail game's install from your images)
 make test       # optional: plays two levels under Xvfb with scripted input
 make debug      # optional: the same game with symbols and debug logging,
                 #    in out/nolf-legacy-debug/
@@ -85,7 +90,10 @@ The remaining work is functions that are written but not yet byte-identical,
 and functions not written yet. `ext/tools/guides/` explains the method, from reading the
 retail machine code to the compiler quirks that decide the last few bytes;
 `make progress` (after `make`) shows where things stand and catches a change
-that breaks a function that matched before.
+that breaks a function that matched before. The CI has no retail game: it
+checks the build against hashes that `make progress-update` records
+(`make ci`; see `progress/README.md`). It cannot find new matches, so run
+`make progress-update` with your disc images before you send a change.
 
 ## Credits
 

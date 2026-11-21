@@ -1,9 +1,6 @@
 [submodule "toolchains"]
 	path = ext/toolchains
 	url = git@github.com:nolffan/toolchains.git
-[submodule "rez"]
-	path = ext/rez
-	url = git@github.com:nolffan/rez.git
 [submodule "ext/openmiles"]
 	path = ext/openmiles
 	url = git@github.com:nolffan/openmiles.git

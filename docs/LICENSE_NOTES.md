@@ -20,9 +20,9 @@ This file says which is which; it is not legal advice and grants nothing.
 
 ## Not in this repository, taken from the retail game at build time
 
-The build takes these from the Game of the Year Edition as the `ext/rez/`
-submodule installs it, from the redump images of its two discs that it
-fetches from archive.org (`ext/rez/README.md`).
+The build takes these from the Game of the Year Edition as
+`build/discs.py` installs it from your own images of its two discs
+(`docs/BUILDING.md`, "What you need").
 
 | What | Origin | Where it goes |
 |---|---|---|

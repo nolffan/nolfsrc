@@ -1,0 +1,113 @@
+## The retail game the build takes its data from: The Operative: No One
+## Lives Forever, Game of the Year Edition (Europe), as its own setup
+## installs it from its two discs. This list holds no game data. It tells
+## build/discs.py which bytes of which disc make each file, and what each
+## file must be (its size and SHA-256).
+##
+## D <disc> <volume label> <volume blocks> <image size> <image SHA-256> <image name>
+##   One disc. A disc image is recognised by its volume label and its volume
+##   size (blocks of 2048 bytes). The image size, SHA-256 and name are those
+##   of one known good image (the .iso of the redump dump). Another correct
+##   copy of the disc can have another size and SHA-256: each file is checked.
+## F <path> <size> <SHA-256> <disc> <offset> <path on the disc>
+##   One installed file: its path in the install, its size and SHA-256, and
+##   where it is: the byte offset of its data in the disc's 2048-byte-sector
+##   image, and its path in the disc's file system.
+## The fields are separated by one TAB.
+D	1	NOLF_DISC_1	259290	531337216	12cca61e15eef3377b5628f4b0c9663d60b1258488cc0faa7de41e49edca8b76	Operative, The - No One Lives Forever (Europe) (Disc 1) (Game of the Year Edition).iso
+D	2	NOLF Disc 2	316767	649428992	bb3fc683f1c90358eb5ac11c3aa0f7d43ee64ba53983a7e32bbec230c5d4cfc1	Operative, The - No One Lives Forever (USA, Europe) (Disc 2) (Game of the Year Edition).iso
+F	autoexec.cfg	10002	158fb71c88958d86f581e74fdc56ec20599a399fa25319d85374f2823432be7a	2	221184	Game/autoexec.cfg
+F	Autopan.flt	40960	a2e27ecbddca931dfed74306ba5ddc028a7b335075307cba05b667df717837f5	2	417792	Game/Autopan.flt
+F	Bandpass.flt	41472	34e29fdd1d0cb92b39963309a43e42e587199126a6b9629df6bcf355cf186ab1	2	540672	Game/Bandpass.flt
+F	binkw32.dll	262656	6b33d3f6a522f08be15bf57a9af39aa6bcaaea3233e37b8dd66447a8f8871b59	2	2705408	Game/binkw32.dll
+F	Capture.flt	33792	a9f27755dfd39329c6e1cf13d56049985f1d86271192ab4d1c6553fb5bd01c60	2	301056	Game/Capture.flt
+F	Chorus.flt	41984	6e8fd688d85a213b0113d3ac9affe475bed6468d37a97f3762d33703840f065d	2	884736	Game/Chorus.flt
+F	Compress.flt	41472	85b325e3e1f8735be6578a25af6987ea04b8403ad17b83caec396f636e124a84	2	583680	Game/Compress.flt
+F	d3d.ren	638976	07f2156b36ad3c5e2787e442979f7bd709841669ea93db58aa8d792d2219d95f	2	631040000	Game/d3d.ren
+F	defaults.cfg	7672	ee7b39f94b8abca045397c667e6285be9663fe932dde985268d34353df0003cf	2	212992	Game/defaults.cfg
+F	defctrls.cfg	5465	24fdf34ddd84eae81f074b627510c17675d80f58cba33ff386ec560e43c006cd	2	198656	Game/defctrls.cfg
+F	EReg/ARG.dun	1399	364ca3b73cdec3c0ba348f403bec6f47e6b956001e8837e8eac371b3e01cf593	2	178176	EReg/ARG.dun
+F	EReg/BTS.dun	1192	0496da3646ecbae67a634f0c5e5947df3db7f4b1e447bc37ed86b83ede053985	2	161792	EReg/BTS.dun
+F	EReg/DPC.dun	1519	b74f66cb093cacc99a69afe0fdf1d6f0c1166049320fb60957165c5ed120e6da	2	180224	EReg/DPC.dun
+F	EReg/EIR.dun	1604	de66fe4c71f14fe7604c680165f16346c6ebc41720e6dc42a44ff904f9b8b7ef	2	186368	EReg/EIR.dun
+F	EReg/EQN.dun	1281	d74aac13133352a0fd4013bde694d588f715e2fb62075a59ed7497a0967582fb	2	169984	EReg/EQN.dun
+F	EReg/EQT.dun	1301	6554dcb45d84670105eb2ac73111166d5e06118211c43c29f82b3afb645a9564	2	174080	EReg/EQT.dun
+F	EReg/FPD.dun	662	ad4fc9fc4cca27d334b6820451cdd7d4e15fdaf0367cb381f0926cb61da6d34c	2	145408	EReg/FPD.dun
+F	EReg/FPF.dun	662	9ad700a0dc5bdba515ffaa07863c6b4a3518fd67c671251d6a126ec6a828bf71	2	143360	EReg/FPF.dun
+F	EReg/FPG.dun	662	68d39c8761bdb55ec2c8bd067559a896d52a58ce59cdea32cb8c8eeeabe4faa5	2	141312	EReg/FPG.dun
+F	EReg/FPI.dun	662	578c58872020d5f3f3707cd3ebfbea182a70bd945b6a81c13fffdcaf49de22e1	2	139264	EReg/FPI.dun
+F	EReg/FPJ.dun	662	92f74d97fcca3cd3f7ac4491afd468cf404de0936f0329916dffd4f5d258d7f9	2	137216	EReg/FPJ.dun
+F	EReg/FPN.dun	662	5c3d2a7d8c927782c24113f576ecd55000a55ff65aa4cee62b9b70620f1826ac	2	135168	EReg/FPN.dun
+F	EReg/FPS.dun	662	aa8cc30629343cc6f4b11e18ed05252239ddc9e2de2a1857ea4f4b2a38207dcd	2	133120	EReg/FPS.dun
+F	EReg/FPU.dun	662	2429916be13e9f1f322817063217a861cb952cb3e18665e6fc9924456a00fdb1	2	131072	EReg/FPU.dun
+F	EReg/FTT.dun	1229	aab8ccde90b9b9a3989c76d4ddeef0cb2d4d794b36de76f53d530b83a73d8125	2	163840	EReg/FTT.dun
+F	EReg/G1F.dun	1947	dfcf2018b15ad9e92063d3684d31b862fb5dc3b1ae15997efc5fc036c19c884e	2	192512	EReg/G1F.dun
+F	EReg/G1S.dun	1054	d48b52e3da504bc2b0446aaae69abcaeb49eb98b511e726b814d6ba9445fee79	2	155648	EReg/G1S.dun
+F	EReg/INE.dun	1669	442b4b6b83d06685e2108e8e6ca50a0fef6f7f5e66f9f910c199e0249fa13d0a	2	188416	EReg/INE.dun
+F	EReg/inw.dun	1591	54ea83b500abeeccb507b4f11039788cae684c2643bc1e6c12f119a8aa82ec57	2	182272	EReg/inw.dun
+F	EReg/JIT.dun	1262	99598edfcfcd384dc278b1f77c2b98af568a2f91056918e4780f8608094e936f	2	167936	EReg/JIT.dun
+F	EReg/mco.dun	1701	277f452baf464a9f31c0b6882780bcbed3b797c693a6bbf2672a7fa74b461fb2	2	190464	EReg/mco.dun
+F	EReg/NAVBrowser.exe	208896	750be61c3039d695ad106a3d3c395b295013170da62ef06cca0b452d707c2de5	2	2496512	EReg/NAVBrowser.exe
+F	EReg/navload.ini	2175	e413ed822176c2846494854a30397eb106db97877ede7da46d2ea8ec05119a7c	2	194560	EReg/navload.ini
+F	EReg/NTO.dun	1299	1795d88eab6c68e81b40e4dfef8cc2795d7e4c33dafce059fea4fb4b414c7c2b	2	172032	EReg/NTO.dun
+F	EReg/SBReg.pbk	74634	9e9df27bdfe56c7bc8763c2992f931b7425945ad7904b2a048574ad85e51dd11	2	1955840	EReg/SBReg.pbk
+F	EReg/SEV.dun	1080	ead5daa3809fcba538e508e47d088635f79ebb0f49ab464e377ebb985aa73511	2	159744	EReg/SEV.dun
+F	EReg/spn.dun	1037	156231ba27b463f4fb0dfee5141e49bd1b18eb0e3ed692958dd12cd8e3cf1434	2	153600	EReg/spn.dun
+F	EReg/sym.dun	662	ec6c1819ec0f1c5e97606ff7f12a0147ad02694f287b20daf73742f925b6a3a1	2	147456	EReg/sym.dun
+F	EReg/tns.dun	1392	a47b1dab295d707d34a1dc556b5328af708584114d23ff3c8fc104614134b25e	2	176128	EReg/tns.dun
+F	EReg/trn.dun	905	a4a2f7e5ef0d91857f89d776bc5a2650bce91bea367ba292dfe418dda35c561b	2	151552	EReg/trn.dun
+F	EReg/ttn.dun	1598	9494b0d7ab9755e504c42cdf017505a0653c6461b89bb7c6fc0afdd81247322a	2	184320	EReg/ttn.dun
+F	EReg/UUC.dun	806	ebc51a778fe085e5090a3abf11a55f925488359e9e5249de1442d96468ca4d75	2	149504	EReg/UUC.dun
+F	EReg/UUN.dun	1242	9fc1dd9aec2efb7bbc9823046ee87ca60c4cd73b3739ef30956a8e840ea6cf03	2	165888	EReg/UUN.dun
+F	EReg/vnz.dun	630	f24191bdb29b5edce9b6294de4ffb5c58c207005a17e442ad44076bf7a649203	2	129024	EReg/vnz.dun
+F	Flange.flt	41984	1ae41eeb7c78f4e6b5e42e56cc3d653df68c5862e41720291d9de24123841e1e	2	927744	Game/Flange.flt
+F	Highpass.flt	40960	484914aabfc9c5bb0155f28b927b3eb6c7c7d1aa306bb0ba7d1b40b336df5a0a	2	458752	Game/Highpass.flt
+F	Laginter.flt	45056	754ee63839a88aa646cfab763721615980b7fd4145d63bd1c636196258afb62e	2	1015808	Game/Laginter.flt
+F	lithtech.exe	790528	d2d1da7ca08f0ce8e4b2a7a8e107383b1efedb34b6d93913bcbcc70f8bc31c69	2	631678976	Game/lithtech.exe
+F	Lowpass.flt	40960	51be252bc216bbd345b69a44a3dcb36554a08ad0dc96ed5064d51b15949fea1a	2	499712	Game/Lowpass.flt
+F	ltmsg.dll	32768	1b6a262a7e2a6fe8714b99a5bb0fc0aea882874c5e69b2d42c35a6c994557d46	2	268288	Game/ltmsg.dll
+F	Mdelay.flt	41472	2b7603d41a7840550e1763cad2aa3af34be3c0cc9568bde982d0bcc53d0ec52c	2	755712	Game/Mdelay.flt
+F	Movies/foxpc.bik	1888016	0192d8a919c8c35892c947a653d071bf85d4a7c87528e30d2d222d08c68e2b31	2	632469504	Movies/foxpc.bik
+F	Movies/LithLogo.bik	3799320	9ebc2e8fc2a4d4730311d3d36412d3e8a8159020047f60d1a633ff402ad9cb7f	2	645056512	Movies/LithLogo.bik
+F	Movies/LTLogo.bik	2539652	f4dab811ad6c2d8ffb675270354c5d0cc589576ac5ad2aa9e6a76b7c403c84b2	2	642514944	Movies/LTLogo.bik
+F	Movies/SierraLogo.bik	2049744	1673c8210a8c59d18ae4859c47586aa987ad26f3c8f5ab8a1fadd0b64ecb9c37	2	634357760	Movies/SierraLogo.bik
+F	MP3DEC.AS6	141312	751dce2c87ee38517120b6dcfda302cee203402f1f04738532d575ebde22875a	2	2158592	Game/MP3DEC.AS6
+F	MP3DEC.ASI	126464	0fce7cda7db80498029f1527d3033ae990afae8926fd315d53779ff8ca4998e0	2	2031616	Game/MP3DEC.ASI
+F	mss32.dll	347648	f09e6024ad35eb6b7b46982efb998df26d162391b26fcf56519a4c23fcbc7015	2	621889536	Game/mss32.dll
+F	MSSA3D.M3D	51200	cf0a7190069a2a481680075893a9d6d41945f308a382f9ab4e92166be4f4e7ae	2	1316864	Game/MSSA3D.M3D
+F	Mssa3d2.m3d	60928	da6997a9baa42ab6f5e6e7d5464b05cdc4ef20daacacdbfbc7336942a196b514	2	1695744	Game/Mssa3d2.m3d
+F	MSSDOLBY.M3D	64512	96cdf54aab85e1c29c4b344fe9ba73e3298c9265b76f34994bb208f930eddc9e	2	1820672	Game/MSSDOLBY.M3D
+F	MSSDS3DH.M3D	50688	082d95ef6ec53dcdfe75edc89e88585ac44929e042bf60b3749f3ec4623b9ae0	2	1112064	Game/MSSDS3DH.M3D
+F	MSSDS3DS.M3D	49664	7e87f1e25c4b1b9aa48a0ec4e0f8518f7ee6e788827ababb524ff04d86b2b931	2	1060864	Game/MSSDS3DS.M3D
+F	Mssdx7sh.m3d	50688	a83a292b9d9d46790c1d05a22d80a5e76dd8a36133acfb976d885d5cfe3a3286	2	1163264	Game/Mssdx7sh.m3d
+F	Mssdx7sl.m3d	50688	6449f01b675ed8e0823f26c55a679d8d8a5179aca1a882fb44b78f4ceba65db0	2	1214464	Game/Mssdx7sl.m3d
+F	Mssdx7sn.m3d	50688	cac2576b2296bd88a72dd513dc09efc56b49ff1d229a609a6c7418c645d82e88	2	1265664	Game/Mssdx7sn.m3d
+F	MSSEAX.M3D	53760	b15cee4cdc603b5a303a066e2271219a2f829473aefb34961c797ecef4157b72	2	1583104	Game/MSSEAX.M3D
+F	Msseax2.m3d	69120	131a9b799482377eced5018a15ee4bbb0df10b9ebedf4a88b37515595a3d62de	2	1886208	Game/Msseax2.m3d
+F	MSSFAST.M3D	63488	1c995154a7c7f33920330614699b3ab8f14c70ff1015cc05e8db911e4b5dd294	2	1757184	Game/MSSFAST.M3D
+F	MSSRSX.M3D	352768	491fd8b1171326776386a82161fe2f05d2b6ad54cdb34fe39ab8f0c6afec7781	2	622237696	Game/MSSRSX.M3D
+F	NOLF.exe	589824	7ae60282fefcaaaf56ed3a6bb22ccd835b9182c868ffaea725d1d5f9bc9f925c	2	630450176	Game/NOLF.exe
+F	NOLF.REZ	618254258	701a40318017ad13bbfae9feb60089351c81ae2dc4c579bd5f64ebb2c5a48ee7	2	3293184	Data/NOLF.REZ
+F	nolf003cres.rez	745674	4591582626810e3ba84fe3a3bc0ca81900702382eaa1fce94286bf177b0e65ca	1	473839616	Data/nolf003cres.rez
+F	NOLF2.REZ	300703727	578965feb92eea18608cd22c0327fc16bba84acdb51b7d1702ba3037f3db1ef4	1	2197504	Data/NOLF2.REZ
+F	NOLFCRES003.REZ	745674	e7b5a72a7b30e4ec1147f57aa0399edb1800a66d54bbac122d3e4e55937112dc	1	302901248	Data/NOLFCRES003.REZ
+F	NOLFGOTY.REZ	170190784	413d0ec029f162ea55086a4c3fb9c218a0e5d02aa009a7610e4e4a32c7a2eaf0	1	303648768	Data/NOLFGOTY.REZ
+F	NolfServ.exe	421888	4237045d8d41d3387fa1d925692ceb9ddb24eac17622b52f1a16c1b12562d55f	2	622972928	Game/NolfServ.exe
+F	NOLFTools001.exe	6106606	b2a13a39a12642b8de66b541dea999c5315c6764f0b6897bcaf7a01e832071d1	2	636407808	Game/NOLFTools001.exe
+F	nolfu003.rez	18194503	f4dcc8ddc47e0c01025febda01545448e0e3af9dbf5818fef6da34b323f2fa9a	1	474587136	Data/nolfu003.rez
+F	nolfu003cres.rez	745674	348f210eaeb14e19db712ee581e3710c2855266c107c9c320f099eaedc004333	1	492783616	Data/nolfu003cres.rez
+F	Parmeq.flt	41472	cbd1c1fed73240db26f9cab0ee4ebbe47815ab511364b64b5b2556e620f2b483	2	712704	Game/Parmeq.flt
+F	Phaser.flt	52224	beaa7e93cc0d309eb70979d1909c6a92ed68a1f6e22a60b4089004d4c4022002	2	1368064	Game/Phaser.flt
+F	readme.txt	53656	917d6baa8797aec3077a41351c4ceb828ddc9741d653ec21d25ebdc32b9519c9	2	1527808	Game/readme.txt
+F	READMEu003.txt	14849	933bb5365f1d4f176ef1656052636fad597f7e18c6256efe59b898aabc0c2618	2	231424	Game/READMEu003.txt
+F	Reson.flt	40960	3feca589cb6b97229fb3ecbc3dc7188403fb7577fb29d881f0a2e42e6d1143e1	2	376832	Game/Reson.flt
+F	Reverb1.flt	41984	cece0f4ba833b1828320f14a6fd845038373db52c491de3d98a6937f270932a8	2	798720	Game/Reverb1.flt
+F	Reverb2.flt	52736	ffe222e8131a9db679bf5d8c2fa91940b919541a10c15b104c382545419fa4e8	2	1421312	Game/Reverb2.flt
+F	Reverb3.flt	56832	87d3b72a241c11ed0116f9977c51b8cbe2dfb19e43b03509f7cc6271aac30006	2	1638400	Game/Reverb3.flt
+F	Ringmod.flt	41472	70f9ce46059caa24265fba39146d7f32bc2c7c2cfc6c882419bbb96001033259	2	626688	Game/Ringmod.flt
+F	Sdelay.flt	41472	207cd5b9d5d03b93edda236549408bd7aa9ff61f0124b5ed0151797415c4c3e2	2	669696	Game/Sdelay.flt
+F	server.dll	380928	36378df9b1e032b226122e3c94b8d35d6306b59e293d9587ad721e10bc8757bd	2	622592000	Game/server.dll
+F	serverreadme.txt	19707	2593e1764ce8f61db850792f06d63bdced5de0c920c8b2c6da4febf1bf9ebea6	2	247808	Game/serverreadme.txt
+F	Shelfeq.flt	52736	0d948f7a7869b20cae24cbb33b15350ca43888e113bb74898f5d3a31818ab2b4	2	1474560	Game/Shelfeq.flt
+F	startup.txt	199	09c13cfd07b9da93e7ded52954c877bd2dfd07b4f89f07361e2a40ddf6b734a4	2	124928	Game/startup.txt
+F	Uninstaller.ico	1078	af43ee57aa2cbfea4a5d606916b0f7a9be2cc08d5fe8f1aaea88f0cf95062bb2	2	157696	Game/Uninstaller.ico

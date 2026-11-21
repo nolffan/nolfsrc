@@ -4,7 +4,7 @@
 NOLF1's own (build/mkinstall.py is NOLF2's, for its InstallShield
 cabinets and update).
 
-  build/mkinstall.py <gamedir> <outdir> [isodir]
+  build/mkinstall.py <gamedir> <outdir>
 
 A game directory holds the retail game's data as well as what we built: the
 four .rez archives, the movies, the text and config files of the play disc,
@@ -14,8 +14,8 @@ our game DLLs, in custom/ or the modern build's nolfsrc.rez, ship in the
 archive). The public
 archive (build/package.sh) leaves all of that out, and three scripts put it
 back from the player's own copies of the two discs -- the Game of the Year
-Edition (Europe), as .iso images or as redump's .bin/.cue (or its .zip),
-which the scripts convert to the .iso first:
+Edition (Europe), as .iso images or as raw .bin/.cue images (or a .zip of
+one), which the scripts convert to the .iso first:
 
   linux-install.sh       bash, dd, sha256sum, base64 (coreutils)
   windows-install.bat    cmd running the PowerShell it carries (5.1, as every
@@ -27,7 +27,7 @@ which the scripts convert to the .iso first:
 Neither reads the ISO 9660 filesystem. A disc is recognised by its size and
 SHA-256 (those of the .iso: a .bin is converted, then checked), and then
 every file is known: this writes each one as a list of
-byte ranges, worked out here against the images --
+byte ranges of the disc images --
 
   C <disc> <offset> <length>   bytes of that disc image
   Z <length>                   zeros (the retail game DLLs blanked inside the
@@ -38,7 +38,10 @@ byte ranges, worked out here against the images --
 
 -- and the file's size and SHA-256, which the script checks before it moves
 the file into place. So the result is the game directory as built, byte for
-byte. The list goes at the end of each script, after a marker line (in the
+byte. The ranges come from build/retail-files.txt, the list build/discs.py
+installs the retail game from (where each retail file is on which disc),
+and are worked out against that install (out/retail/nolf-eu-goty/, or
+$NOLF_RETAIL): this script needs no disc image. The list goes at the end of each script, after a marker line (in the
 Perl one, after its __END__); the scripts' code is
 build/game-scripts/linux-install.sh, windows-install.ps1 (the .bat's header
 is written here) and mac-install.command.
@@ -48,9 +51,7 @@ Writes <outdir>/linux-install.sh, <outdir>/windows-install.bat,
 <outdir>/disc-files.txt, the game directory's paths the scripts write (the
 archive leaves them out), and <outdir>/disc-sums.txt, the SHA-256 of each of
 those but autoexec.cfg, which the engine rewrites (build/package.sh puts them
-in the archive's SHA256SUMS). <isodir> is ext/rez/isos/ by default; the discs'
-installed copy, ext/rez/games/nolf-eu-goty/, says where each retail file came
-from. Exits 3 if the disc images are not there.
+in the archive's SHA256SUMS). Exits 3 if the retail game is not installed.
 """
 import base64
 import difflib
@@ -61,17 +62,14 @@ import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(REPO, "ext", "tools"))
-sys.path.insert(0, os.path.join(REPO, "ext", "rez", "tools"))
+sys.path.insert(0, os.path.join(REPO, "build"))
 from rezextract import Rez  # noqa: E402
-from isoextract import Iso, SECTOR  # noqa: E402
+import discs as disclist  # noqa: E402
 
-RETAIL = os.path.join(REPO, "ext", "rez", "games", "nolf-eu-goty")
+RETAIL = os.environ.get("NOLF_RETAIL") or os.path.join(REPO, "out", "retail", "nolf-eu-goty")
 RECIPES = os.path.join(REPO, "src", "modern", "data")
 SCRIPTS = os.path.join(REPO, "build", "game-scripts")
-DISCS = {
-    1: "Operative, The - No One Lives Forever (Europe) (Disc 1) (Game of the Year Edition).iso",
-    2: "Operative, The - No One Lives Forever (USA, Europe) (Disc 2) (Game of the Year Edition).iso",
-}
+SECTOR = 2048
 MARKER = "__NOLF_INSTALL_DATA__"
 CHUNK = 1 << 20
 RAW_SECTOR = 2352
@@ -87,26 +85,19 @@ def sha256(path):
     return h.hexdigest()
 
 
-class Disc:
-    def __init__(self, n, path):
-        self.n, self.path, self.name = n, path, os.path.basename(path)
-        self.size = os.path.getsize(path)
-        self.sha = sha256(path)
-        self.f = open(path, "rb")
-        self.files = {p.lower(): (ext * SECTOR, sz) for p, ext, sz in Iso(path).walk()}
-
-    def read(self, off, n):
-        self.f.seek(off)
-        return self.f.read(n)
-
-
 class Source:
-    """A retail file's bytes: one range of one disc image."""
-    def __init__(self, disc, off, size):
+    """A retail file's bytes: one range of one disc image (`disc`, its
+    number; `off`, the byte offset in its .iso), read from the installed
+    copy of the file (`path`, from `base` on): the same bytes, which
+    build/discs.py checked."""
+    def __init__(self, disc, off, size, path, base=0):
         self.disc, self.off, self.size = disc, off, size
+        self.path, self.base = path, base
 
     def read(self, pos=0, n=None):
-        return self.disc.read(self.off + pos, self.size - pos if n is None else n)
+        with open(self.path, "rb") as f:
+            f.seek(self.base + pos)
+            return f.read(self.size - pos if n is None else n)
 
 
 class Ops:
@@ -118,10 +109,10 @@ class Ops:
             return
         off = src.off + pos
         last = self.ops[-1] if self.ops else None
-        if last and last[0] == "C" and last[1] == src.disc.n and last[2] + last[3] == off:
+        if last and last[0] == "C" and last[1] == src.disc and last[2] + last[3] == off:
             last[3] += n
         else:
-            self.ops.append(["C", src.disc.n, off, n])
+            self.ops.append(["C", src.disc, off, n])
 
     def bytes(self, b):
         if not b:
@@ -293,36 +284,24 @@ def ops_archive(parts, path):
 
 
 def main():
-    if len(sys.argv) not in (3, 4):
+    if len(sys.argv) != 3:
         sys.exit(__doc__)
     game, outdir = sys.argv[1].rstrip("/"), sys.argv[2]
-    isodir = sys.argv[3] if len(sys.argv) == 4 else os.path.join(REPO, "ext", "rez", "isos")
-    paths = {n: os.path.join(isodir, name) for n, name in DISCS.items()}
-    missing = [p for p in paths.values() if not os.path.isfile(p)]
-    if missing or not os.path.isfile(os.path.join(RETAIL, "MANIFEST.txt")):
-        print("mkinstall: no disc images (%s) or no ext/rez/games/nolf-eu-goty/ -- "
-              "ext/rez/fetch-isos.sh nolf-eu-goty && ext/rez/install-games.sh nolf-eu-goty"
-              % ", ".join(missing or paths.values()), file=sys.stderr)
+    if not os.path.isfile(os.path.join(RETAIL, ".retail-files")):
+        print(f"mkinstall: the retail game is not installed in {RETAIL} -- make retail "
+              "(it needs your two disc images: docs/BUILDING.md)", file=sys.stderr)
         sys.exit(3)
-    discs = {n: Disc(n, p) for n, p in paths.items()}
-    by_name = {d.name: d for d in discs.values()}
+    discs, files = disclist.load()
 
-    # Where each retail file is on the discs (ext/rez/install-games.sh's record).
-    retail = {}
-    for line in open(os.path.join(RETAIL, "MANIFEST.txt"), errors="replace"):
-        if line.startswith("#") or "\t" not in line:
-            continue
-        rel, origin = line.rstrip("\n").split("\t", 1)
-        iso, _, dpath = origin.partition(".iso:")
-        disc = by_name[iso + ".iso"]
-        off, size = disc.files[dpath.lower()]
-        retail[rel.lower()] = Source(disc, off, size)
+    # Where each retail file is on the discs (build/retail-files.txt).
+    retail = {f.path.lower(): Source(f.disc, f.off, f.size, os.path.join(RETAIL, f.path))
+              for f in files}
 
     # The four archives' entries, as ranges of the discs.
     entries = {}                          # archive (lower) -> {path (lower): Source}
     for rez in ("nolf.rez", "nolf2.rez", "nolfgoty.rez", "nolfu003.rez"):
         src = retail[rez]
-        entries[rez] = {p.lower(): Source(src.disc, src.off + pos, size)
+        entries[rez] = {p.lower(): Source(src.disc, src.off + pos, size, src.path, pos)
                         for p, pos, size in Rez(os.path.join(RETAIL, next(
                             n for n in os.listdir(RETAIL) if n.lower() == rez))).walk()}
 
@@ -394,7 +373,7 @@ def main():
     data = ["NOLFINSTALL 1"]
     for n, d in sorted(discs.items()):
         data.append(f"D {n} {d.size} {d.sha} {d.name}")
-        # The redump .bin of the disc: one MODE1/2352 track, each 2048
+        # The raw .bin of the known image of the disc: one MODE1/2352 track, each 2048
         # bytes of the .iso a 2352-byte sector (the scripts convert it).
         data.append(f"R {n} {d.size // SECTOR * RAW_SECTOR}")
     data += records
@@ -439,7 +418,7 @@ rem
 rem   Drop both disc images of The Operative: No One Lives Forever, Game of
 rem   the Year Edition (Europe) onto this file, or put them in this folder
 rem   and double-click it. Then start the game with NOLF.exe. An image is a
-rem   plain .iso, redump's .bin (or its .cue), or redump's .zip download; a
+rem   plain .iso, a raw .bin (or its .cue), or a .zip of one; a
 rem   .bin or .zip is first converted to a temporary .iso in this folder
 rem   (about 0.6 GB a disc, removed at the end).
 rem

@@ -7,39 +7,60 @@ parts of it by hand.
 
 * **Linux with Docker.** The compilers are Win32 programs and run under Wine
   in a container; the host needs nothing else (no Wine, no Python).
+* **Your own images of the two discs** of *The Operative: No One Lives
+  Forever, Game of the Year Edition* (Europe). The build takes the game's
+  data from them. This repository does not supply them. Put both images in
+  `isos/` at the root of the checkout, or set `NOLF_ISOS=<directory>` (make
+  mounts that directory read-only in the container). The directory must
+  hold the files, not symbolic links to files outside it: the container
+  cannot follow those. A hard link is good and uses no more disk:
+  `ln <image> isos/`. An image can be:
+  * a `.iso`, 2048-byte sectors (your own rip, for example);
+  * a raw `.bin`, 2352-byte MODE1 sectors, with or without its `.cue`;
+  * a `.zip` that holds one `.bin` or `.iso` (read in place).
+
+  For example, the redump dumps of the discs are good images, as
+  `Operative, The - No One Lives Forever (Europe) (Disc 1) (Game of the Year
+  Edition)` and `Operative, The - No One Lives Forever (USA, Europe) (Disc 2)
+  (Game of the Year Edition)`. Any correct copy of the discs is good: the
+  build does not check the image as a whole. It recognises each disc by its
+  volume label and size, and it checks each file that it installs against
+  `build/retail-files.txt`.
+
+  `make retail` (every build runs it) installs the game from the images
+  into `out/retail/nolf-eu-goty/` the first time, as the discs' own setup
+  does (`build/discs.py`). `build/retail-files.txt` is the list of the
+  installed files: for each one, its size, its SHA-256 and where it is on
+  which disc. It holds no game data. Without the images, `make` stops with
+  a message that tells you what to supply.
 * **The submodules**: `git submodule update --init`.
   * `ext/toolchains/`, the compilers (about 560 MB). See `ext/toolchains/README.md`.
-  * `ext/rez/`, the retail game the build takes its data from. It fetches the
-    redump images of the two discs of *No One Lives Forever: Game of the Year
-    Edition* (Europe) from archive.org, checks them, and installs the game
-    from them as its own setup would, into `ext/rez/games/nolf-eu-goty/`, checked
-    file by file against `ext/rez/games.sha256`. `make` does this the first time
-    (`make retail`); see `ext/rez/README.md`.
   * `ext/tools/`, the build's helpers (the scorer, the object makers, the
     playtest, ...) and the reconstruction tools and guides
     ([nolffan/tools](https://github.com/nolffan/tools)). Every build needs it.
   * `ext/openmiles` and `ext/ffmpeg`, the upstream projects the modern build
     uses in place of Miles and Bink ("The modern build's middleware" below).
     The release build does not need them.
-* About 9 GB of disk: 2.6 GB for the docker image, 2.8 GB for `out/` (the
-  game directory, its two .tar.gz, and the 0.6 GB Wine prefix), about 3 GB in `ext/rez/`
-  (the disc images, zipped and unzipped, and the installed game), a few
-  hundred MB of objects.
+* About 8 GB of disk: 2.6 GB for the docker image, 2.8 GB for `out/` (the
+  game directory, its two .tar.gz, and the 0.6 GB Wine prefix), 1.1 GB for
+  the installed retail game in `out/retail/`, 1.2 GB for the two disc
+  images in `isos/` (none if they are hard links), a few hundred MB of
+  objects.
 
 ## What `make` does
 
-1. Checks the compilers are in `ext/toolchains/` and that `ext/rez/` is there.
+1. Checks the compilers are in `ext/toolchains/`.
 2. Builds the docker image `nolfsrc-build` from `docker/Dockerfile` if
    needed (a few minutes, once).
-3. `make retail`, in a container: the first time, fetches the two disc
-   images and installs the retail game from them (`ext/rez/fetch-isos.sh
-   nolf-eu-goty`, `ext/rez/install-games.sh nolf-eu-goty`); every time, checks
-   the installed files against `ext/rez/games.sha256` (the result is remembered
-   in `out/.retail-verified` while the files are unchanged). See
-   `build/retail.sh`.
+3. `make retail`, in a container: the first time, installs the retail game
+   from your disc images into `out/retail/nolf-eu-goty/` (`build/discs.py
+   install`, about a minute); every time, checks the installed files
+   against `build/retail-files.txt` (the result is remembered in
+   `out/.retail-verified` while the files are unchanged). See
+   `build/retail.sh`. `make clean` removes the install with the rest of
+   `out/`, and the next build installs it again.
 4. Runs `build/all.sh` in a throwaway container (`--rm --init`, named
-   `nolfsrc-build`), as your user, with the checkout (and so `ext/rez/`) mounted
-   at `/repo`.
+   `nolfsrc-build`), as your user, with the checkout mounted at `/repo`.
 
 `build/all.sh` then:
 
@@ -101,7 +122,13 @@ make progress     # score the build against the retail binaries, function by
                   #   the retail text in a way progress/data-known.txt does not
                   #   list (ext/tools/datacheck.py); our lithshared libraries too,
                   #   against Monolith's prebuilt ones in progress/reference/
-make progress-update   # record the score in progress/ (and its README.md table)
+make progress-update   # record the score in progress/ (and its README.md table),
+                  #   and the hashes progress-ci checks against (progress/hashes/)
+make progress-ci  # the check without the retail game: the build against
+                  #   progress/hashes/ ("The CI build", below)
+make ci           # make NODISCS=1, then make progress-ci: what the CI runs
+make retail       # install the retail game from your disc images (every build
+                  #   runs it)
 make shell        # a shell in the build container, at /repo
 make clean        # remove out/ and every build output in the source tree
 make distclean    # clean, and remove the docker image
@@ -422,11 +449,12 @@ the game to anyone else, give them the `-public` archive instead
 (`out/nolf-modern-release-public.tar.gz`, about 5 MB): the same directory
 without anything from the discs, and three scripts that copy it out of their
 own disc images of the Game of the Year Edition (Europe). An image can be a
-plain `.iso` (an own rip), redump's `.bin` (or its `.cue`), or redump's
-`.zip` as archive.org serves it; a `.bin` or `.zip` is converted to a
-temporary `.iso` first (about 0.6 GB a disc; on Linux this needs
-`python3`). They check each image's SHA-256 and every file they write, so
-the result is the `-private` archive's directory, byte for byte:
+plain `.iso`, a raw `.bin` (or its `.cue`), or a `.zip` that holds them; a
+`.bin` or `.zip` is converted to a temporary `.iso` first (about 0.6 GB a
+disc; on Linux this needs `python3`). They check each image's SHA-256 (the
+images must be byte for byte the known images of `build/retail-files.txt`)
+and every file they write, so the result is the `-private` archive's
+directory, byte for byte:
 
 ```sh
 nolf-modern-release/linux-install.sh disc1.zip disc2.zip    # Linux, Steam Deck
@@ -436,8 +464,9 @@ nolf-modern-release/mac-install.command disc1.zip disc2.zip # a Mac, for CrossOv
 On Windows, drop both images onto `windows-install.bat` (or put them in the
 game folder and double-click it), then start `NOLF.exe`. Each script finds
 the images in the game directory or the one above it by itself, and can be
-run again: a file already in place is checked and kept. The public archive
-is made only if `ext/rez/isos/` has the two `.iso` images (`build/mkinstall.py`).
+run again: a file already in place is checked and kept. `build/mkinstall.py`
+writes the scripts from `build/retail-files.txt` and the installed retail
+game (`out/retail/`), so the public archive needs no disc image to build.
 
 Music needs more in the release build: it is DirectMusic, which Wine
 implements only in part. Its own DirectMusic cannot load the music's styles,

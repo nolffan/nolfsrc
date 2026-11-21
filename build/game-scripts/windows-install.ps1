@@ -5,7 +5,7 @@
 #
 # What linux-install.sh does: check that the folder is the release unpacked
 # and nothing else (SHA256SUMS), find the two disc images (the arguments, or
-# the images in the game folder or the one above it; a redump .bin, .cue or
+# the images in the game folder or the one above it; a raw .bin, .cue or
 # .zip converted to a temporary .iso first), check their sizes and SHA-256,
 # then write each file of the list at the end of the .bat from
 # its byte ranges -- C <disc> <offset> <length>, Z <length> zeros, L <base64>
@@ -115,7 +115,7 @@ foreach ($l in $lines) {
     if ($l.StartsWith('R ')) { $p = $l.Split(' '); $discs[$p[1]].Raw = [int64]$p[2] }
 }
 
-# A redump image: a .bin, or the one .bin of a .zip, of 2352-byte MODE1
+# A raw image: a .bin, or the one .bin of a .zip, of 2352-byte MODE1
 # sectors. Open-Raw gives @(size, stream) (stream $null with -SizeOnly);
 # a .zip without exactly one .bin has size 0, so it matches no disc.
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -132,7 +132,7 @@ function Open-Raw($path, [switch]$SizeOnly) {
     return @($size, [IO.File]::OpenRead($path))
 }
 
-# The .iso of a redump image: the 2048 bytes of user data of each sector,
+# The .iso of a raw image: the 2048 bytes of user data of each sector,
 # after its 16-byte sync and header.
 function Convert-Raw($path, $out) {
     $r = Open-Raw $path
@@ -223,7 +223,7 @@ foreach ($n in ($discs.Keys | Sort-Object)) {
     $d = $discs[$n]
     if (-not $d.Path) {
         Write-Host "no image of disc $n`: $($d.Name)" -ForegroundColor Red
-        Write-Host "  (.iso: $($d.Size) bytes, SHA-256 $($d.Sha); or redump's .bin/.cue or .zip)"
+        Write-Host "  (.iso: $($d.Size) bytes, SHA-256 $($d.Sha); or a raw .bin/.cue, or a .zip of one)"
         $missing = $true
     }
 }

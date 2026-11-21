@@ -52,8 +52,8 @@ rewrites).
   - <http://redump.org/disc/42823/>
   - <http://redump.org/disc/42561/>
 
-  An image can be a plain `.iso` (your own rip), redump's `.bin` (or its
-  `.cue`), or redump's `.zip` download. A `.bin` or `.zip` is first
+  An image can be a plain `.iso`, a raw `.bin` (or its `.cue`), or a `.zip`
+  that holds them. A `.bin` or `.zip` is first
   converted to a temporary `.iso`, which needs about 0.6 GB of free space per
   disc; it is removed at the end. Other editions and other regions' discs
   are not supported: the installer checks each image's checksum.

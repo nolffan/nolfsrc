@@ -10,7 +10,7 @@ Sources:
   and `clientmgr2.cpp` (SceneDesc, CreateRenderWorld).
 - **Retail PC renderer.** d3d.ren, reconstructed in `src/engine/d3d/*.cpp`.
 - **Mac renderer.** The Mac build of the same engine version
-  (`ext/rez/games/nolf-mac-usa/NOLF/LithTech`, PowerPC, names preserved, OpenGL renderer linked in).
+  (`$NOLF_MAC_DIR/NOLF/LithTech`, PowerPC, names preserved, OpenGL renderer linked in).
 
 Address conventions:
 - `PC 0x004xxxxx` is lithtech.exe.
@@ -127,7 +127,7 @@ drawing. Other parts cover the BSP data (B), lightmaps (C), visibility / world
 models / sky (D) and the per-poly passes (E).
 
 Evidence notation: `PC 0x…` = address in lithtech.exe or d3d.ren; `Mac 0x…` =
-code offset in ext/rez/games/nolf-mac-usa/NOLF/LithTech (PowerPC, OpenGL renderer
+code offset in $NOLF_MAC_DIR/NOLF/LithTech (PowerPC, OpenGL renderer
 linked in), disassembled with ext/tools/pef.py. "inferred" marks anything not read
 directly off an instruction.
 
@@ -725,7 +725,7 @@ drawing are Part D; pass logic is Part E.
 
 ## Evidence conventions
 
-* `Mac 0xNNNNNN` = code offset in ext/rez/games/nolf-mac-usa/NOLF/LithTech (PPC,
+* `Mac 0xNNNNNN` = code offset in $NOLF_MAC_DIR/NOLF/LithTech (PPC,
   CodeWarrior, names preserved). Listings come from `ext/tools/pef.py dis`.
 * `PC 0x1000xxxx` = d3d.ren, `PC 0x004xxxxx` = lithtech.exe, with the repo file
   that reconstructs it.
@@ -2453,7 +2453,7 @@ animates the offsets.
 
 # Part E: how the renderer draws world polygons
 
-Sources. The main source is the Mac OpenGL renderer (`ext/rez/games/nolf-mac-usa/NOLF/LithTech`). Addresses are offsets into the Mac code section, as `ext/tools/pef.py` prints them. **The stock `pef.py dis` stops at the first `fcmpo`/`fcmpu`** (capstone cannot decode them), so every long function here was re-disassembled with capstone `skipdata=True`. The skipped compares show up as `.byte fc 0x 0x 40`. The PC `d3d.ren` side is used where it confirms or differs.
+Sources. The main source is the Mac OpenGL renderer (`$NOLF_MAC_DIR/NOLF/LithTech`). Addresses are offsets into the Mac code section, as `ext/tools/pef.py` prints them. **The stock `pef.py dis` stops at the first `fcmpo`/`fcmpu`** (capstone cannot decode them), so every long function here was re-disassembled with capstone `skipdata=True`. The skipped compares show up as `.byte fc 0x 0x 40`. The PC `d3d.ren` side is used where it confirms or differs.
 
 Console-variable names come from the `ConVar(name, default, int*, float*)` constructors in `__sinit_common_stuff_cpp` (0x14e6d0), `__sinit_opengl_draw_cpp` (0x159760) and `__sinit_lm_dualpass_cpp` (0x19ad50), mapped to the data addresses that the code reads. GL enum values were decoded from the immediates.
 

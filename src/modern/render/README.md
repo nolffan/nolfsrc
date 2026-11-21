@@ -79,7 +79,15 @@ Console variables it reads besides the engine's own (the names and defaults
 
 ## The Mac renderer, for reference
 
-`ext/rez/games/nolf-mac-usa/NOLF/LithTech` (ext/rez/README.md) is one PowerPC
+The Mac release (MacPlay, 2002) is reference material for this work only.
+The build does not use it, and this repository does not supply it. To read
+it, install the Mac release from your own disc, and set `NOLF_MAC_DIR` to
+the directory that holds its `NOLF/` folder. `ext/tools/pef.py` then reads
+`$NOLF_MAC_DIR/NOLF/LithTech` when you give `-` as its file (in `make
+shell`, give `make shell NOLF_MAC_DIR=<directory>`: the directory is
+mounted read-only at `/mac`).
+
+`$NOLF_MAC_DIR/NOLF/LithTech` is one PowerPC
 executable: the engine with the renderer linked in where the PC loads
 `d3d.ren`. The renderer is 514 functions, 225 KB of code, from
 `opengl_init.cpp` to `lightmap_dynamic.cpp`; CodeWarrior's static

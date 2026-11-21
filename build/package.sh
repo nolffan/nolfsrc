@@ -17,12 +17,13 @@
 #                               to give to other people. Its SHA256SUMS lists
 #                               every file of the archive and every file the
 #                               scripts write; they refuse a directory that is
-#                               not the archive unpacked. It needs the images
-#                               in ext/rez/isos/; without them it is skipped.
+#                               not the archive unpacked. It needs the
+#                               installed retail game (build/discs.py,
+#                               out/retail/); without it it is skipped.
 #
 # NOLF_ARCHIVES (default "private public") says which to write; with
-# "public" alone (the CI build, .github/workflows/public-archives.yml) the
-# private one is not made, and no disc images is an error, not a skip.
+# "public" alone the private one is not made, and no retail game is an
+# error, not a skip.
 #
 # build/all.sh runs it for the release build (step 6) and build/variant.sh
 # for each variant, once its data and symbols are in place.
@@ -72,10 +73,10 @@ PUB="$PARENT/$NAME-public.tar.gz"
 rc=0
 python3 "$HERE/mkinstall.py" "$OUT" "$PARENT/$STAGE" || rc=$?
 if [ $rc = 3 ] && [ -n "${NOLF_ARCHIVES:-}" ]; then
-    echo "   $PUB: no disc images, but NOLF_ARCHIVES asks for it" >&2
+    echo "   $PUB: no installed retail game, but NOLF_ARCHIVES asks for it" >&2
     exit 1
 elif [ $rc = 3 ]; then
-    echo "   $PUB: skipped (no disc images)"
+    echo "   $PUB: skipped (no installed retail game)"
     rm -f "$PUB"
 elif [ $rc != 0 ]; then
     exit $rc

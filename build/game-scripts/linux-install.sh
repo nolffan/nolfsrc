@@ -9,8 +9,8 @@
 # of the Year Edition (Europe), in either order, each as any of
 #
 #   .iso   a plain image (2048-byte sectors), e.g. your own rip
-#   .bin   redump's raw image (2352-byte sectors), or its .cue
-#   .zip   redump's download as archive.org serves it (the .cue and .bin)
+#   .bin   a raw image (2352-byte sectors), or its .cue
+#   .zip   a zip of the .cue and the .bin
 #
 # A .bin, .cue or .zip is first converted to a temporary .iso in this
 # directory (about 0.6 GB a disc, removed at the end; this needs python3).
@@ -106,7 +106,7 @@ TEMPS=()
 cleanup() { [ ${#TEMPS[@]} -eq 0 ] || rm -f "${TEMPS[@]}"; }
 trap cleanup EXIT
 
-# raw <cmd> <file> [out]: a redump image's raw (2352-byte sector) data.
+# raw <cmd> <file> [out]: a raw image's (2352-byte sector) data.
 #   raw size <.bin|.zip>          its size (a .zip's one .bin)
 #   raw iso  <.bin|.zip> <out>    the 2048 bytes of user data of each sector
 #                                 (MODE1: after the 16-byte sync and header)
@@ -208,7 +208,7 @@ missing=0
 for n in $(printf '%s\n' "${!DSIZE[@]}" | sort); do
     if [ -z "${DISC[$n]:-}" ]; then
         echo "linux-install.sh: no image of disc $n: ${DNAME[$n]}" >&2
-        echo "  (.iso: ${DSIZE[$n]} bytes, SHA-256 ${DSHA[$n]}; or redump's .bin/.cue or .zip)" >&2
+        echo "  (.iso: ${DSIZE[$n]} bytes, SHA-256 ${DSHA[$n]}; or a raw .bin/.cue, or a .zip of one)" >&2
         missing=1
     fi
 done

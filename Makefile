@@ -9,15 +9,16 @@
 #   make modern   the game with the retail bugs fixed (NOLFSRC_MODERN), in out/nolf-modern-release/
 #   make progress how much of the build is byte-identical to the retail game;
 #                 fails if a function recorded as identical stops matching
+#   make ci       the CI build and check, without the retail game
 #   make help     everything else
 #
-# Needs only docker on the host and the submodules (`git submodule update
+# Needs only docker on the host, the submodules (`git submodule update
 # --init`): ext/tools/, the build's helpers; the compilers, ext/toolchains/
 # (ext/toolchains/README.md); ext/lithtools/, whose lithrez packs the modern
-# build's nolfsrc.rez (build/lithrez.sh); and ext/rez/, which
-# fetches the redump images of the Game of the Year discs from archive.org and
-# installs the game from them (ext/rez/README.md; `make retail`, which every build
-# runs first, does it once). Every step runs in a throwaway container of the
+# build's nolfsrc.rez (build/lithrez.sh) -- and your own images of the two
+# Game of the Year discs, in isos/ (or NOLF_ISOS=<dir>), from which `make
+# retail`, which every build runs first, installs the retail game once
+# (build/discs.py). Every step runs in a throwaway container of the
 # image docker/Dockerfile describes, with this checkout mounted at /repo, as
 # you.
 
@@ -39,17 +40,27 @@ JOBS ?=
 NOLF_SOURCE ?= progress/reference
 SRC_MOUNT := $(if $(NOLF_SOURCE),-v $(realpath $(NOLF_SOURCE)):/nolfsource:ro -e NOLF_SOURCE=/nolfsource)
 
+# Your disc images, if they are not in isos/: NOLF_ISOS=<directory>
+# (mounted read-only). NODISCS=1: build without the retail game (`make ci`).
+# NOLF_MAC_DIR=<directory>: the Mac release, for development only (make shell).
+NOLF_ISOS ?=
+NOLF_MAC_DIR ?=
+NODISCS ?=
+ISO_MOUNT := $(if $(NOLF_ISOS),-v $(abspath $(NOLF_ISOS)):/isos:ro -e NOLF_ISOS=/isos)
+MAC_MOUNT := $(if $(NOLF_MAC_DIR),-v $(abspath $(NOLF_MAC_DIR)):/mac:ro -e NOLF_MAC_DIR=/mac)
+
 DOCKER_RUN = docker run --rm --init --name $(CONTAINER) \
 	-u $(shell id -u):$(shell id -g) -e HOME=/tmp/home $(if $(JOBS),-e NOLFSRC_JOBS=$(JOBS)) \
 	$(if $(NOLF_ARCHIVES),-e NOLF_ARCHIVES="$(NOLF_ARCHIVES)") \
-	-v $(CURDIR):/repo -w /repo $(SRC_MOUNT) $(IMAGE)
+	$(if $(filter 1,$(NODISCS)),-e NOLF_NODISCS=1) \
+	-v $(CURDIR):/repo -w /repo $(SRC_MOUNT) $(ISO_MOUNT) $(IMAGE)
 
 TOOLCHAIN_FILES = ext/toolchains/msvc-6.00-9782/VC98/Bin/CL.EXE \
 	ext/toolchains/msvc-6.00-8168/BIN/cl.exe \
 	ext/toolchains/msvc-6.00-8447/BIN/cl.exe \
 	ext/toolchains/icl-4.0/BIN/icl.exe
 
-.PHONY: all game debug modern modern-debug image retail check-rez check-tools check-lithtools check-ext check-toolchain test test-modern test-compare test-renderers progress progress-update shell clean distclean help
+.PHONY: all game debug modern modern-debug image retail ci progress-ci check-nodiscs check-tools check-lithtools check-ext check-toolchain test test-modern test-compare test-renderers progress progress-update shell clean distclean help
 
 all: game
 
@@ -67,9 +78,14 @@ help:
 	@echo "                TEST_RENDERERS, then out/play/compare-<scene>-d3d7-<scene>-<renderer>.jpg"
 	@echo "make progress   score the build against the retail binaries; fails if a"
 	@echo "                function recorded in progress/identical.txt stops matching"
-	@echo "make progress-update  record the score in progress/ and README.md"
-	@echo "make retail     fetch the two disc images and install the retail game from"
-	@echo "                them (ext/rez/, once; every build runs it), and check it"
+	@echo "make progress-update  record the score in progress/ and README.md, and the"
+	@echo "                hashes make progress-ci checks against in progress/hashes/"
+	@echo "make progress-ci  the check without the retail game: the build against"
+	@echo "                progress/hashes/ (finds no new matches)"
+	@echo "make ci         what CI runs: make NODISCS=1 (the legacy release build without"
+	@echo "                the retail game: placeholder art, no data), then make progress-ci"
+	@echo "make retail     install the retail game from your two disc images in isos/"
+	@echo "                (once; every build runs it), and check it"
 	@echo "make shell      a shell in the build container (build/*.sh, ext/tools/ work there)"
 	@echo "make image      (re)build the docker image $(IMAGE)"
 	@echo "make clean      remove out/ and every build output in the source tree"
@@ -77,22 +93,27 @@ help:
 	@echo
 	@echo "Variables: TEST_LEVELS=\"$(TEST_LEVELS)\", TEST_RES=<WxH>, JOBS=<n> (parallel compiles; default one per CPU)"
 	@echo "           NOLF_ARCHIVES=\"private public\" (the archives build/package.sh writes)"
+	@echo "           NOLF_ISOS=<dir> (your disc images, if not in isos/), NODISCS=1 (see make ci)"
 	@echo "           NOLF_SOURCE=<dir> (Monolith's prebuilt libraries for make progress;"
 	@echo "           default progress/reference), COMPLETE=1, COVERED=1, ACCEPT_LOSSES=1 (progress/README.md)"
 
 game: check-toolchain retail
 	$(DOCKER_RUN) bash build/all.sh
 
-debug: check-toolchain retail
+debug: check-nodiscs check-toolchain retail
 	$(DOCKER_RUN) bash build/variant.sh $@
 
 # the modern build also builds OpenMiles and its Bink player from ext/
 # (build/ext.sh)
-modern modern-debug: check-toolchain check-lithtools check-ext retail
+modern modern-debug: check-nodiscs check-toolchain check-lithtools check-ext retail
 	$(DOCKER_RUN) bash build/variant.sh $@
 
+# Only the legacy release build can be built without the retail game.
+check-nodiscs:
+	@[ "$(NODISCS)" != 1 ] || { echo "error: NODISCS=1 builds only the legacy release game (make NODISCS=1)" >&2; exit 1; }
+
 # IMAGE_BUILD=0: use $(IMAGE) as it is (CI builds it with a layer cache
-# first, .github/workflows/public-archives.yml).
+# first, .github/workflows/ci.yml).
 IMAGE_BUILD ?= 1
 image:
 ifeq ($(IMAGE_BUILD),0)
@@ -105,12 +126,15 @@ endif
 	@echo "== docker image $(IMAGE) ready"
 
 # The retail game the build takes its data from (build/retail.sh): installed
-# by ext/rez/ the first time, checked against ext/rez/games.sha256 every time.
-retail: check-rez check-tools image
+# from your disc images (isos/, or NOLF_ISOS) by build/discs.py the first
+# time, checked against build/retail-files.txt every time. Nothing with
+# NODISCS=1.
+retail: check-tools image
+ifeq ($(NODISCS),1)
+	@echo "== NODISCS=1: no retail game (the build has no game data and placeholder art)"
+else
 	@$(DOCKER_RUN) bash -c 'source build/retail.sh && retail_install && retail_verify'
-
-check-rez:
-	@[ -f ext/rez/install-games.sh ] || { echo "error: ext/rez/ is empty -- the disc images and their installer are the ext/rez/ submodule: run git submodule update --init (see ext/rez/README.md)" >&2; exit 1; }
+endif
 
 check-tools:
 	@[ -f ext/tools/progress.py ] || { echo "error: ext/tools/ is empty -- the build's helpers are the ext/tools/ submodule: run git submodule update --init (see ext/tools/README.md)" >&2; exit 1; }
@@ -197,11 +221,23 @@ progress: retail
 progress-update: retail
 	$(DOCKER_RUN) env ACCEPT_LOSSES=$(ACCEPT_LOSSES) $(EVIDENCE_ENV) bash build/progress.sh update
 
+# Without the retail game: the build against progress/hashes/ (build/progress.sh ci)
+progress-ci: check-tools image
+	$(DOCKER_RUN) bash build/progress.sh ci
+
+# What CI runs (.github/workflows/ci.yml): the legacy release
+# build without the retail game, then the check without it
+ci:
+	$(MAKE) --no-print-directory NODISCS=1 game
+	$(MAKE) --no-print-directory progress-ci
+
 shell: image
 	docker run --rm -it --init --name $(CONTAINER)-shell \
 	  -u $(shell id -u):$(shell id -g) -e HOME=/tmp/home \
-	  -v $(CURDIR):/repo -w /repo $(SRC_MOUNT) $(IMAGE) bash
+	  -v $(CURDIR):/repo -w /repo $(SRC_MOUNT) $(ISO_MOUNT) $(MAC_MOUNT) $(IMAGE) bash
 
+# (out/retail/, the installed retail game, goes too: the next build installs
+# it again from your disc images)
 clean:
 	rm -rf out
 	rm -rf src/engine/*/Release src/lithshared/*/Release src/lithshared/*/Debug src/lithshared/out \

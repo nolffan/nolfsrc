@@ -10,8 +10,8 @@
 # of the Year Edition (Europe), in either order, each as any of
 #
 #   .iso   a plain image (2048-byte sectors), e.g. your own rip
-#   .bin   redump's raw image (2352-byte sectors), or its .cue
-#   .zip   redump's download as archive.org serves it (the .cue and .bin)
+#   .bin   a raw image (2352-byte sectors), or its .cue
+#   .zip   a zip of the .cue and the .bin
 #
 # What linux-install.sh does: a .bin, .cue or .zip is first converted to a
 # temporary .iso in this folder (about 0.6 GB a disc, removed at the end).
@@ -124,7 +124,7 @@ for (@data) {
 }
 
 # A .zip's members from its central directory: (name, method, packed size,
-# size, offset of the local header) of each. Not zip64: redump's discs fit.
+# size, offset of the local header) of each. Not zip64: a CD image fits.
 sub zip_members {
     my ($path) = @_;
     open my $fh, '<:raw', $path or return ();
@@ -156,14 +156,14 @@ sub zip_bin {
     return @bins == 1 ? $bins[0] : undef;
 }
 
-# A redump image's raw (2352-byte sector) size: a .bin's, or a .zip's .bin's.
+# A raw image's (2352-byte sector) size: a .bin's, or a .zip's .bin's.
 sub raw_size {
     my ($f) = @_;
     if ($f =~ /\.zip\z/i) { my $b = zip_bin($f); return $b ? $b->[3] : 0; }
     return -s $f;
 }
 
-# A reader of a redump image's raw bytes: a code ref giving up to n bytes
+# A reader of a raw image's bytes: a code ref giving up to n bytes
 # (fewer only at the end).
 sub raw_reader {
     my ($f) = @_;
@@ -203,7 +203,7 @@ sub raw_reader {
     };
 }
 
-# The .iso of a redump image: the 2048 bytes of user data of each sector
+# The .iso of a raw image: the 2048 bytes of user data of each sector
 # (MODE1: after the 16-byte sync and header).
 sub convert {
     my ($f, $to) = @_;
@@ -286,7 +286,7 @@ my $missing = 0;
 for my $n (sort keys %dsize) {
     next if $disc{$n};
     print STDERR "$ME: no image of disc $n: $dname{$n}\n",
-                 "  (.iso: $dsize{$n} bytes, SHA-256 $dsha{$n}; or redump's .bin/.cue or .zip)\n";
+                 "  (.iso: $dsize{$n} bytes, SHA-256 $dsha{$n}; or a raw .bin/.cue, or a .zip of one)\n";
     $missing = 1;
 }
 if ($missing) {

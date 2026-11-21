@@ -98,6 +98,9 @@ export NOLFSRC_CFLAGS="$CFLAGS"
 export NOLFSRC_LDFLAGS="$LDFLAGS"
 export NOLFSRC_RCFLAGS="$RCFLAGS"
 export NOLF_GAME_OUT="$REPO/out/$NAME"
+# the retail game this checkout installed (build/retail.sh), not the tree's
+source "$REPO/build/retail.sh"
+export NOLF_RETAIL="$(retail_root)"
 export NOLF_PACKAGE=0
 case "$VARIANT" in modern*) export NOLF_MIDDLEWARE=open NOLF_EXT_OUT="$REPO/out/ext" ;; esac
 bash "$TREE/build/all.sh"
