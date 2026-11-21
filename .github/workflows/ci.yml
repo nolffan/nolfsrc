@@ -1,27 +1,62 @@
-# The legacy release build, without the retail game, and the byte check
-# without the retail binaries (`make ci`).
+# The four build variants without the retail game, their public archives,
+# the byte check, and the nightly and tagged releases.
 #
-# The runner has no disc images, so:
+# The runner has no disc images and no retail data, so every build is
+# `make NODISCS=1 <target>` (build/all.sh, NOLF_NODISCS=1):
 #
-#   * The build (`make NODISCS=1`) compiles every binary from this
-#     repository as always. It takes no game data and no Miles or Bink, and
-#     it compiles placeholder art in place of the retail art
-#     (build/retailextract.py placeholders). The code is the same.
-#   * The check (`make progress-ci`, build/progress.sh ci) compares the
-#     build with the hashes in progress/hashes/, which `make
-#     progress-update` records locally from the full check against the
-#     retail binaries. It fails if a function, a resource, a float constant,
-#     a string, a vtable or a call recorded there changed. It finds no new
-#     match: only a local `make progress-update` does.
+#   * It compiles every binary from this repository as always. It takes no
+#     game data and no Miles or Bink, and it compiles placeholder art in
+#     place of the retail art: of the same shapes (build/retail-ranges.txt),
+#     so each binary has the layout it has with the retail game.
+#   * Its game directory, out/<name>-nodiscs/, does not play. Its public
+#     archive, out/<name>-public.tar.gz, does: the same archive as a build
+#     with the retail game makes (build/package.sh). Its install scripts
+#     copy the game's data, and the art of our binaries, out of the player's
+#     own disc images (build/mkinstall.py). The -private archives hold
+#     retail data: they are never made here.
 #
-# The public archives, the modern build, the releases and the nightly need
-# the retail game. They are built locally (docs/BUILDING.md, "Variant
-# builds"), not here.
+# Each variant is a job of its own, named for the variant, and uploads its
+# public archive as a workflow artifact (the .tar.gz itself, not a zip
+# around it). The legacy release build is also checked for byte regressions
+# without the retail binaries (`make progress-ci`, build/progress.sh ci): it
+# compares the build with the hashes in progress/hashes/, which `make
+# progress-update` records locally from the full check. It fails if a
+# function, a resource, a float constant, a string, a vtable or a call
+# recorded there changed. It finds no new match: only a local `make
+# progress-update` does.
+#
+# The job "prepare" builds the docker image once into the layer cache; the
+# four builds then run at the same time and only read it. None of the builds
+# needs another's output.
+#
+# Pushing a tag (v*, e.g. v0.0.3-alpha) also makes a GitHub release of it,
+# with the modern build's public archives attached (the job "release"),
+# named for the tag: nolf-modern-release-public.tar.gz as
+# nolfsrc-<tag>.tar.gz and nolf-modern-debug-public.tar.gz as
+# nolfsrc-debug-<tag>.tar.gz, each repacked to unpack to a directory of
+# that name. A tag with a hyphen in it is marked a pre-release. A release of
+# that tag made by hand beforehand is kept, with its text; the archives are
+# added to it, replacing ones of the same name. A new release's text is
+# .github/release_notes.md, followed by GitHub's generated list of changes.
+#
+# A push to master whose four builds pass updates the pre-release "nightly"
+# the same way: the tag nightly is moved to the commit, its archives are
+# replaced by the commit's -- named for it, nolfsrc-nightly-<commit>.tar.gz
+# and nolfsrc-debug-nightly-<commit>.tar.gz (the first 7 digits of the
+# hash), each unpacking to a directory of that name, so a download and an
+# install say what they were built from -- and the text is
+# .github/nightly_notes.md (the commit and date) followed by
+# release_notes.md. The new archives go up before the old ones are deleted.
+# It is edited in place, not made anew, so its page stays the same and
+# watchers are not notified of every merge, and it is never marked the
+# latest release. A run whose commit is no longer master's head (one re-run
+# later, say) leaves it alone.
 name: CI
 
 on:
   push:
     branches: [master]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -33,24 +68,64 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: nolf-legacy-release (no retail game)
+  prepare:
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # Written to the layer cache here, once; the builds only read it.
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: docker
+          tags: nolfsrc-build
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false         # one build failing still lets the others finish
+      matrix:
+        include:
+          # submodules: the legacy builds need only ext/tools (the build's
+          # scripts) and ext/toolchains (the compilers); the modern builds
+          # also ext/lithtools (lithrez, which packs nolfsrc.rez) and the
+          # middleware and models of ext/
+          - name: nolf-legacy-release
+            target: all
+            submodules: ext/tools ext/toolchains
+          - name: nolf-legacy-debug
+            target: debug
+            submodules: ext/tools ext/toolchains
+          - name: nolf-modern-release
+            target: modern
+            submodules: ''
+          - name: nolf-modern-debug
+            target: modern-debug
+            submodules: ''
+    name: ${{ matrix.name }}
     env:
+      NOLF_ARCHIVES: public
       IMAGE_BUILD: 0           # the step "Build image" loads it, cached
     steps:
       - uses: actions/checkout@v4
 
       # .gitmodules names the submodules by SSH; all of them are public, so
-      # fetch them over HTTPS instead, at the commit this one records. The
-      # legacy build needs only ext/tools (the build's scripts) and
-      # ext/toolchains (the compilers).
+      # fetch them over HTTPS instead, at the commit this one records (no
+      # names: all of them).
       - name: Submodules
+        env:
+          SUBMODULES: ${{ matrix.submodules }}
         run: |
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git submodule sync
-          git submodule update --init --depth 1 ext/tools ext/toolchains
+          # shellcheck disable=SC2086 # (a list of paths, or none)
+          git submodule update --init --depth 1 --jobs 4 $SUBMODULES
 
       # Loaded as nolfsrc-build, which the Makefile then uses (IMAGE_BUILD=0).
       - uses: docker/setup-buildx-action@v3
@@ -61,12 +136,119 @@ jobs:
           tags: nolfsrc-build
           load: true
           cache-from: type=gha
-          cache-to: type=gha,mode=max
 
-      - name: Build nolf-legacy-release without the retail game
-        run: make NODISCS=1
+      - name: Build ${{ matrix.name }}
+        run: make NODISCS=1 ${{ matrix.target }}
 
       # Fails if a function recorded in progress/identical.txt is no longer
       # byte-identical, by its hash in progress/hashes/
       - name: Byte regressions (make progress-ci)
+        if: matrix.name == 'nolf-legacy-release'
         run: make progress-ci
+
+      # Uploaded as the .tar.gz itself (archive: false), not zipped again;
+      # the artifact takes the file's name.
+      - uses: actions/upload-artifact@v7
+        with:
+          path: out/${{ matrix.name }}-public.tar.gz
+          archive: false
+          if-no-files-found: error
+
+  release:
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/master')
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write          # create the release and upload to it
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+          sparse-checkout-cone-mode: false
+
+      # Each by its name: the build jobs upload the .tar.gz itself
+      # (archive: false), which download-artifact reads from v8 on.
+      - uses: actions/download-artifact@v8
+        with:
+          name: nolf-modern-release-public.tar.gz
+          path: dist
+      - uses: actions/download-artifact@v8
+        with:
+          name: nolf-modern-debug-public.tar.gz
+          path: dist
+
+      - name: Release ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'nightly' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          TAG: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'nightly' }}
+        run: |
+          # The archives' names after nolfsrc-: the tag, or for the nightly
+          # the commit it was built from.
+          ARCHIVE="$TAG"
+          if [ "$TAG" = nightly ]; then ARCHIVE="nightly-${SHA:0:7}"; fi
+
+          find dist -type f -ls
+          notes() {   # the release text for $TAG, into notes.md
+            sed -e "s|{{TAG}}|$TAG|g" -e "s|{{ARCHIVE}}|$ARCHIVE|g" -e "s|{{REPO}}|$GH_REPO|g" \
+                .github/release_notes.md | sed '/^<!--/,/^-->/d' > body.md
+            if [ "$TAG" = nightly ]; then
+              sed -e "s|{{SHA}}|$SHA|g" -e "s|{{SHORT}}|${SHA:0:7}|g" \
+                  -e "s|{{REPO}}|$GH_REPO|g" -e "s|{{DATE}}|$(date -u '+%Y-%m-%d %H:%M UTC')|g" \
+                  .github/nightly_notes.md | cat - body.md > notes.md
+            else
+              mv body.md notes.md
+            fi
+          }
+          if [ "$TAG" = nightly ]; then
+            head="$(gh api "repos/$GH_REPO/git/ref/heads/master" --jq .object.sha)"
+            if [ "$head" != "$SHA" ]; then
+              echo "master is at $head now, not $SHA: the nightly is left as it is"
+              exit 0
+            fi
+            notes
+            if gh release view nightly >/dev/null 2>&1; then
+              # Moved, or made again if it was deleted by hand.
+              gh api -X PATCH "repos/$GH_REPO/git/refs/tags/nightly" \
+                  -f sha="$SHA" -F force=true >/dev/null ||
+                gh api -X POST "repos/$GH_REPO/git/refs" \
+                    -f ref=refs/tags/nightly -f sha="$SHA" >/dev/null
+              gh release edit nightly --prerelease --latest=false \
+                  --title "Nightly (${SHA:0:7})" --notes-file notes.md
+            else
+              gh release create nightly --target "$SHA" --prerelease --latest=false \
+                  --title "Nightly (${SHA:0:7})" --notes-file notes.md
+            fi
+          elif ! gh release view "$TAG" >/dev/null 2>&1; then
+            pre=; case "$TAG" in *-*) pre=--prerelease ;; esac
+            notes
+            gh release create "$TAG" --verify-tag --notes-file notes.md \
+                --generate-notes $pre --title "$TAG"
+          fi
+          # Repacked so that each unpacks to a directory of its own name,
+          # not the build's nolf-modern-release/ or nolf-modern-debug/.
+          repack() {   # <build name> <release name>
+            rm -rf x && mkdir x
+            tar -C x -xzpf "$(find dist -name "$1-public.tar.gz")"
+            mv "x/$1" "x/$2"
+            tar -C x -cf - "$2" | gzip -6 > "up/$2.tar.gz"
+          }
+          mkdir up
+          repack nolf-modern-release "nolfsrc-$ARCHIVE"
+          repack nolf-modern-debug "nolfsrc-debug-$ARCHIVE"
+          for f in up/*.tar.gz; do echo "$f: $(tar -tzf "$f" | head -1)"; done
+          gh release upload "$TAG" up/*.tar.gz --clobber
+          # The nightly keeps only this commit's archives, deleted once the
+          # new ones are up so the page is never without a download.
+          if [ "$TAG" = nightly ]; then
+            gh release view nightly --json assets --jq '.assets[].name' |
+              while read -r a; do
+                case "$a" in "nolfsrc-nightly-${SHA:0:7}.tar.gz"|"nolfsrc-debug-nightly-${SHA:0:7}.tar.gz") ;;
+                  *) echo "deleting $a"; gh release delete-asset nightly "$a" --yes < /dev/null ;;
+                esac
+              done
+          fi
