@@ -5,12 +5,12 @@
 | `nolfsrc-{{ARCHIVE}}.tar.gz` | **This is what you want**; the retail game with bug fixes and new features. |
 | `nolfsrc-debug-{{ARCHIVE}}.tar.gz` | The same build with debug information. For bug reporting. |
 
-**No game data is included.** A platform specific installer is included that copies the game's data from your own images of the two discs of the EU GOTY Edition.
+**No game data is included.** A platform specific installer is included that copies the game's data from your own GOTY (EU) disc images.
 
-Supported images:
+Supported images (the redump dumps of the two discs):
 
-- <http://redump.org/disc/42823/>
-- <http://redump.org/disc/42561/>
+- Disc 1: `Operative, The - No One Lives Forever (Europe) (Disc 1) (Game of the Year Edition)`, redump ID 42823
+- Disc 2: `Operative, The - No One Lives Forever (USA, Europe) (Disc 2) (Game of the Year Edition)`, redump ID 42561
 
 ## Install
 

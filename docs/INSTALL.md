@@ -51,9 +51,11 @@ rewrites).
 
 - **The two discs of _The Operative: No One Lives Forever_, Game of the Year
   Edition (Europe)**, as disc images. These are the images the installer
-  expects:
-  - <http://redump.org/disc/42823/>
-  - <http://redump.org/disc/42561/>
+  expects (the redump dumps of the two discs):
+  - Disc 1: `Operative, The - No One Lives Forever (Europe) (Disc 1) (Game of
+    the Year Edition)`, redump ID 42823
+  - Disc 2: `Operative, The - No One Lives Forever (USA, Europe) (Disc 2) (Game
+    of the Year Edition)`, redump ID 42561
 
   An image can be a plain `.iso`, a raw `.bin` (or its `.cue`), or a `.zip`
   that holds them. A `.bin` or `.zip` is first
