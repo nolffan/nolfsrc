@@ -68,10 +68,14 @@
 #                         did. The modern build instead packs them, with
 #                         assets/modern/rez/ (our own data files), into
 #                         nolfsrc.rez, the archive it loads last of the
-#                         game's, with lithtools' lithrez (build/lithrez.sh),
-#                         and its edits of the discs' data (src/modern/data/,
-#                         ext/tools/moddata.py) into nolfsrcdisc.rez, before
-#                         it.
+#                         game's, with lithtools' lithrez (build/lithrez.sh).
+#                         assets/modern/rez/ includes the retail files that
+#                         the modern build changes (bug fixes, and changes
+#                         as a mod makes them), made from the recipes of
+#                         src/modern/data/ (build/moderndata.py, which this
+#                         step uses to check them); its defaults.cfg and
+#                         defctrls.cfg, assets/modern/gamedir/, replace the
+#                         retail ones in step 1.
 #   5. audit              every PE file in out/nolf-legacy-release/ listed with its origin;
 #                         the build fails if any is unaccounted for or if a
 #                         .rez archive still holds one.
@@ -129,14 +133,26 @@ else
     step "1. resources: game data from $RETAIL -> $OUT"
     python3 build/retailextract.py resources "$RETAIL" "$OUT"
 fi
+# The modern build (build/variant.sh): our archive (step 4); every other
+# build keeps the game DLLs in custom/
+MODERN=
+case "${NOLFSRC_CFLAGS:-}" in *NOLFSRC_MODERN*) MODERN=modern ;; esac
+if [ -n "$MODERN" ]; then
+    # The modern build's own defaults.cfg and defctrls.cfg, which the engine
+    # reads from the game directory, in place of the retail ones that
+    # `resources` copied (assets/README.md); the manifest row says so.
+    for f in assets/modern/gamedir/*; do
+        n="$(basename "$f")"
+        cp "$f" "$OUT/$n"
+        sed -i "/\t${n//./\\.}\$/d" "$OUT/MANIFEST.txt"
+        printf 'ours %s\t%s\n' "$f" "$n" >> "$OUT/MANIFEST.txt"
+        echo "   $n  <-  $f"
+    done
+fi
 # autoexec.cfg starts as the shipped defaults (the engine rewrites it on
 # exit); a rebuild keeps the player's.
 [ -f "$OUT/autoexec.cfg" ] || [ -n "$NODISCS" ] || cp "$OUT/defaults.cfg" "$OUT/autoexec.cfg"
 mkdir -p "$OUT/Save"
-# The modern build (build/variant.sh): our archives (step 4) and its data
-# edits (step 4b); every other build keeps the game DLLs in custom/
-MODERN=
-case "${NOLFSRC_CFLAGS:-}" in *NOLFSRC_MODERN*) MODERN=modern ;; esac
 [ -n "$MODERN" ] || mkdir -p "$OUT/custom"
 # nolfcmds.txt: the command file the engine starts with, as a fresh build
 # writes it (the launcher rewrites it; build/playtest.sh uses it),
@@ -145,12 +161,12 @@ bash build/nolfcmds.sh "${NOLF_MIDDLEWARE:-retail}" $MODERN > "$OUT/nolfcmds.txt
 # startup.txt: the rez stack NolfServ.exe, the dedicated server, loads (the
 # retail one's names, Rez0-Rez8, then ours last, as nolfcmds.txt has them
 # for the engine: custom/, with our game DLLs; in the modern build
-# nolfsrcdisc.rez and nolfsrc.rez). `resources` copies the retail file
+# nolfsrc.rez). `resources` copies the retail file
 # again whenever this one differs in size, so the lines are added afresh
 # each time.
 if [ -f "$OUT/startup.txt" ] && ! grep -qi '^Rez9 *=' "$OUT/startup.txt"; then
     if [ -n "$MODERN" ]; then
-        printf 'Rez9 = "nolfsrcdisc.rez"\r\nRez10 = "nolfsrc.rez"\r\n' >> "$OUT/startup.txt"
+        printf 'Rez9 = "nolfsrc.rez"\r\n' >> "$OUT/startup.txt"
     else
         printf 'Rez9 = "custom"\r\n' >> "$OUT/startup.txt"
     fi
@@ -201,15 +217,16 @@ done
 
 step "4. assemble: the built binaries -> $OUT"
 if [ -n "$MODERN" ]; then
-    # custom/: where modern builds before nolfsrc.rez put the game DLLs and
-    # their data edits. Every launcher loads it (the retail one always did,
-    # before the update's and GOTY's archives), so what they put there goes,
-    # by the manifest's rows and custom/MODERN-DATA.txt's list (whose
-    # game-directory rows carry over to the list's new place). Anything
-    # else -- a player's own files, or Custom/*.rez for the launcher's
-    # custom archives -- stays, and so does custom/ then. Never for a legacy
-    # game directory, whose game DLLs live there.
-    python3 build/retailextract.py oldcustom "$OUT"
+    # What older modern builds left: in custom/, where builds before
+    # nolfsrc.rez put the game DLLs and their data edits (every launcher
+    # loads it, as the retail one always did, before the update's and GOTY's
+    # archives), by the manifest's rows and custom/MODERN-DATA.txt's list;
+    # and nolfsrcdisc.rez, MODERN-DATA.txt and the <file>.retail copies,
+    # which builds before assets/modern/ made from the discs. Anything else
+    # -- a player's own files, or Custom/*.rez for the launcher's custom
+    # archives -- stays, and so does custom/ then. Never for a legacy game
+    # directory, whose game DLLs live there.
+    python3 build/retailextract.py oldmodern "$OUT"
 else
     # our archives, which only the modern build has (a legacy directory
     # built while the legacy build had them too)
@@ -274,22 +291,11 @@ else
     cp -rL "$a/." "$STAGE/nolfsrc/"
     echo "   nolfsrc.rez  <-  $a/ ($(find -L "$a" -type f | wc -l) files)"
 
-    step "4b. modern data: the src/modern/data/ recipes, on the discs' data -> nolfsrcdisc.rez, $OUT"
-    # Edits of the retail data (ext/tools/moddata.py, src/modern/data/README.md),
-    # made from the discs by every build: never committed, and never in the
-    # public archive, whose install scripts make them from the player's discs
-    # (build/mkinstall.py) -- hence an archive of their own. The recipes
-    # apply to the retail archives only (--skip: ours hold the last build's
-    # results). MODERN-DATA.txt lists what was written.
-    mkdir -p "$STAGE/nolfsrcdisc"
-    python3 ext/tools/moddata.py apply "$OUT" src/modern/data \
-        --out "$STAGE/nolfsrcdisc" --list "$OUT/MODERN-DATA.txt" \
-        --skip nolfsrc.rez --skip nolfsrcdisc.rez
+    # assets/modern/: the retail files the modern build changes must be
+    # what the src/modern/data/ recipes make of the discs' data
+    python3 build/moderndata.py check
 
-    step "4c. archives: $STAGE/ -> nolfsrc.rez, nolfsrcdisc.rez (lithtools' lithrez)"
-    # A file in both would be ours twice, and one would silently win.
-    dup="$(cd "$STAGE" && find . -type f | sed 's|^\./[^/]*/||' | tr '[:upper:]' '[:lower:]' | sort | uniq -d)"
-    [ -z "$dup" ] || { echo "error: in both nolfsrc.rez's and nolfsrcdisc.rez's inputs: $dup" >&2; exit 1; }
+    step "4b. archive: $STAGE/nolfsrc/ -> nolfsrc.rez (lithtools' lithrez)"
     bash build/lithrez.sh
     # One fixed time (27 April 2001, the 1.003 update's readme's date) on every
     # entry, so that every build of the same inputs makes the same bytes.
@@ -301,11 +307,6 @@ else
         echo "   $2  <-  $1/ ($(find "$1" -type f | wc -l) files, $(stat -c %s "$OUT/$2") bytes)"
     }
     pack "$STAGE/nolfsrc" nolfsrc.rez "packed by lithrez: the game DLLs, assets/"
-    if [ -n "$(find "$STAGE/nolfsrcdisc" -type f -print -quit)" ]; then
-        pack "$STAGE/nolfsrcdisc" nolfsrcdisc.rez "packed by lithrez: the src/modern/data recipes on the discs' data"
-    else
-        rm -f "$OUT/nolfsrcdisc.rez"
-    fi
 fi
 
 step "5. audit: every PE file in $OUT"

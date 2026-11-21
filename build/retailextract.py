@@ -33,8 +33,10 @@ the build takes out of the retail binaries, is this file's).
   build/retailextract.py reference   <retaildir> <refdir>   the retail engine images
                                                             and game DLLs, for
                                                             scoring only
-  build/retailextract.py oldcustom   <gamedir>              what older modern builds
-                                                            put in custom/, removed
+  build/retailextract.py oldmodern   <gamedir>              what older modern builds
+                                                            left (custom/,
+                                                            nolfsrcdisc.rez),
+                                                            removed
   build/retailextract.py prune       <gamedir>              stale manifest rows
   build/retailextract.py audit       <gamedir>              every PE file in a game
                                                             directory, with its
@@ -118,13 +120,17 @@ lists every PE file in the directory with its origin, failing on any it
 cannot account for -- or on any PE file inside a .rez archive but the ones
 we built into our own (a manifest row `built <source>\t<archive>:<name>`).
 
-`oldcustom`, for a modern game directory only, removes what modern builds
-before nolfsrc.rez put in its custom/ rez directory (the game DLLs; the
-data edits, by custom/MODERN-DATA.txt, whose game-directory rows move to
-<gamedir>/MODERN-DATA.txt), and custom/ itself once empty: every launcher
-loads custom/, so they would load. Other files there (a player's) are
-kept. It refuses a directory whose manifest does not name NOLFLauncher.exe
-(the modern build's): a legacy build's game DLLs live in custom/.
+`oldmodern`, for a modern game directory only, removes what older modern
+builds left. Builds before nolfsrc.rez put the game DLLs and the data edits
+in the custom/ rez directory (by the manifest's rows and
+custom/MODERN-DATA.txt); every launcher loads custom/, so they would load.
+custom/ itself goes once it is empty; other files there (a player's) are
+kept. Builds before assets/modern/ made the data edits from the discs at
+build time: nolfsrcdisc.rez, the list MODERN-DATA.txt, and the retail
+originals of the changed game-directory files, <file>.retail
+(defaults.cfg.retail, defctrls.cfg.retail). They are ours, so they go too.
+It refuses a directory whose manifest does not name NOLFLauncher.exe (the
+modern build's): a legacy build's game DLLs live in custom/.
 
 `placeholders` is for a build without the retail game (build/all.sh with
 NOLF_NODISCS=1, the CI build): it writes the files of `launcherres`,
@@ -752,7 +758,8 @@ def cmd_reference(retaildir, refdir):
         rez.f.close()
 
 
-# Our own archives (build/all.sh, step 4): their rows are written afresh.
+# Our own archives (build/all.sh, step 4): their rows are written afresh
+# (nolfsrcdisc.rez: older modern builds made it, `oldmodern`).
 OUR_REZ = {"nolfsrc.rez", "nolfsrcdisc.rez"}
 
 
@@ -765,32 +772,34 @@ def cmd_prune(gamedir):
         man.save()
 
 
-def cmd_oldcustom(gamedir):
+def cmd_oldmodern(gamedir):
     gamedir = Path(gamedir)
     custom = gamedir / "custom"
-    if not custom.is_dir():
-        return
-    man = Manifest(gamedir)
-    if "NOLFLauncher.exe" not in man.rows:
-        sys.exit(f"retailextract: oldcustom: {gamedir} is not a modern game directory "
-                 "(no NOLFLauncher.exe in its manifest); its custom/ is left alone")
-    gone = set()
-    lst = custom / "MODERN-DATA.txt"
-    if lst.is_file():
-        carry = []
+    gone, retail = set(), set()
+    for lst, inside in ((custom / "MODERN-DATA.txt", True), (gamedir / "MODERN-DATA.txt", False)):
+        if not lst.is_file():
+            continue
         for e in lst.read_text().split("\n"):
             if e.startswith("gamedir:"):
-                carry.append(e)
-            elif e:
+                retail.add(e[len("gamedir:"):])
+            elif e and inside:
                 gone.add("custom/" + e)
-        gone.add("custom/MODERN-DATA.txt")
-        new = gamedir / "MODERN-DATA.txt"
-        if carry and not new.exists():
-            new.write_text("".join(e + "\n" for e in carry))
-    for p in list(man.rows):
-        if p.lower().startswith("custom/"):
-            gone.add(p)
-            del man.rows[p]
+        gone.add(str(lst.relative_to(gamedir)))
+    for p in retail | {"defaults.cfg", "defctrls.cfg"}:
+        if (gamedir / (p + ".retail")).is_file():
+            gone.add(p + ".retail")
+    if (gamedir / "nolfsrcdisc.rez").is_file():
+        gone.add("nolfsrcdisc.rez")
+    man = Manifest(gamedir)
+    old = [p for p in man.rows if p.lower().startswith("custom/")]
+    if not gone and not old and not custom.is_dir():
+        return
+    if "NOLFLauncher.exe" not in man.rows:
+        sys.exit(f"retailextract: oldmodern: {gamedir} is not a modern game directory "
+                 "(no NOLFLauncher.exe in its manifest); it is left alone")
+    for p in old:
+        gone.add(p)
+        del man.rows[p]
     if man.path.exists():
         man.save()
     for p in sorted(gone):
@@ -865,8 +874,8 @@ def main():
         cmd_placeholders()
     elif cmd == "reference" and len(sys.argv) == 4:
         cmd_reference(sys.argv[2], sys.argv[3])
-    elif cmd == "oldcustom" and len(sys.argv) == 3:
-        cmd_oldcustom(sys.argv[2])
+    elif cmd == "oldmodern" and len(sys.argv) == 3:
+        cmd_oldmodern(sys.argv[2])
     elif cmd == "prune" and len(sys.argv) == 3:
         cmd_prune(sys.argv[2])
     elif cmd == "audit" and len(sys.argv) == 3:

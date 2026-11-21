@@ -3,3 +3,7 @@
 # read by the game at run time) and keep the CRLF endings they shipped with.
 src/game/ClientRes/credits.txt -text
 src/game/ClientRes/intro.txt -text
+# The modern build's changed retail files (build/moderndata.py): game data,
+# kept byte for byte (CRLF text, binary textures and models).
+assets/modern/rez/** -text -diff
+assets/modern/gamedir/** -text

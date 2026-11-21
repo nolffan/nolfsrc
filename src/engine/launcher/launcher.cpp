@@ -532,14 +532,11 @@ BOOL LaunchGame(char* sCmdLine, BOOL bMultiplayer)
 		csCmd += g_csContentCmdLine;
 	}
 #ifdef NOLFSRC_MODERN
-	// Our archives last of the game's, over whatever the update and content
-	// archives carry (the engine searches last-first): the edits of the
-	// discs' data (nolfsrcdisc.rez, which the install scripts make), then
-	// nolfsrc.rez -- the game code built from source, and our own data.
-	// The player's custom archives (Custom\*.rez, GetCustomRezCommands)
-	// still follow, so a mod overrides them.
-	if (GetFileAttributes("nolfsrcdisc.rez") != (DWORD)-1)
-		csCmd += " -rez nolfsrcdisc.rez";
+	// Our archive last of the game's, over whatever the update and content
+	// archives carry (the engine searches last-first): nolfsrc.rez -- the
+	// game code built from source, and our own data (the changed retail
+	// files included). The player's custom archives (Custom\*.rez,
+	// GetCustomRezCommands) still follow, so a mod overrides it.
 	csCmd += " -rez nolfsrc.rez";
 #endif
 

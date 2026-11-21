@@ -8,12 +8,12 @@ cabinets and update).
 
 A game directory holds the retail game's data as well as what we built: the
 four .rez archives, the movies, the text and config files of the play disc,
-the retail Miles and Bink files (legacy builds) and the modern build's data
-edits made from them (nolfsrcdisc.rez, from the recipes of src/modern/data/;
-our game DLLs, in custom/ or the modern build's nolfsrc.rez, ship in the
-archive). The public
-archive (build/package.sh) leaves all of that out, and three scripts put it
-back from the player's own copies of the two discs -- the Game of the Year
+and the retail Miles and Bink files (legacy builds). Our game DLLs, in
+custom/ or the modern build's nolfsrc.rez, ship in the archive, and so do
+the modern build's own defaults.cfg and defctrls.cfg and the retail files it
+changes (assets/modern/; their manifest rows do not name the discs). The
+public archive (build/package.sh) leaves the discs' data out, and three
+scripts put it back from the player's own copies of the two discs -- the Game of the Year
 Edition (Europe), as .iso images or as raw .bin/.cue images (or a .zip of
 one), which the scripts convert to the .iso first:
 
@@ -32,9 +32,8 @@ byte ranges of the disc images --
   C <disc> <offset> <length>   bytes of that disc image
   Z <length>                   zeros (the retail game DLLs blanked inside the
                                .rez archives: build/all.sh's `resources`)
-  L <base64>                   bytes of ours (the modern data edits: a few
-                               lines of a patched .txt, a palette entry;
-                               nolfsrcdisc.rez's header and directory)
+  L <base64>                   bytes of ours (the modern build's
+                               autoexec.cfg, its defaults.cfg)
 
 -- and the file's size and SHA-256, which the script checks before it moves
 the file into place. So the result is the game directory as built, byte for
@@ -67,7 +66,6 @@ from rezextract import Rez  # noqa: E402
 import discs as disclist  # noqa: E402
 
 RETAIL = os.environ.get("NOLF_RETAIL") or os.path.join(REPO, "out", "retail", "nolf-eu-goty")
-RECIPES = os.path.join(REPO, "src", "modern", "data")
 SCRIPTS = os.path.join(REPO, "build", "game-scripts")
 SECTOR = 2048
 MARKER = "__NOLF_INSTALL_DATA__"
@@ -128,23 +126,6 @@ class Ops:
             self.ops[-1][1] += b
         else:
             self.ops.append(["L", bytearray(b)])
-
-    def extend(self, other):
-        """Another Ops' records after these, runs joined where they meet."""
-        for op in other.ops:
-            if op[0] == "C":
-                last = self.ops[-1] if self.ops else None
-                if last and last[0] == "C" and last[1] == op[1] and last[2] + last[3] == op[2]:
-                    last[3] += op[3]
-                else:
-                    self.ops.append(list(op))
-            elif op[0] == "Z":
-                if self.ops and self.ops[-1][0] == "Z":
-                    self.ops[-1][1] += op[1]
-                else:
-                    self.ops.append(list(op))
-            else:
-                self.bytes(bytes(op[1]))
 
     def lines(self):
         for op in self.ops:
@@ -251,38 +232,6 @@ def ops_for(sources, path):
     return best
 
 
-def ops_for_bytes(sources, out):
-    """ops_for, for bytes in memory (an archive's entry)."""
-    best = None
-    for src in sources:
-        if src.size == len(out):
-            ops = ops_same_chunks(src, (out[i:i + CHUNK] for i in range(0, len(out), CHUNK)))
-        else:
-            ops = ops_text(src, out)
-        if best is None or ops.literal < best.literal:
-            best = ops
-    return best
-
-
-def ops_archive(parts, path):
-    """An archive of ours whose entries are made from retail files
-    (nolfsrcdisc.rez): each entry from its sources, the bytes between them
-    (the header, the directories) literal. parts: (pos, size, sources, name)."""
-    data = open(path, "rb").read()
-    ops, at = Ops(), 0
-    for pos, size, srcs, name in sorted(parts, key=lambda p: p[0]):
-        if pos < at:
-            sys.exit(f"mkinstall: {path}: entries overlap at {name}")
-        ops.bytes(data[at:pos])
-        best = ops_for_bytes(srcs, data[pos:pos + size])
-        if best is None:
-            sys.exit(f"mkinstall: {path}:{name}: not made from its retail file")
-        ops.extend(best)
-        at = pos + size
-    ops.bytes(data[at:])
-    return ops
-
-
 def main():
     if len(sys.argv) != 3:
         sys.exit(__doc__)
@@ -311,39 +260,7 @@ def main():
         m = re.match(r"(data|THIRD-PARTY) nolf-eu-goty:(\S+).*\t(.+)$", line.rstrip("\n"))
         if m:
             wanted[m.group(3)] = [retail[m.group(2).lower()]]
-    for rel in list(wanted):
-        if os.path.isfile(os.path.join(game, rel + ".retail")):
-            wanted[rel + ".retail"] = wanted[rel]
-    # The modern build's edits of the discs' data, MODERN-DATA.txt's list
-    # (ext/tools/moddata.py), are the entries of nolfsrcdisc.rez: each made
-    # from the retail file its recipe edits, or names (.from).
-    archives = {}                         # game path -> [(pos, size, [Source], name)]
-    made = {}                             # path in nolfsrcdisc.rez (lower) -> [Source]
-    listing = os.path.join(game, "MODERN-DATA.txt")
-    for rel in open(listing).read().split() if os.path.isfile(listing) else []:
-        if rel.startswith("gamedir:"):
-            continue                      # a MANIFEST row already
-        frm = os.path.join(RECIPES, rel + ".from")
-        if os.path.isfile(frm):
-            rez, path = open(frm).read().split()
-            made[rel.lower()] = [entries[rez.lower()][path.lower()]]
-        else:
-            made[rel.lower()] = [e[rel.lower()] for e in entries.values()
-                                 if rel.lower() in e]
-    disc_rez = os.path.join(game, "nolfsrcdisc.rez")
-    if os.path.isfile(disc_rez):
-        parts = []
-        for name, pos, size in Rez(disc_rez).walk():
-            if name.lower() not in made:
-                sys.exit(f"mkinstall: nolfsrcdisc.rez:{name}: not in MODERN-DATA.txt")
-            if not made[name.lower()]:
-                sys.exit(f"mkinstall: nolfsrcdisc.rez:{name}: no retail file to make it from")
-            parts.append((pos, size, made[name.lower()], name))
-        archives["nolfsrcdisc.rez"] = parts
-        wanted["nolfsrcdisc.rez"] = None
     for rel, srcs in wanted.items():
-        if srcs is None:
-            continue                      # an archive of ours: `archives`
         if not srcs:
             sys.exit(f"mkinstall: {rel}: no retail file to make it from")
         if re.search(r"[\s\"'`$\\%!]", rel):
@@ -351,10 +268,20 @@ def main():
 
     # autoexec.cfg is the shipped defaults.cfg (build/package.sh); the
     # scripts write it only if there is none, as the engine rewrites it.
+    # The modern build's defaults.cfg is ours, in the archive: its
+    # autoexec.cfg is then our bytes, not the discs'.
     records, literal, sums = [], 0, []
+    if "defaults.cfg" not in wanted:
+        cfg = open(os.path.join(game, "defaults.cfg"), "rb").read()
+        ops = Ops()
+        ops.bytes(cfg)
+        literal += ops.literal
+        records.append(f"F autoexec.cfg {len(cfg)} {hashlib.sha256(cfg).hexdigest()} once")
+        records.extend(ops.lines())
+        records.append("E")
     for rel in sorted(wanted, key=str.lower):
         path = os.path.join(game, rel)
-        ops = ops_archive(archives[rel], path) if rel in archives else ops_for(wanted[rel], path)
+        ops = ops_for(wanted[rel], path)
         if ops is None:
             sys.exit(f"mkinstall: {rel}: not made from its retail file")
         literal += ops.literal

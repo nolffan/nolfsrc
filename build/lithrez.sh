@@ -2,9 +2,8 @@
 # lithrez, the command line tool for LithTech .rez archives, built from the
 # lithtools submodule (ext/lithtools/tools/lithrez; C++17, CMake) into
 # out/lithrez/lithrez, without its Qt GUI and tests: build/all.sh packs our
-# game DLLs and assets/ into the game directory's nolfsrc.rez with it (and
-# the modern build's data edits into nolfsrcdisc.rez). Built again only when
-# its sources are newer than the binary.
+# game DLLs and assets/modern/rez/ into the game directory's nolfsrc.rez
+# with it. Built again only when its sources are newer than the binary.
 #
 #   build/lithrez.sh
 set -e

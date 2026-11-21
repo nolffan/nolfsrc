@@ -60,7 +60,7 @@ TOOLCHAIN_FILES = ext/toolchains/msvc-6.00-9782/VC98/Bin/CL.EXE \
 	ext/toolchains/msvc-6.00-8447/BIN/cl.exe \
 	ext/toolchains/icl-4.0/BIN/icl.exe
 
-.PHONY: all game debug modern modern-debug image retail ci progress-ci check-nodiscs check-tools check-lithtools check-ext check-toolchain test test-modern test-compare test-renderers progress progress-update shell clean distclean help
+.PHONY: all game debug modern modern-debug image retail ci progress-ci check-nodiscs check-tools check-lithtools check-ext check-toolchain modern-data modern-data-check test test-modern test-compare test-renderers progress progress-update shell clean distclean help
 
 all: game
 
@@ -70,6 +70,10 @@ help:
 	@echo "make modern     the game with NOLFSRC_MODERN (the retail bugs fixed), in out/nolf-modern-release/"
 	@echo "make modern-debug  both, in out/nolf-modern-debug/"
 	@echo "                (none of these is ever scored; build/variant.sh)"
+	@echo "make modern-data  apply the src/modern/data/ recipes to the retail game and write the"
+	@echo "                results into assets/modern/ (build/moderndata.py write)"
+	@echo "make modern-data-check  check that assets/modern/ is what the recipes make"
+	@echo "                (make modern and make progress also do this)"
 	@echo "make test       scripted playtest of out/nolf-legacy-release/ ($(TEST_LEVELS)), under Xvfb"
 	@echo "make test-modern  the same of out/nolf-modern-release/"
 	@echo "make test-compare both, then out/play/compare-test-<level>-test-modern-<level>.jpg:"
@@ -107,6 +111,15 @@ debug: check-nodiscs check-toolchain retail
 # (build/ext.sh)
 modern modern-debug: check-nodiscs check-toolchain check-lithtools check-ext retail
 	$(DOCKER_RUN) bash build/variant.sh $@
+
+# The modern build's changed retail files, assets/modern/: written again from
+# the src/modern/data/ recipes and the retail game, or checked against them
+# (build/moderndata.py)
+modern-data: check-tools retail
+	$(DOCKER_RUN) python3 build/moderndata.py write
+
+modern-data-check: check-tools retail
+	$(DOCKER_RUN) python3 build/moderndata.py check
 
 # Only the legacy release build can be built without the retail game.
 check-nodiscs:

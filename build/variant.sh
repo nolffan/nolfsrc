@@ -24,10 +24,10 @@
 #   modern   NOLFSRC_MODERN: the retail bugs fixed (RETAIL_BUGS.md) and new
 #            features (MODERN.md). Compile + /D NOLFSRC_MODERN, resource
 #            scripts + /d NOLFSRC_MODERN, nothing else; and our own data
-#            files of assets/modern/rez/ go in nolfsrc.rez with the game
-#            DLLs, and the game-data edits in src/modern/data/ are applied
-#            to the data from the discs (ext/tools/moddata.py) into
-#            nolfsrcdisc.rez (build/all.sh, step 4). And open-source
+#            files of assets/modern/rez/ (with the changed retail files
+#            that the src/modern/data/ recipes make, build/moderndata.py)
+#            go in nolfsrc.rez with the game DLLs (build/all.sh, step 4),
+#            and assets/modern/gamedir/ into the game directory. And open-source
 #            middleware instead of RAD's (NOLF_MIDDLEWARE=open, build/ext.sh):
 #            OpenMiles for Miles, our FFmpeg-based player for Bink, built
 #            from the ext/ submodules into out/ext/; the movies play.
