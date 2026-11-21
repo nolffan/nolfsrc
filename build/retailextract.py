@@ -205,8 +205,10 @@ REFERENCE_GAME = [("CSHELL.dll", "CShell.dll"), ("OBJECT.lto", "Object.lto"),
 # is the one the GOTY install runs): (archive, entry, reference name).
 REFERENCE_REZ = [("NOLF2.REZ", "SRES.dll", "sres.dll")]
 
-# Configs the build writes itself rather than copying (see build/all.sh).
-NOT_COPIED = {"autoexec.cfg"}
+# Configs the build writes itself rather than copying (see build/all.sh):
+# autoexec.cfg, and startup.txt (the dedicated server's rez stack, with ours
+# last).
+NOT_COPIED = {"autoexec.cfg", "startup.txt"}
 
 # The name of the install (build/retail.sh), in the manifest's rows.
 RETAIL_RELEASE = "nolf-eu-goty"

@@ -158,19 +158,23 @@ mkdir -p "$OUT/Save"
 # writes it (the launcher rewrites it; build/playtest.sh uses it),
 # build/nolfcmds.sh.
 bash build/nolfcmds.sh "${NOLF_MIDDLEWARE:-retail}" $MODERN > "$OUT/nolfcmds.txt"
-# startup.txt: the rez stack NolfServ.exe, the dedicated server, loads (the
-# retail one's names, Rez0-Rez8, then ours last, as nolfcmds.txt has them
+# startup.txt: the rez stack NolfServ.exe, the dedicated server, loads
+# (ServerDlg.cpp, AddResources: Rez0, Rez1, ... to the first one missing).
+# Ours, written whole: the retail file's nine names, Rez0-Rez8 (with the
+# names the GOTY install has no archive of, as the retail file has them),
+# then ours last, as nolfcmds.txt has them
 # for the engine: custom/, with our game DLLs; in the modern build
-# nolfsrc.rez). `resources` copies the retail file
-# again whenever this one differs in size, so the lines are added afresh
-# each time.
-if [ -f "$OUT/startup.txt" ] && ! grep -qi '^Rez9 *=' "$OUT/startup.txt"; then
-    if [ -n "$MODERN" ]; then
-        printf 'Rez9 = "nolfsrc.rez"\r\n' >> "$OUT/startup.txt"
-    else
-        printf 'Rez9 = "custom"\r\n' >> "$OUT/startup.txt"
-    fi
-fi
+# nolfsrc.rez.
+if [ -n "$MODERN" ]; then OURS=nolfsrc.rez; else OURS=custom; fi
+n=0
+{ printf '[Rez]\r\n'
+  for r in nolf nolf.rez nolf2.rez nolfdll.rez nolfl.rez nolfu003.rez nolfc001.rez \
+           nolfc002.rez nolfgoty.rez "$OURS"; do
+      printf 'Rez%d = "%s"\r\n' $n "$r"
+      n=$((n + 1))
+  done; } > "$OUT/startup.txt"
+sed -i '/\tstartup\.txt$/d' "$OUT/MANIFEST.txt"
+printf 'ours build/all.sh\tstartup.txt\n' >> "$OUT/MANIFEST.txt"
 # linux-run.sh: start the game with the host's Wine, through our NOLF.exe;
 # linux-server.sh: a dedicated server, NolfServ.exe (build/game-scripts/;
 # usage in their headers).
