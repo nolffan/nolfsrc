@@ -1,0 +1,123 @@
+## Where the retail game's bytes go in a game directory, beyond the files
+## that the build copies whole (build/retail-files.txt lists those). This
+## list holds no game data: only names, offsets, sizes, shapes and SHA-256
+## values. build/retailextract.py writes it from the installed retail game
+## (`make retail-ranges`), and checks it on every build with the retail
+## game. A build without the retail game (NODISCS=1) and the install
+## scripts of a public archive (build/mkinstall.py) use it in place of the
+## retail game.
+##
+## PE <path>
+##   A file of the install that is a PE image (the build does not copy it).
+## ZERO <archive> <offset> <size> <entry>
+##   A retail game DLL in one of the four archives: the build writes zeros
+##   over its data in the game directory's copy. The offset is in the archive.
+## ZSUM <archive> <size> <SHA-256>
+##   The game directory's copy of that archive, with those zeros.
+## ART <path> <size> <SHA-256> <shape>
+##   A file of art or text that the build takes out of a retail binary and
+##   compiles into ours. A placeholder (NODISCS=1) has the same shape: the
+##   same size, and the same images or strings of the same sizes. So the
+##   binaries compiled from it have the same layout.
+## RES <retail binary> <type> <name> <offset> <size> <SHA-256>
+##   The data of one resource of a retail binary that is art, and where it
+##   is: the offset is in the file of the install (for a binary inside an
+##   archive, <archive>:<entry>, in the archive). The binaries we compile
+##   with that art have the same resource, with the same size.
+## The fields are separated by one TAB.
+PE	Autopan.flt
+PE	Bandpass.flt
+PE	binkw32.dll
+PE	Capture.flt
+PE	Chorus.flt
+PE	Compress.flt
+PE	d3d.ren
+PE	EReg/NAVBrowser.exe
+PE	Flange.flt
+PE	Highpass.flt
+PE	Laginter.flt
+PE	lithtech.exe
+PE	Lowpass.flt
+PE	ltmsg.dll
+PE	Mdelay.flt
+PE	MP3DEC.AS6
+PE	MP3DEC.ASI
+PE	mss32.dll
+PE	MSSA3D.M3D
+PE	Mssa3d2.m3d
+PE	MSSDOLBY.M3D
+PE	MSSDS3DH.M3D
+PE	MSSDS3DS.M3D
+PE	Mssdx7sh.m3d
+PE	Mssdx7sl.m3d
+PE	Mssdx7sn.m3d
+PE	MSSEAX.M3D
+PE	Msseax2.m3d
+PE	MSSFAST.M3D
+PE	MSSRSX.M3D
+PE	NOLF.exe
+PE	NolfServ.exe
+PE	NOLFTools001.exe
+PE	Parmeq.flt
+PE	Phaser.flt
+PE	Reson.flt
+PE	Reverb1.flt
+PE	Reverb2.flt
+PE	Reverb3.flt
+PE	Ringmod.flt
+PE	Sdelay.flt
+PE	server.dll
+PE	Shelfeq.flt
+ZSUM	NOLF.REZ	618254258	701a40318017ad13bbfae9feb60089351c81ae2dc4c579bd5f64ebb2c5a48ee7
+ZERO	NOLF2.REZ	3834024	155702	SRES.dll
+ZERO	NOLF2.REZ	3092648	741376	CRES.dll
+ZERO	NOLF2.REZ	168	1224704	CSHELL.dll
+ZERO	NOLF2.REZ	1224872	1867776	OBJECT.lto
+ZSUM	NOLF2.REZ	300703727	8f7b4c27eca2507ccc873d76ee8f55a5c6b6c3fcc8244ab23498de753f283d99
+ZERO	nolfu003.rez	14980985	1310720	CSHELL.dll
+ZERO	nolfu003.rez	16291705	1900544	OBJECT.lto
+ZSUM	nolfu003.rez	18194503	c9516ddbce94f15ac55309d8b81a26549b3724a886856bc40b3a759e2b1175b5
+ZERO	NOLFGOTY.REZ	634767	774144	CRES.dll
+ZERO	NOLFGOTY.REZ	1408911	1314816	CSHELL.dll
+ZERO	NOLFGOTY.REZ	11527558	1921024	OBJECT.lto
+ZSUM	NOLFGOTY.REZ	170190784	4129c3a70c5ed8b5a6fee1d28940fe25347c0284ab9d0f9a0da460aa7adcf35d
+ART	src/engine/launcher/res/game1.bmp	77878	9fbc6ff311721a690820249bc4fdcdeee4c10af4ec219359e0d2e824a7ac7d63	bmp 320,240,8,256
+ART	src/engine/launcher/res/game1.pal	768	7d27444e47ef7f6c55cc6fbc0dd0004fd7d1efa2652c1c98e9c30e55ff418c7f	raw
+ART	src/engine/launcher/res/game1.wav	309558	c01e381b6941e0ea086a632c2b3031ef603e7de7cf4a99e8b6a85cf4dbddc376	wave
+ART	src/engine/launcher/res/nolf.ico	2998	9943e2d06e3ba59df93cac1ee9e5e5d0a9b4e43fd8c912edc32476e335bf72af	ico 32,32,16,0,1,4,744,4 32,32,0,0,1,8,2216,8
+ART	src/engine/launcher/res/webclick.cur	326	285a630d70486e70d9d381557364187783dc557ed612d4092790fb3a22d3cbe7	cur 32,32,0,0,5,4,304,1
+ART	src/engine/launcher/res/webhand.cur	326	f61c7cdae9fe0122069dce1bf2702648b16876756aaaab4f4158587e04c29340	cur 32,32,0,0,5,4,304,1
+RES	NOLF.exe	14	ICON	567960	34	e3a01fe1922074f8dff9e049cd64133d77d1d6a9f008da9ba06baf49f8d1a679
+RES	NOLF.exe	3	3	565000	744	9ea1a3f28c24fbbe9bddfb50db49f1ae6583e2e346cc446b6c457211d0f7f876
+RES	NOLF.exe	3	4	565744	2216	c46dc9009fcb1116429c446230d4e585a7e6296c329a1c783dc1c26c8f1dd378
+RES	NOLF.exe	12	WEBHAND	564640	20	c53efa8085835ba129c1909beaff8a67b45f50837707f22dfff0f24d8cd26710
+RES	NOLF.exe	1	1	564328	308	6ff4bbcad4d5f6107c40fbec21ddb59dac49ed31f372a163e81165ab8681619e
+RES	NOLF.exe	12	WEBCLICK	564976	20	b07e022f8ef0a8e5fd3f56986b2e5bf06df07054e9ea9177996b0a6c27d74d7c
+RES	NOLF.exe	1	2	564664	308	fac1440058c29600c9e087286f2a8f47c23eff1daa181fc5e49020c7183976aa
+RES	NOLF.exe	2	GAME1	169408	77864	88cba59e422a8b4792add9005328effd022f3c2c68b53e3b6ea46bad909f66d1
+RES	NOLF.exe	PALETTE	GAME1	247272	768	7d27444e47ef7f6c55cc6fbc0dd0004fd7d1efa2652c1c98e9c30e55ff418c7f
+RES	NOLF.exe	WAVE	GAME1	254768	309558	c01e381b6941e0ea086a632c2b3031ef603e7de7cf4a99e8b6a85cf4dbddc376
+ART	src/engine/nolfserv/res/nolfserv.ico	2998	9943e2d06e3ba59df93cac1ee9e5e5d0a9b4e43fd8c912edc32476e335bf72af	ico 32,32,16,0,1,4,744,4 32,32,0,0,1,8,2216,8
+ART	src/engine/nolfserv/res/selected.ico	318	09d425b496393d0cf2aaa2d02d6246b7622de0a1b5c6d1f228cf4a36e5cdfc7a	ico 16,16,16,0,1,4,296,4
+ART	src/engine/nolfserv/res/wizard.bmp	28080	1c9fa4eb448d7463a74a63b6ba7d2391207ce7b40b40d01408dc38a5c3165d66	bmp 300,90,8,0
+RES	NolfServ.exe	14	128	373680	34	9f8d3c735f57ec1d0c60b9429f4c64eb1adec6e77084b89d55cd188897e494c2
+RES	NolfServ.exe	3	1	370720	744	9ea1a3f28c24fbbe9bddfb50db49f1ae6583e2e346cc446b6c457211d0f7f876
+RES	NolfServ.exe	3	2	371464	2216	c46dc9009fcb1116429c446230d4e585a7e6296c329a1c783dc1c26c8f1dd378
+RES	NolfServ.exe	14	133	374016	20	7698ef362b288a7e3b96304ca50814b42518cba38598db9dbb36d8b90212d76a
+RES	NolfServ.exe	3	3	373720	296	0d65507c37da935f81e8155d1b6d2d3642b9bf0e003589c9c3fb3858c98519a5
+RES	NolfServ.exe	2	139	381016	28066	7f56a7c1181e7da4144c0b1cf0bb137842db5f063c9c91707b78d0692a70b6c7
+ART	src/engine/lithtech/res/confont.pcx	9608	ae2328da394cc64636c91f9135b09ca6f0bdbc82cdd97abc470e466f407edb60	raw
+ART	src/engine/lithtech/res/lithtech.ico	2998	9943e2d06e3ba59df93cac1ee9e5e5d0a9b4e43fd8c912edc32476e335bf72af	ico 32,32,16,0,1,4,744,4 32,32,0,0,1,8,2216,8
+RES	lithtech.exe	14	128	731128	34	9f8d3c735f57ec1d0c60b9429f4c64eb1adec6e77084b89d55cd188897e494c2
+RES	lithtech.exe	3	1	728168	744	9ea1a3f28c24fbbe9bddfb50db49f1ae6583e2e346cc446b6c457211d0f7f876
+RES	lithtech.exe	3	2	728912	2216	c46dc9009fcb1116429c446230d4e585a7e6296c329a1c783dc1c26c8f1dd378
+RES	lithtech.exe	12345	140	731168	9608	ae2328da394cc64636c91f9135b09ca6f0bdbc82cdd97abc470e466f407edb60
+ART	src/game/ClientRes/goty/credits.txt	5753	5f9722571d18685efd399767efba49be0bf29e28cf8ff453b55c1a4874d51ddf	text
+ART	src/game/ClientRes/goty/goty.rc	5948	9fdbf83f4373f84f0a2554a38d5fc0ca1f6dec65a320d57d0b9244576e76cbd6	strings 30000:19 30001:86 30002:355 30003:20 30004:20 30005:45 30006:46 30007:75 30008:31 30009:27 30010:28 30011:14 30012:27 30013:72 30014:173 30015:53 30016:265 30017:188 30018:178 30019:59 30020:46 30021:54 30022:95 30023:40 30024:15 30025:26 30026:48 30027:45 30028:16 30029:91 30030:86 30031:91 30032:77 30033:9 30034:73 30035:3 30036:75 30037:12 30038:60 30039:17 30040:49 30041:40 30042:5 30043:34 30044:11 30045:24 30046:33 30047:18 30048:68 30049:49 30050:37 30051:18 30052:39 30053:87 30054:30 30055:25 30056:34 30057:32 30060:48 30061:24 30070:25 30071:79 30072:150 30073:40 30074:215 30075:286 30076:27 30077:89 30078:87 30079:46 30080:39 30081:69 30082:29 30083:23 30084:25
+RES	NOLFGOTY.REZ:CRES.dll	6	1876	1387935	2214	dc9d16e97f66b9de12490c5b29175eae5ed2d82f9bfbf0309ae1cce14fe471ed
+RES	NOLFGOTY.REZ:CRES.dll	6	1877	1390151	2718	9664f9b5362b0f8f69306ce514b1b046ecfcfb177277f024c859b34b42f3c6d2
+RES	NOLFGOTY.REZ:CRES.dll	6	1878	1393887	1112	d3a8dcbcd72b6fbc72f097ac3546acfeca37a4d0c3cd31fcd723eaa2a3021c7d
+RES	NOLFGOTY.REZ:CRES.dll	6	1879	1392871	1014	1143f263da3577928f20a81786e8ac901215063b5d9d6d6e69afb5b9432950ea
+RES	NOLFGOTY.REZ:CRES.dll	6	1880	1394999	2120	fc0b8068885bb2103930267531aea9f7795e008879388fff04acbc55c6ed71dd
+RES	NOLFGOTY.REZ:CRES.dll	6	1881	1397119	402	7562ab558c830d83aa1dc740069e9ed45e94f86f5a1ab5f5f094c93902b52a3a
+RES	NOLFGOTY.REZ:CRES.dll	TEXT	CREDITS	691519	5753	5f9722571d18685efd399767efba49be0bf29e28cf8ff453b55c1a4874d51ddf

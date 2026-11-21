@@ -90,6 +90,8 @@ help:
 	@echo "                the retail game: placeholder art, no data), then make progress-ci"
 	@echo "make retail     install the retail game from your two disc images in isos/"
 	@echo "                (once; every build runs it), and check it"
+	@echo "make retail-ranges  write build/retail-ranges.txt from the retail game: where its"
+	@echo "                art and zeroed DLLs are (for NODISCS=1 and the install scripts)"
 	@echo "make shell      a shell in the build container (build/*.sh, ext/tools/ work there)"
 	@echo "make image      (re)build the docker image $(IMAGE)"
 	@echo "make clean      remove out/ and every build output in the source tree"
@@ -148,6 +150,12 @@ ifeq ($(NODISCS),1)
 else
 	@$(DOCKER_RUN) bash -c 'source build/retail.sh && retail_install && retail_verify'
 endif
+
+# build/retail-ranges.txt, written again from the retail game
+# (build/retailextract.py ranges): only needed when what the build takes
+# out of the retail game changes; every build with it checks the list
+retail-ranges: check-tools retail
+	$(DOCKER_RUN) bash -c 'source build/retail.sh && python3 build/retailextract.py ranges write "$$(retail_dir)"'
 
 check-tools:
 	@[ -f ext/tools/progress.py ] || { echo "error: ext/tools/ is empty -- the build's helpers are the ext/tools/ submodule: run git submodule update --init (see ext/tools/README.md)" >&2; exit 1; }
