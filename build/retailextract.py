@@ -26,6 +26,10 @@ the build takes out of the retail binaries, is this file's).
                                                             our CRes.dll is built
                                                             with, out of the retail
                                                             one
+  build/retailextract.py placeholders                       placeholder art and text
+                                                            in place of the four
+                                                            above, for a build
+                                                            without the retail game
   build/retailextract.py reference   <retaildir> <refdir>   the retail engine images
                                                             and game DLLs, for
                                                             scoring only
@@ -121,6 +125,15 @@ data edits, by custom/MODERN-DATA.txt, whose game-directory rows move to
 loads custom/, so they would load. Other files there (a player's) are
 kept. It refuses a directory whose manifest does not name NOLFLauncher.exe
 (the modern build's): a legacy build's game DLLs live in custom/.
+
+`placeholders` is for a build without the retail game (build/all.sh with
+NOLF_NODISCS=1, the CI build): it writes the files of `launcherres`,
+`nolfservres`, `lithtechres` and `goty` with the same names, formats and
+shapes (the same number of images in each icon, the same sizes), but with
+blank pixels, silence and placeholder text. The code of the binaries does
+not change; only those resources do (progress/targets.py names them as
+each target's `art`). Each directory gets a file PLACEHOLDER, which the
+real extraction removes, and which build/progress.sh looks for.
 
 `prune` drops the manifest's rows for files no longer in the directory and
 for our archives and their entries, which build/all.sh writes again.
@@ -493,15 +506,22 @@ def cursor_file(res, group):
     return head + body
 
 
-def write_res(resdir, out, origin):
+def write_res(resdir, out, origin, placeholder=False):
     """Write {file name: bytes} into resdir, leaving files already right
-    untouched (so make sees no change)."""
+    untouched (so make sees no change). A directory of placeholders
+    (`placeholders`) is marked by a file PLACEHOLDER; real ones are not."""
     resdir = Path(resdir)
     resdir.mkdir(parents=True, exist_ok=True)
     for name, data in out.items():
         dest = resdir / name
         if not dest.exists() or dest.read_bytes() != data:
             dest.write_bytes(data)
+    mark = resdir / "PLACEHOLDER"
+    if placeholder:
+        mark.write_text("placeholder art (build/retailextract.py placeholders), "
+                        "not the retail game's\n")
+    elif mark.exists():
+        mark.unlink()
     print(f"== {origin} resources -> {resdir}/ ({', '.join(out)})")
 
 
@@ -609,11 +629,103 @@ def cmd_goty(retaildir, outdir):
     outdir = Path(outdir)
     outdir.mkdir(parents=True, exist_ok=True)
     rc = "\r\n".join(lines).encode("cp1252")
-    for name, data in (("goty.rc", rc), ("credits.txt", credits)):
-        dest = outdir / name
-        if not dest.exists() or dest.read_bytes() != data:
-            dest.write_bytes(data)
-    print(f"== {r.name}:{p} CRES.dll -> {outdir}/goty.rc ({n} strings), credits.txt")
+    write_res(outdir, {"goty.rc": rc, "credits.txt": credits},
+              f"{r.name}:{p} CRES.dll ({n} strings)")
+
+
+# --- placeholders, for a build without the retail game --------------------------
+
+def _dib(w, h, bpp, mask=True):
+    """A blank DIB: BITMAPINFOHEADER, a grey palette, zero pixels (and for
+    an icon or cursor, its AND mask: the height is doubled)."""
+    import struct
+    colors = 1 << bpp if bpp <= 8 else 0
+    row = ((w * bpp + 31) // 32) * 4
+    mrow = ((w + 31) // 32) * 4
+    hh = h * 2 if mask else h
+    pal = b"".join(bytes((i * 255 // max(colors - 1, 1),) * 3 + (0,)) for i in range(colors))
+    body = bytes(row * h) + (bytes(mrow * h) if mask else b"")
+    return struct.pack("<IiiHHIIiiII", 40, w, hh, 1, bpp, 0, len(body), 0, 0, 0, 0) + pal + body
+
+
+def _icon(images, cursor=False):
+    """An .ico (or a .cur, its images (w, h, hotspot x, hotspot y)) of blank
+    images: (w, h, bpp) each."""
+    import struct
+    head = struct.pack("<HHH", 0, 2 if cursor else 1, len(images))
+    body, at = b"", 6 + 16 * len(images)
+    for im in images:
+        if cursor:
+            w, h, hx, hy = im
+            dib = _dib(w, h, 1)
+            head += struct.pack("<BBBBHHII", w, h, 0, 0, hx, hy, len(dib), at + len(body))
+        else:
+            w, h, bpp = im
+            dib = _dib(w, h, bpp)
+            cc = (1 << bpp) if bpp < 8 else 0
+            head += struct.pack("<BBBBHHII", w, h, cc, 0, 1, bpp, len(dib), at + len(body))
+        body += dib
+    return head + body
+
+
+def _bmp(w, h, bpp=8):
+    return bmp_file(_dib(w, h, bpp, mask=False))
+
+
+def _wav(seconds=0.1, rate=22050):
+    import struct
+    data = bytes(int(rate * seconds) * 2)
+    return b"RIFF" + struct.pack("<I", 36 + len(data)) + b"WAVEfmt " + \
+        struct.pack("<IHHIIHH", 16, 1, 1, rate, rate * 2, 2, 16) + b"data" + \
+        struct.pack("<I", len(data)) + data
+
+
+def _pcx(w, h):
+    """An 8-bit RLE PCX of zeros, with its 256-colour palette."""
+    import struct
+    head = struct.pack("<BBBBHHHHHH", 10, 5, 1, 8, 0, 0, w - 1, h - 1, 72, 72)
+    head += bytes(48) + struct.pack("<BBHHHH", 0, 1, w, 1, 0, 0)
+    head += bytes(128 - len(head))
+    row = b""
+    left = w
+    while left:
+        n = min(left, 63)
+        row += bytes((0xC0 | n, 0))
+        left -= n
+    return head + row * h + b"\x0c" + bytes(768)
+
+
+def cmd_placeholders():
+    """The art and text the four extractions write, as placeholders: the
+    same files, formats and shapes as the retail ones, with no retail
+    content (build/all.sh without the retail game)."""
+    write_res("src/engine/launcher/res", {
+        "game1.bmp": _bmp(320, 240),
+        "game1.pal": bytes(768),
+        "game1.wav": _wav(),
+        "nolf.ico": _icon([(32, 32, 4), (32, 32, 8)]),
+        "webhand.cur": _icon([(32, 32, 5, 4)], cursor=True),
+        "webclick.cur": _icon([(32, 32, 5, 4)], cursor=True),
+    }, "placeholder launcher", placeholder=True)
+    write_res("src/engine/nolfserv/res", {
+        "nolfserv.ico": _icon([(32, 32, 4), (32, 32, 8)]),
+        "selected.ico": _icon([(16, 16, 4)]),
+        "wizard.bmp": _bmp(300, 90),
+    }, "placeholder dedicated server", placeholder=True)
+    write_res("src/engine/lithtech/res", {
+        "lithtech.ico": _icon([(32, 32, 4), (32, 32, 8)]),
+        "confont.pcx": _pcx(96, 160),
+    }, "placeholder engine", placeholder=True)
+    lines = ["// Placeholder text (build/retailextract.py placeholders): the",
+             "// retail Game of the Year strings are not here.", "",
+             "STRINGTABLE DISCARDABLE", "BEGIN"]
+    for blk in GOTY_STRING_BLOCKS:
+        lines.append('    %d "placeholder"' % ((blk - 1) * 16))
+    lines += ["END", ""]
+    write_res("src/game/ClientRes/goty", {
+        "goty.rc": "\r\n".join(lines).encode("cp1252"),
+        "credits.txt": b"Placeholder credits: built without the retail game.\r\n",
+    }, "placeholder Game of the Year text", placeholder=True)
 
 
 def cmd_reference(retaildir, refdir):
@@ -732,7 +844,7 @@ def cmd_audit(gamedir):
 
 
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 3 and sys.argv[1:] != ["placeholders"]:
         sys.exit(__doc__)
     cmd = sys.argv[1]
     if cmd == "resources" and len(sys.argv) == 4:
@@ -749,6 +861,8 @@ def main():
         cmd_lithtechres(sys.argv[2], sys.argv[3])
     elif cmd == "goty" and len(sys.argv) == 4:
         cmd_goty(sys.argv[2], sys.argv[3])
+    elif cmd == "placeholders" and len(sys.argv) == 2:
+        cmd_placeholders()
     elif cmd == "reference" and len(sys.argv) == 4:
         cmd_reference(sys.argv[2], sys.argv[3])
     elif cmd == "oldcustom" and len(sys.argv) == 3:

@@ -10,10 +10,17 @@
 #   make test               (then: play it -- build/playtest.sh on out/nolf-legacy-release/)
 #
 # Needs: the toolchain (ext/toolchains/, see ext/toolchains/README.md), Wine (the build
-# container has it), and the retail Game of the Year Edition (Europe) as the
-# ext/rez/ submodule installs it from its two disc images (ext/rez/games/nolf-eu-goty/,
+# container has it), and the retail Game of the Year Edition (Europe) as
+# build/discs.py installs it from your two disc images (out/retail/nolf-eu-goty/,
 # build/retail.sh). It only reads that directory: no retail game binary is
 # run, linked or copied into the game, apart from the middleware of step 2.
+#
+# NOLF_NODISCS=1 builds without the retail game (the CI build, `make
+# NODISCS=1`): the code of every binary as always, but steps 1, 2 and 6 do
+# not run (no game data, no Miles or Bink, no archives), and steps 2b and 2c
+# write placeholder art and text (build/retailextract.py placeholders), so
+# only those resources differ. The game directory, out/nolf-legacy-nodiscs/,
+# does not play. Only the legacy release build can be built so.
 #
 # The steps, in order:
 #   1. resources          game data from the retail game: the four .rez archives
@@ -93,8 +100,19 @@ export WINEDEBUG=-all
 cd "$REPO"
 source build/retail.sh
 OUT="${NOLF_GAME_OUT:-out/nolf-legacy-release}"
-RETAIL="$(retail_dir)"
-retail_verify
+NODISCS=
+if [ "${NOLF_NODISCS:-0}" = 1 ]; then
+    case "${NOLFSRC_CFLAGS:-}" in
+        *NOLFSRC_*) echo "error: NOLF_NODISCS=1 builds only the legacy release game" >&2; exit 1 ;;
+    esac
+    NODISCS=1
+    RETAIL="(no retail game: NOLF_NODISCS=1)"
+    # not the game directory of a real build: this one does not play
+    OUT="${NOLF_GAME_OUT:-out/nolf-legacy-nodiscs}"
+else
+    RETAIL="$(retail_dir)"
+    retail_verify
+fi
 T0=$(date +%s)
 step() { echo; echo "######## $* ($(( $(date +%s) - T0 ))s)"; }
 need() {  # need <file> <what> [log]: a build output must exist
@@ -104,11 +122,16 @@ need() {  # need <file> <what> [log]: a build output must exist
     exit 1
 }
 
-step "1. resources: game data from $RETAIL -> $OUT"
-python3 build/retailextract.py resources "$RETAIL" "$OUT"
+if [ -n "$NODISCS" ]; then
+    step "1. resources: none, without the retail game"
+    mkdir -p "$OUT"
+else
+    step "1. resources: game data from $RETAIL -> $OUT"
+    python3 build/retailextract.py resources "$RETAIL" "$OUT"
+fi
 # autoexec.cfg starts as the shipped defaults (the engine rewrites it on
 # exit); a rebuild keeps the player's.
-[ -f "$OUT/autoexec.cfg" ] || cp "$OUT/defaults.cfg" "$OUT/autoexec.cfg"
+[ -f "$OUT/autoexec.cfg" ] || [ -n "$NODISCS" ] || cp "$OUT/defaults.cfg" "$OUT/autoexec.cfg"
 mkdir -p "$OUT/Save"
 # The modern build (build/variant.sh): our archives (step 4) and its data
 # edits (step 4b); every other build keeps the game DLLs in custom/
@@ -125,7 +148,7 @@ bash build/nolfcmds.sh "${NOLF_MIDDLEWARE:-retail}" $MODERN > "$OUT/nolfcmds.txt
 # nolfsrcdisc.rez and nolfsrc.rez). `resources` copies the retail file
 # again whenever this one differs in size, so the lines are added afresh
 # each time.
-if ! grep -qi '^Rez9 *=' "$OUT/startup.txt"; then
+if [ -f "$OUT/startup.txt" ] && ! grep -qi '^Rez9 *=' "$OUT/startup.txt"; then
     if [ -n "$MODERN" ]; then
         printf 'Rez9 = "nolfsrcdisc.rez"\r\nRez10 = "nolfsrc.rez"\r\n' >> "$OUT/startup.txt"
     else
@@ -141,7 +164,9 @@ rm -f "$OUT/linux-run-launcher.sh"           # linux-run.sh's name before it rep
 cp build/game-scripts/linux-run.sh build/game-scripts/linux-server.sh "$OUT/"
 chmod +x "$OUT/linux-run.sh" "$OUT/linux-server.sh"
 
-if [ "${NOLF_MIDDLEWARE:-retail}" = open ]; then
+if [ -n "$NODISCS" ]; then
+    step "2. third-party runtime: none, without the retail game"
+elif [ "${NOLF_MIDDLEWARE:-retail}" = open ]; then
     step "2. open runtime: OpenMiles, our Bink player on FFmpeg and our renderers (build/ext.sh)"
     bash build/ext.sh
     python3 build/retailextract.py openruntime "${NOLF_EXT_OUT:-out/ext}" "$OUT"
@@ -150,13 +175,18 @@ else
     python3 build/retailextract.py thirdparty "$RETAIL" "$OUT"
 fi
 
-step "2b. launcher, server and engine art: resources of the retail NOLF.exe, NolfServ.exe and lithtech.exe in $RETAIL -> src/engine/{launcher,nolfserv,lithtech}/res/"
-python3 build/retailextract.py launcherres "$RETAIL" src/engine/launcher/res
-python3 build/retailextract.py nolfservres "$RETAIL" src/engine/nolfserv/res
-python3 build/retailextract.py lithtechres "$RETAIL" src/engine/lithtech/res
+if [ -n "$NODISCS" ]; then
+    step "2b, 2c. placeholder art and text -> src/engine/{launcher,nolfserv,lithtech}/res/, src/game/ClientRes/goty/"
+    python3 build/retailextract.py placeholders
+else
+    step "2b. launcher, server and engine art: resources of the retail NOLF.exe, NolfServ.exe and lithtech.exe in $RETAIL -> src/engine/{launcher,nolfserv,lithtech}/res/"
+    python3 build/retailextract.py launcherres "$RETAIL" src/engine/launcher/res
+    python3 build/retailextract.py nolfservres "$RETAIL" src/engine/nolfserv/res
+    python3 build/retailextract.py lithtechres "$RETAIL" src/engine/lithtech/res
 
-step "2c. Game of the Year text: the retail CRES.dll in $RETAIL -> src/game/ClientRes/goty/"
-python3 build/retailextract.py goty "$RETAIL" src/game/ClientRes/goty
+    step "2c. Game of the Year text: the retail CRES.dll in $RETAIL -> src/game/ClientRes/goty/"
+    python3 build/retailextract.py goty "$RETAIL" src/game/ClientRes/goty
+fi
 
 step "3. compile: libraries, game DLLs, engine (build/compile.sh: build/build.mk, ${NOLFSRC_JOBS:-$(nproc)} jobs)"
 GAME_CONFIG=final bash build/compile.sh all
@@ -283,9 +313,15 @@ python3 build/retailextract.py audit "$OUT"
 
 # (NOLF_PACKAGE=0 skips it: build/variant.sh packages its game directory
 # itself, once the variant's data and symbols are in)
-if [ "${NOLF_PACKAGE:-1}" = 1 ]; then
+if [ -n "$NODISCS" ]; then
+    step "6. package: none, without the retail game"
+elif [ "${NOLF_PACKAGE:-1}" = 1 ]; then
     step "6. package: $OUT -> $OUT-private.tar.gz, -public.tar.gz"
     bash "$REPO/build/package.sh" "$OUT"
 fi
 
-step "done: $OUT ($(( $(date +%s) - T0 ))s) -- play it with $OUT/linux-run.sh, or test it with make test"
+if [ -n "$NODISCS" ]; then
+    step "done: $OUT ($(( $(date +%s) - T0 ))s) -- built without the retail game: it does not play; check it with make progress-ci"
+else
+    step "done: $OUT ($(( $(date +%s) - T0 ))s) -- play it with $OUT/linux-run.sh, or test it with make test"
+fi
