@@ -1,0 +1,72 @@
+# The legacy release build, without the retail game, and the byte check
+# without the retail binaries (`make ci`).
+#
+# The runner has no disc images, so:
+#
+#   * The build (`make NODISCS=1`) compiles every binary from this
+#     repository as always. It takes no game data and no Miles or Bink, and
+#     it compiles placeholder art in place of the retail art
+#     (build/retailextract.py placeholders). The code is the same.
+#   * The check (`make progress-ci`, build/progress.sh ci) compares the
+#     build with the hashes in progress/hashes/, which `make
+#     progress-update` records locally from the full check against the
+#     retail binaries. It fails if a function, a resource, a float constant,
+#     a string, a vtable or a call recorded there changed. It finds no new
+#     match: only a local `make progress-update` does.
+#
+# The public archives, the modern build, the releases and the nightly need
+# the retail game. They are built locally (docs/BUILDING.md, "Variant
+# builds"), not here.
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: nolf-legacy-release (no retail game)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      IMAGE_BUILD: 0           # the step "Build image" loads it, cached
+    steps:
+      - uses: actions/checkout@v4
+
+      # .gitmodules names the submodules by SSH; all of them are public, so
+      # fetch them over HTTPS instead, at the commit this one records. The
+      # legacy build needs only ext/tools (the build's scripts) and
+      # ext/toolchains (the compilers).
+      - name: Submodules
+        run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git submodule sync
+          git submodule update --init --depth 1 ext/tools ext/toolchains
+
+      # Loaded as nolfsrc-build, which the Makefile then uses (IMAGE_BUILD=0).
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: docker
+          tags: nolfsrc-build
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build nolf-legacy-release without the retail game
+        run: make NODISCS=1
+
+      # Fails if a function recorded in progress/identical.txt is no longer
+      # byte-identical, by its hash in progress/hashes/
+      - name: Byte regressions (make progress-ci)
+        run: make progress-ci

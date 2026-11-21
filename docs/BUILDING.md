@@ -213,21 +213,41 @@ what changed takes to rebuild. Each is packaged like the release game, as
 `out/<directory>-private.tar.gz` and `-public.tar.gz`
 (`out/nolf-modern-release-private.tar.gz`, ...); `NOLF_ARCHIVES=public
 make ...` writes only the public one, and fails rather than skip it without
-the disc images. Play them as the release game, from the directory the
+the installed retail game. Play them as the release game, from the directory the
 table gives: `out/nolf-modern-release/linux-run.sh` (starts the game directly),
 or open `NOLFLauncher.exe` for the modern launcher. Modern `NOLF.exe` uses
 the same settings and game commands as the launcher and stays running until
 `lithtech.exe` exits. For a scripted test, use `build/playtest.sh out/nolf-modern-release 'Worlds\T01S01'`.
 
-The GitHub Actions workflow `.github/workflows/public-archives.yml` builds
-the release game and all three variants that way on every push to `master`
-and every pull request, each in a job of its own and all four at the same
-time, runs `make progress` on the release build (a
-function recorded as byte-identical that stops matching fails the run), and
-keeps the four public archives as the run's artifacts, each the `.tar.gz`
-itself rather than a zip around it. It caches the two redump zips (keyed on
-`ext/rez/isos/SHA256SUMS`) and the docker image's layers, so only the first run
-downloads from archive.org.
+The variants, the public archives and the releases need the retail game, so
+you build them locally. The CI does not have the retail game: see "The CI
+build" below.
+
+### The CI build: without the retail game
+
+The GitHub Actions workflow `.github/workflows/ci.yml` runs on every push to
+`master` and every pull request. It has no disc images, so it does `make
+ci`:
+
+```sh
+make NODISCS=1    # the legacy release build without the retail game
+make progress-ci  # the byte check without the retail binaries
+```
+
+`make NODISCS=1` (`build/all.sh` with `NOLF_NODISCS=1`) compiles every
+binary as `make` does. It does not take the game data or Miles and Bink
+(steps 1 and 2), and it makes no archives (step 6). In steps 2b and 2c it
+writes placeholder art and text (`build/retailextract.py placeholders`):
+files with the same names, formats, sizes and image counts as the retail
+art, but blank. Thus the code of each binary is the same as in a full
+build; only those resources differ. The game directory is
+`out/nolf-legacy-nodiscs/`, and it does not play. A later `make` with your
+disc images writes the retail art again and rebuilds what changed. Only the
+legacy release build can be built without the retail game.
+
+`make progress-ci` is described in `progress/README.md`, "The check without
+the retail game". You can run both on your own machine (`make ci`), also
+when you have the disc images.
 
 ### The modern build: `NOLFSRC_MODERN`
 
