@@ -41,7 +41,9 @@
 #           fails on any that differs; and ext/tools/vtabcheck.py --targets: our
 #           vtables slot by slot, and the callees and globals our uniquely
 #           placed functions reach, against retail's; fails on a
-#           contradiction progress/vtab-known.txt does not list
+#           contradiction progress/vtab-known.txt does not list; and
+#           build/moderndata.py check: assets/modern/ against the
+#           src/modern/data/ recipes
 #
 # Before anything is scored, the cached retail images in out/reference/ are
 # checked against progress/reference.sha256 (extracted again once if they
@@ -137,6 +139,11 @@ python3 ext/tools/vtabcheck.py --targets $H || rc=1
 echo
 python3 ext/tools/evidence.py || rc=1
 [ "$mode" = update ] && cp out/progress/evidence.json progress/evidence.json
+# ... and the modern build's changed retail files in assets/modern/ against
+# what the src/modern/data/ recipes make (build/moderndata.py)
+echo
+echo "modern data (build/moderndata.py check):"
+python3 build/moderndata.py check || rc=1
 # ... and what the checks compared against, for `ci`, once all of them pass
 if [ "$mode" = update ]; then
     if [ $rc = 0 ]; then
