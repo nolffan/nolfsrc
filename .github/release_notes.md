@@ -14,7 +14,7 @@ Supported images (the redump dumps of the two discs):
 
 ## Install
 
-**This is the whole game, not a patch.** Unpack it into a new, empty directory, not over an earlier release or another installation: the installer checks the directory against `SHA256SUMS` and stops if it holds anything else. Copy your old `Save` folder across to keep your saved games.
+**This is the whole game, not a patch.** For a first installation, unpack it into a new, empty directory and run the installer. **To upgrade, unpack it over your installed game** (the same build, legacy or modern): put the files of its directory into your game's directory, e.g. `tar xzf <archive> --strip-components=1 -C <game directory>`. Do not run the installer again: the files from your discs, your saved games and your settings stay.
 
 The full guide, is [here](https://github.com/{{REPO}}/blob/{{TAG}}/docs/INSTALL.md).
 

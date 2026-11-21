@@ -39,12 +39,27 @@ the retail icons, the launcher's splash bitmap and sound, the dedicated
 server's wizard bitmap and the Game of the Year text, as the retail
 programs do.
 
-**Each release is the whole game, not a patch.** Unpack it into a new, empty
-directory, never over an earlier release or another installation of the
-game. The installer checks this first and stops if the directory holds
-anything the release does not: it lists every file of the release, and every
-file the installer writes, in `SHA256SUMS`. To keep your saved games, copy
-the old directory's `Save` folder into the new one.
+**Each release is the whole game, not a patch.** For a first installation,
+unpack it into a new, empty directory, then run the installer. The installer
+checks this first and stops if the directory holds a file that the release
+does not have: it lists every file of the release, and every file the
+installer writes, in `SHA256SUMS`.
+
+**To upgrade, unpack the new release over your installed game.** Use the
+same build (legacy or modern) as the installed game. Each archive holds one
+directory with the name of its release, so put the files that are in that
+directory into the directory of the installed game. On Linux:
+
+```sh
+tar xzf nolfsrc-v0.0.4-alpha.tar.gz --strip-components=1 -C /path/to/installed/game
+```
+
+On Windows or a Mac, unpack the archive, then copy the files in its
+directory into the folder of the installed game, and replace the files that
+are there. Do not run the installer again: the release replaces all of our
+files, and the files from your discs stay. Your saved games (`Save`) and
+your settings stay too. Then use `sha256sum -c SHA256SUMS` to check the
+directory.
 
 Once the game is installed, `sha256sum -c SHA256SUMS` in its directory checks
 every file of it (all but your settings, `autoexec.cfg`, which the game
@@ -126,7 +141,8 @@ No winetricks or Protontricks are needed.
 ## Windows
 
 1. Unpack the archive into a new, empty folder (7-Zip and Windows 11's
-   Explorer both open `.tar.gz`).
+   Explorer both open `.tar.gz`). To upgrade, copy the files in its folder
+   over the installed game instead, and skip step 2 (see above).
 2. Drop both disc images onto `windows-install.bat`, or put them in the game
    folder and double-click it.
 3. Start `NOLF.exe` to play immediately. Open `NOLFLauncher.exe` to change
