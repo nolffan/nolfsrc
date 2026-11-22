@@ -464,6 +464,24 @@ information -- the static C runtime, or a `d3d.ren` file compiled with
 binary's preferred base; `ext/tools/mapaddr.py out/nolf-legacy-debug/d3d.map
 0x10036d1c` names it from the map.
 
+Before the backtrace, the handler writes what the access violation did
+(`read`, `write` or `execute`, and the address), the ID of the thread
+that crashed, and the registers. The game has more than one thread: for
+example, the loading screen draws from a thread of its own. When the crash
+address is in no module (a call through a bad function pointer or vtable),
+the backtrace cannot start. Then the handler also lists the stack words
+that point into a module. The first of them is usually the return address
+of the call that went wrong, thus it names the caller:
+
+```
+crash: CRASH: exception 0xc0000005 at 0x8b000000
+crash: CRASH: execute of 0x8b000000
+crash: CRASH: thread 36, eax 8b000000 ebx ... ecx 0040cf78 ... esp 0031ff10
+crash:   #0  0x8b000000 ?
+crash: CRASH: 0x8b000000 is in no module; stack words that point into a module (the first is likely the caller):
+crash:   [esp+0x000] 0x00401022 t.exe!main+0x12  [t.cpp:4]
+```
+
 The playtest runs the game in `out/play/<name>/`, so a playtest's
 `nolfsrc.log` is there.
 

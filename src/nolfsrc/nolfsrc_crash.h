@@ -40,6 +40,55 @@ typedef BOOL (WINAPI *NolfsrcStackWalk_t)(DWORD, HANDLE, HANDLE, LPSTACKFRAME, L
 typedef BOOL (WINAPI *NolfsrcSymGetSymFromAddr_t)(HANDLE, DWORD, LPDWORD, PIMAGEHLP_SYMBOL);
 typedef BOOL (WINAPI *NolfsrcSymGetLineFromAddr_t)(HANDLE, DWORD, LPDWORD, PIMAGEHLP_LINE);
 
+/* one code address as a line of the log: module, function, source line
+   when the .pdb has them, else the module offset, else nothing */
+static void NolfsrcCrashAddr(HANDLE process, const char *tag, DWORD addr,
+                             PGET_MODULE_BASE_ROUTINE pModuleBase,
+                             NolfsrcSymGetSymFromAddr_t pSymFromAddr,
+                             NolfsrcSymGetLineFromAddr_t pLineFromAddr)
+{
+    char symbuf[sizeof(IMAGEHLP_SYMBOL) + 256];
+    PIMAGEHLP_SYMBOL sym = (PIMAGEHLP_SYMBOL)symbuf;
+    IMAGEHLP_LINE line;
+    char module[MAX_PATH], *modname;
+    DWORD base, disp = 0, linedisp = 0;
+
+    modname = (char *)"?";
+    base = pModuleBase(process, addr);
+    if (base && GetModuleFileNameA((HMODULE)base, module, sizeof(module))) {
+        modname = strrchr(module, '\\');
+        modname = modname ? modname + 1 : module;
+    }
+    memset(symbuf, 0, sizeof(symbuf));
+    sym->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
+    sym->MaxNameLength = 256;
+    memset(&line, 0, sizeof(line));
+    line.SizeOfStruct = sizeof(line);
+
+    if (pSymFromAddr(process, addr, &disp, sym)) {
+        if (pLineFromAddr && pLineFromAddr(process, addr, &linedisp, &line)) {
+            /* the compilers record bare file names, which dbghelp
+               prefixes with the current directory: keep the name */
+            const char *file = strrchr(line.FileName, '\\');
+            file = file ? file + 1 : line.FileName;
+            NOLFSRC_CRASH_LOG(("  %s 0x%08lx %s!%s+0x%lx  [%s:%lu]", tag, addr, modname,
+                               sym->Name, disp, file, line.LineNumber));
+        } else
+            NOLFSRC_CRASH_LOG(("  %s 0x%08lx %s!%s+0x%lx", tag, addr, modname, sym->Name, disp));
+    } else if (base) {
+        /* no symbols (the CRT, or a d3d.ren file built with /Qip, for
+           which icl 4.0 emits no debug information): give the address
+           at the image's preferred base too, which is what its .map
+           file (beside it in out/nolf-legacy-debug/) lists */
+        IMAGE_DOS_HEADER *dos = (IMAGE_DOS_HEADER *)base;
+        IMAGE_NT_HEADERS *nt = (IMAGE_NT_HEADERS *)(base + dos->e_lfanew);
+        NOLFSRC_CRASH_LOG(("  %s 0x%08lx %s+0x%lx  (0x%08lx in its .map)", tag, addr, modname,
+                           addr - base, nt->OptionalHeader.ImageBase + (addr - base)));
+    } else {
+        NOLFSRC_CRASH_LOG(("  %s 0x%08lx ?", tag, addr));
+    }
+}
+
 static LONG WINAPI NolfsrcCrashFilter(EXCEPTION_POINTERS *ep)
 {
     HMODULE dbghelp;
@@ -58,6 +107,19 @@ static LONG WINAPI NolfsrcCrashFilter(EXCEPTION_POINTERS *ep)
     NOLFSRC_CRASH_LOG(("CRASH: exception 0x%08lx at 0x%08lx",
                  ep->ExceptionRecord->ExceptionCode,
                  (unsigned long)ep->ExceptionRecord->ExceptionAddress));
+    /* an access violation says what it touched: 0 read, 1 write, 8 run */
+    if (ep->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION &&
+        ep->ExceptionRecord->NumberParameters >= 2)
+        NOLFSRC_CRASH_LOG(("CRASH: %s of 0x%08lx",
+                     ep->ExceptionRecord->ExceptionInformation[0] == 8 ? "execute" :
+                     ep->ExceptionRecord->ExceptionInformation[0] == 1 ? "write" : "read",
+                     (unsigned long)ep->ExceptionRecord->ExceptionInformation[1]));
+    /* which thread (the game has more than one: the loading screen draws
+       from its own), and the registers: after a call through a bad
+       pointer, ecx is often the object and esp holds the return address */
+    NOLFSRC_CRASH_LOG(("CRASH: thread %lu, eax %08lx ebx %08lx ecx %08lx edx %08lx esi %08lx edi %08lx ebp %08lx esp %08lx",
+                 GetCurrentThreadId(), ctx.Eax, ctx.Ebx, ctx.Ecx, ctx.Edx,
+                 ctx.Esi, ctx.Edi, ctx.Ebp, ctx.Esp));
 
     dbghelp = LoadLibraryA("dbghelp.dll");
     if (!dbghelp)
@@ -93,11 +155,8 @@ static LONG WINAPI NolfsrcCrashFilter(EXCEPTION_POINTERS *ep)
     frame.AddrStack.Mode = AddrModeFlat;
 
     for (i = 0; i < 64; i++) {
-        char symbuf[sizeof(IMAGEHLP_SYMBOL) + 256];
-        PIMAGEHLP_SYMBOL sym = (PIMAGEHLP_SYMBOL)symbuf;
-        IMAGEHLP_LINE line;
-        char module[MAX_PATH], *modname;
-        DWORD addr, base, disp = 0, linedisp = 0;
+        char tag[8];
+        DWORD addr;
 
         if (!pStackWalk(IMAGE_FILE_MACHINE_I386, process, thread, &frame, &ctx,
                         NULL, pTableAccess, pModuleBase, NULL))
@@ -105,40 +164,33 @@ static LONG WINAPI NolfsrcCrashFilter(EXCEPTION_POINTERS *ep)
         addr = frame.AddrPC.Offset;
         if (!addr)
             break;
+        sprintf(tag, "#%-2d", i);
+        NolfsrcCrashAddr(process, tag, addr, pModuleBase, pSymFromAddr, pLineFromAddr);
+    }
 
-        modname = (char *)"?";
-        base = pModuleBase(process, addr);
-        if (base && GetModuleFileNameA((HMODULE)base, module, sizeof(module))) {
-            modname = strrchr(module, '\\');
-            modname = modname ? modname + 1 : module;
-        }
-        memset(symbuf, 0, sizeof(symbuf));
-        sym->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
-        sym->MaxNameLength = 256;
-        memset(&line, 0, sizeof(line));
-        line.SizeOfStruct = sizeof(line);
+    /* A crash at an address in no module (a call through a stale or
+       broken function pointer or vtable) gives the walk nothing to start
+       from. The caller's return address is still on the stack, at or near
+       esp: list the stack words that point into a module, the first of
+       them most likely the caller. */
+    if (!pModuleBase(process, ep->ContextRecord->Eip)) {
+        DWORD *sp = (DWORD *)ep->ContextRecord->Esp;
+        int found = 0;
 
-        if (pSymFromAddr(process, addr, &disp, sym)) {
-            if (pLineFromAddr && pLineFromAddr(process, addr, &linedisp, &line)) {
-                /* the compilers record bare file names, which dbghelp
-                   prefixes with the current directory: keep the name */
-                const char *file = strrchr(line.FileName, '\\');
-                file = file ? file + 1 : line.FileName;
-                NOLFSRC_CRASH_LOG(("  #%-2d 0x%08lx %s!%s+0x%lx  [%s:%lu]", i, addr, modname,
-                                   sym->Name, disp, file, line.LineNumber));
-            } else
-                NOLFSRC_CRASH_LOG(("  #%-2d 0x%08lx %s!%s+0x%lx", i, addr, modname, sym->Name, disp));
-        } else if (base) {
-            /* no symbols (the CRT, or a d3d.ren file built with /Qip, for
-               which icl 4.0 emits no debug information): give the address
-               at the image's preferred base too, which is what its .map
-               file (beside it in out/nolf-legacy-debug/) lists */
-            IMAGE_DOS_HEADER *dos = (IMAGE_DOS_HEADER *)base;
-            IMAGE_NT_HEADERS *nt = (IMAGE_NT_HEADERS *)(base + dos->e_lfanew);
-            NOLFSRC_CRASH_LOG(("  #%-2d 0x%08lx %s+0x%lx  (0x%08lx in its .map)", i, addr, modname,
-                               addr - base, nt->OptionalHeader.ImageBase + (addr - base)));
-        } else {
-            NOLFSRC_CRASH_LOG(("  #%-2d 0x%08lx ?", i, addr));
+        NOLFSRC_CRASH_LOG(("CRASH: 0x%08lx is in no module; stack words that point into a module (the first is likely the caller):",
+                     (unsigned long)ep->ContextRecord->Eip));
+        for (i = 0; i < 256 && found < 16; i++) {
+            char tag[16];
+            DWORD word;
+
+            if (IsBadReadPtr(sp + i, sizeof(DWORD)))
+                break;
+            word = sp[i];
+            if (!word || !pModuleBase(process, word))
+                continue;
+            sprintf(tag, "[esp+0x%03x]", i * 4);
+            NolfsrcCrashAddr(process, tag, word, pModuleBase, pSymFromAddr, pLineFromAddr);
+            found++;
         }
     }
     return EXCEPTION_CONTINUE_SEARCH;   /* the crash goes on as before */

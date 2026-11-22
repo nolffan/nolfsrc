@@ -12,6 +12,14 @@ covers each change in detail, under its item number (M-P1-01 and so on).
 
 Since the first public release:
 
+- **Better crash reports for a crash at a bad address.** When the game
+  crashes at an address that is in no module (for example, a call through
+  a bad function pointer or vtable), the debug build's crash report in
+  `nolfsrc.log` had no backtrace. Now the report also gives the kind of
+  access, the thread, the registers, and the code addresses on the stack,
+  the first of which is usually the caller. This is for the crash at
+  level load that was reported with the crash address `0x8b000000`.
+  Our tests did not cause that crash. (issue #50)
 - **The console text stays inside the console's frame.** The console
   background has an orange frame, which gets wider at higher resolutions
   (13 pixels at 1600x1200). The text started at 8 pixels from the left of
