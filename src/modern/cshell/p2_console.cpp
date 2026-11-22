@@ -19,6 +19,7 @@
 //   M-P2-04  "Help": the engine's own list of console commands
 //   M-P2-05  ConsoleBackdrop: 0/1 the retail menu's blank tag, 2 black
 //   M-P2-06  "ConsoleHistoryToLog": the scroll-back into the modern log
+//   M-P2-16  the text inside the blank tag's frame at every resolution
 
 #include "stdafx.h"
 #include <stdlib.h>
@@ -683,6 +684,29 @@ LTBOOL P2Console_OnCommandOn(int nCommand)
 //  Drawing
 // ----------------------------------------------------------------------- //
 
+// M-P2-16: menu\art\blanktag.pcx is 240 x 160 with a frame 2 pixels
+// wide. The console scales it to the screen width and half the screen
+// height, so the frame on screen is wider at higher resolutions (13 pixels
+// at the left and right at 1600 x 1200, 16 at 1920 x 1080). The text keeps
+// this far from each side, plus its own margin.
+#define P2CON_TAG_WIDTH		240
+#define P2CON_TAG_HEIGHT	160
+#define P2CON_TAG_FRAME		2
+#define P2CON_MARGIN		8		// text to the frame (or to the screen edge)
+
+static void GetFrameInsets(int nConWidth, int nConHeight, int* pX, int* pY)
+{
+	*pX = 0;
+	*pY = 0;
+
+	if ((int)s_vtConsoleBackdrop.GetFloat() == 2)
+		return;						// black: no frame
+
+	// The frame's width on screen, rounded up.
+	*pX = (P2CON_TAG_FRAME * nConWidth + P2CON_TAG_WIDTH - 1) / P2CON_TAG_WIDTH;
+	*pY = (P2CON_TAG_FRAME * nConHeight + P2CON_TAG_HEIGHT - 1) / P2CON_TAG_HEIGHT;
+}
+
 static HSURFACE GetBackdrop()
 {
 	// M-P2-05: 0 and 1 the retail menus' blank tag (0 was the NOLF demo's
@@ -712,6 +736,7 @@ void P2Console_Draw()
 	CLTGUIFont* pFont;
 	uint32      nWidth, nHeight;
 	int         nConHeight, nLineHeight, nY, i;
+	int         nLeft, nFrameX, nFrameY;
 	char        szEdit[P2CON_EDIT_LEN + 4];
 	LTRect      rcCon;
 
@@ -727,6 +752,10 @@ void P2Console_Draw()
 	nLineHeight = pFont->GetHeight() + 2;
 	if (nLineHeight < 4) nLineHeight = 4;
 
+	// M-P2-16: the text stays inside the backdrop's frame.
+	GetFrameInsets((int)nWidth, nConHeight, &nFrameX, &nFrameY);
+	nLeft = nFrameX + P2CON_MARGIN;
+
 	g_pLTClient->Start3D();
 	g_pLTClient->StartOptimized2D();
 
@@ -740,12 +769,12 @@ void P2Console_Draw()
 		g_pLTClient->ScaleSurfaceToSurface(hScreen, hBack, &rcCon, LTNULL);
 
 	// The edit line at the bottom, with a blinking caret.
-	nY = nConHeight - nLineHeight - 2;
+	nY = nConHeight - nFrameY - nLineHeight - 2;
 	sprintf(szEdit, "> %s%s", s_szEdit, ((GetTickCount() / 400) & 1) ? "_" : "");
-	pFont->Draw(szEdit, hScreen, 8, nY, LTF_JUSTIFY_LEFT, P2CON_COLOR_EDIT);
+	pFont->Draw(szEdit, hScreen, nLeft, nY, LTF_JUSTIFY_LEFT, P2CON_COLOR_EDIT);
 
 	// The scroll-back above it, newest last.
-	s_nVisibleLines = (nY - 4) / nLineHeight;
+	s_nVisibleLines = (nY - nFrameY - 4) / nLineHeight;
 	if (s_nVisibleLines < 1) s_nVisibleLines = 1;
 
 	EnterCriticalSection(&s_LinesCS);
@@ -761,7 +790,7 @@ void P2Console_Draw()
 
 		pLine = &s_Lines[(s_nLineHead - 1 - nBack + 2 * P2CON_MAX_LINES) % P2CON_MAX_LINES];
 		nY -= nLineHeight;
-		pFont->Draw(pLine->szText, hScreen, 8, nY, LTF_JUSTIFY_LEFT, pLine->nColor);
+		pFont->Draw(pLine->szText, hScreen, nLeft, nY, LTF_JUSTIFY_LEFT, pLine->nColor);
 	}
 
 	LeaveCriticalSection(&s_LinesCS);
@@ -771,7 +800,7 @@ void P2Console_Draw()
 	{
 		char szMore[48];
 		sprintf(szMore, "-- %d more below (Page Down) --", s_nScroll);
-		pFont->Draw(szMore, hScreen, nWidth - 8, nConHeight - nLineHeight - 2,
+		pFont->Draw(szMore, hScreen, nWidth - nLeft, nConHeight - nFrameY - nLineHeight - 2,
 		            LTF_JUSTIFY_RIGHT, P2CON_COLOR_ECHO);
 	}
 

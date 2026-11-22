@@ -12,6 +12,12 @@ covers each change in detail, under its item number (M-P1-01 and so on).
 
 Since the first public release:
 
+- **The console text stays inside the console's frame.** The console
+  background has an orange frame, which gets wider at higher resolutions
+  (13 pixels at 1600x1200). The text started at 8 pixels from the left of
+  the screen, so at high resolutions it was on the frame, and the top and
+  bottom lines were on the frame too. Now the text starts inside the frame
+  at all resolutions. (issue #61)
 - **No more empty files in the temp folder.** At each start the game left
   one empty file, `cre<hex>.tmp`, in the Windows temp folder. Now it
   deletes that file.
