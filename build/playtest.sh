@@ -85,6 +85,11 @@
 #                         autoexec.cfg (lines like "UIScale" "1.000000")
 #   PLAYTEST_SAVES=<dir>  start a scripted run with a copy of these saved
 #                         games as its Save/ (instead of none)
+#   PLAYTEST_PREFIX=<dir> the Wine prefix to use and keep (a relative path
+#                         is from the repository). Default: a private copy
+#                         of the container's prefix (out/wineprefix), removed
+#                         after the run, so runs at the same time in
+#                         different containers cannot interfere
 #   PLAYTEST_ARGS="..."   more of the game's command line, before the ++
 #                         settings (e.g. "+connect 127.0.0.1:27888" to join
 #                         a server; the line's end is no place for a value,
@@ -329,14 +334,37 @@ else
 fi
 RUNNER
 
+# The Wine prefix: $PLAYTEST_PREFIX as it is, else a private copy of the
+# container's (out/wineprefix), made for this run and removed after it.
+# Each container has its own wineserver, and two wineservers on one prefix
+# do not see each other's open files: a second game writes its DLLs out of
+# nolfsrc.rez into the Temp folder (cshell.dll, object.lto, ...) over the
+# files that the first game runs from, and the first game crashes (access
+# violations, Bus errors). One wineserver refuses that write, as Windows
+# does, and the second game then writes to a new name.
+PRIVATE_PREFIX=
+if [ -n "${PLAYTEST_PREFIX:-}" ]; then
+    export WINEPREFIX="$(abs "$PLAYTEST_PREFIX")"
+else
+    SRC_PREFIX="${WINEPREFIX:-$HOME/.wine}"
+    PRIVATE_PREFIX="$(mktemp -d "${TMPDIR:-/tmp}/playtest-prefix.XXXXXX")" || exit 2
+    if [ -f "$SRC_PREFIX/system.reg" ]; then
+        cp -a "$SRC_PREFIX/." "$PRIVATE_PREFIX/" || exit 2
+        rm -rf "$PRIVATE_PREFIX"/drive_c/users/*/Temp/*
+    fi
+    export WINEPREFIX="$PRIVATE_PREFIX"
+fi
 (
 cd "$RUN" || exit 1
 export WINEDEBUG=${PLAYTEST_WINEDEBUG:--all,+seh} WINEDLLOVERRIDES=${PLAYTEST_DLLOVERRIDES-winedbg.exe=d}
-[ -n "${PLAYTEST_PREFIX:-}" ] && export WINEPREFIX=$PLAYTEST_PREFIX
 export PLAYTEST_MAP="${PLAYTEST_MAP:-retail}"
 # a scripted run's gamepad is the test pad, and starts unplugged (`pad`)
 [ -n "$SCRIPT" ] && export NOLFSRC_PADTEST=padtest.txt
 xvfb-run -a -s "-screen 0 ${SCREEN}x24" bash runner.sh $SECS
 )
+if [ -n "$PRIVATE_PREFIX" ]; then
+    wineserver -k 2>/dev/null; wineserver -w 2>/dev/null
+    rm -rf "$PRIVATE_PREFIX"
+fi
 cat "$RUN/result.txt" 2>/dev/null || echo "NO RESULT (the run failed)"
 grep -q '^ALIVE' "$RUN/result.txt" 2>/dev/null
