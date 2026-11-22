@@ -12,6 +12,9 @@ covers each change in detail, under its item number (M-P1-01 and so on).
 
 Since the first public release:
 
+- **No more empty files in the temp folder.** At each start the game left
+  one empty file, `cre<hex>.tmp`, in the Windows temp folder. Now it
+  deletes that file.
 - **The mouse buttons keep their bindings.** The default controls named
   the mouse buttons by the names that Windows gives them ("Button 0" and
   so on). Where Windows or the mouse driver gives other names, the mouse

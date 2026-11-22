@@ -474,6 +474,12 @@ int sub_42e110(CClientMgrQ42D* pMgr, char* pTempPath, char* pFilename,
 
 			if (nRetry != 0)
 			{
+#ifdef NOLFSRC_MODERN
+				// fixed: GetTempFileName made the file, and a copy that did
+				// not work left it empty in the temp folder, at each start
+				// for cresl.dll (RETAIL_BUGS.md)
+				DeleteFileA(sUnique);
+#endif
 				return nRetry;
 			}
 			else

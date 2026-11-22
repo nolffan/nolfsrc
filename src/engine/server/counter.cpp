@@ -1042,6 +1042,11 @@ int sub_1000e05b(CServerMgr* pMgr, char* pTempPath, char* pFilename,
 
 			if (nRetry != 0)
 			{
+#ifdef NOLFSRC_MODERN
+				// fixed: the empty file GetTempFileName made stays behind
+				// when the copy does not work (RETAIL_BUGS.md)
+				DeleteFileA(sUnique);
+#endif
 				return nRetry;
 			}
 			else

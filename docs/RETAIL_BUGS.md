@@ -73,6 +73,7 @@ in.
 * [Stepping up onto a slope where it is not](#stepping-up-onto-a-slope-where-it-is-not)
 * [On a scaled display the cursor is held to part of the screen](#on-a-scaled-display-the-cursor-is-held-to-part-of-the-screen)
 * [Empty and placeholder sound names fill the console with errors](#empty-and-placeholder-sound-names-fill-the-console-with-errors)
+* [Each start leaves an empty file in the temp folder](#each-start-leaves-an-empty-file-in-the-temp-folder)
 * [The default mouse buttons are bound by names that Windows can change](#the-default-mouse-buttons-are-bound-by-names-that-windows-can-change)
 * [The console ends a command at some characters above 127](#the-console-ends-a-command-at-some-characters-above-127)
 
@@ -1030,6 +1031,29 @@ that is null the whole body is skipped, so the eight-byte record is lost.
 To decide whether to show its customization page, the wizard looks for a
 `.rez` file in the `Custom` folder with `_findfirst`, and never calls
 `_findclose` on the handle it gets back.
+
+### Each start leaves an empty file in the temp folder
+`0x0042e110` (lithtech.exe) · `src/engine/lithtech/clientdsi.cpp`;
+`0x1000e05b` (server.dll) · `src/engine/server/counter.cpp`
+
+> **✅ FIXED in the modern build** (`NOLFSRC_MODERN`, M-P1-32):
+> when the second copy fails, the function deletes the file that
+> `GetTempFileName` made. The release build keeps the empty files.
+
+The engine copies each game DLL out of the resource files into the Windows
+temp folder, and loads it from there. If the copy to `<temp>\<name>`
+fails, the function gets a new name from `GetTempFileName` and copies to
+that name. `GetTempFileName` makes the file. If this second copy also
+fails, the function returns the error and does not delete the file.
+
+The client always asks for `cresl.dll`, and no resource file has it. Thus
+each start of the game adds one empty file, `cre<hex>.tmp`, to the temp
+folder. The server's function (`object.lto`, `sres.dll`) has the same
+mistake, but its files are always there.
+
+Not changed: a copy to a new name that succeeds also stays in the temp
+folder after the game stops. The engine makes such a copy when a second
+game runs at the same time, because the first game uses `<temp>\<name>`.
 
 ---
 
