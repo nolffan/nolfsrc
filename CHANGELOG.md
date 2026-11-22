@@ -29,6 +29,11 @@ Since the first public release:
   reported an error each time it played that nothing. Now it plays nothing
   without an error. A sound file that is missing is still reported.
   (issue #64)
+- **The tunnel fans in M05S04 make a sound.** The level data names
+  their sound `Snd\Amb|tunnelfan2.wav`, with `|` in place of `\`. Thus
+  the fans were silent, and the console showed "Couldn't play sound" two
+  times when the level started. Now the game reads `|` in a sound name as
+  `\`, and the fans play `tunnelfan2.wav`. (related to issue #64)
 - **The music error gives the file.** Twelve levels (among them T01S03,
   T03S01, M08S02, M11S02, and some multiplayer maps) use a music theme,
   `Music\UrbanSpy`, that is not in any release of the game. These levels

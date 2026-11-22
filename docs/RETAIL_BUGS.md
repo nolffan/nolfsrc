@@ -73,6 +73,7 @@ in.
 * [Stepping up onto a slope where it is not](#stepping-up-onto-a-slope-where-it-is-not)
 * [On a scaled display the cursor is held to part of the screen](#on-a-scaled-display-the-cursor-is-held-to-part-of-the-screen)
 * [Empty and placeholder sound names fill the console with errors](#empty-and-placeholder-sound-names-fill-the-console-with-errors)
+* [M05S04's tunnel fans name their sound with a bar in place of a backslash](#m05s04s-tunnel-fans-name-their-sound-with-a-bar-in-place-of-a-backslash)
 * [Each start leaves an empty file in the temp folder](#each-start-leaves-an-empty-file-in-the-temp-folder)
 * [Twelve worlds use a music theme that is not in the game](#twelve-worlds-use-a-music-theme-that-is-not-in-the-game)
 * [The default mouse buttons are bound by names that Windows can change](#the-default-mouse-buttons-are-bound-by-names-that-windows-can-change)
@@ -588,6 +589,32 @@ the shark's last step). The entry stops `GetSound` at the character's own
 set, thus the character does not use the lines of its nationality or its
 sex. But `"x"` is not a file: the game plays it, and the console shows
 `Couldn't play sound 'x'`.
+
+### M05S04's tunnel fans name their sound with a bar in place of a backslash
+`WORLDS/M05S04.dat` (NOLF.REZ, level data) · `src/game/ObjectDLL/ServerSoundMgr.cpp`, `RotatingWorldModel.cpp`
+
+> **✅ FIXED in the modern build** (`NOLFSRC_MODERN`, MODERN.md M-P5-23;
+> related to issue #64): `CServerSoundMgr::PlaySound`
+> (`ServerSoundMgr.cpp`) plays a sound name that has `|` with `\` in
+> place of each `|`. It uses a copy of the name, thus the caller's name
+> does not change. A sound name that is still not found is reported. The
+> release build keeps the retail code, and the level data does not change.
+
+This is a mistake in the level data, not in the code. In M05S04 (the
+fourth level of "A Tenuous Lead"), two `RotatingWorldModel` objects,
+`RotatingWorldModel2` and `RotatingWorldModel3`, are the tunnel fans. Their
+`BusySound` property is `Snd\Amb|tunnelfan2.wav`. The `|` is where the path
+separator `\` was meant. The sound file that was meant,
+`SND\AMB\TUNNELFAN2.wav` (104,400 bytes), is in NOLF2.REZ. The `SoundFX`
+objects `fan0` to `fan5` near the fans use the correct name.
+
+The two fans have `StartOn` set, thus each plays its busy sound when the
+level starts. The engine does not find a file with that name, so the fans
+are silent, and the console shows two lines:
+`ERROR in CServerSoundMgr::PlaySound() - Couldn't play sound 'Snd\Amb|tunnelfan2.wav'`.
+Tested: a run of the retail game on M05S04 shows the two lines at the
+start. The other rotating objects of the 102 worlds have correct sound
+names.
 
 ### Twelve worlds use a music theme that is not in the game
 `WORLDS/T01S03.dat` and 11 other worlds (NOLF.REZ, NOLFGOTY.REZ, level data) · `0x0043fcd0` (lithtech.exe) · `src/engine/lithtech/clientmusic.cpp` (`CLTDirectMusicMgr::InitLevel`)

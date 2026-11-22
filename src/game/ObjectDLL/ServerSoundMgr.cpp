@@ -140,11 +140,34 @@ HLTSOUND CServerSoundMgr::PlaySound(PlaySoundInfo & psi)
 	// SpinDownSound, for example), so retail printed "Couldn't play sound
 	// ''" for each of them. A name that is not found is still reported.
 	if (!psi.m_szSoundName[0]) return LTNULL;
-#endif
 
+	// M-P5-23 (RETAIL_BUGS.md, "M05S04's tunnel fans name their sound with
+	// a bar in place of a backslash"): level data can give '|' where the path
+	// separator '\' was meant. M05S04's two fans have BusySound
+	// "Snd\Amb|tunnelfan2.wav", thus retail cannot find the file, the fans
+	// are silent, and the console shows "Couldn't play sound". Play the
+	// name with '\' in place of each '|', from a copy: the caller's
+	// PlaySoundInfo keeps its name. A name that is still not found is
+	// reported with the name as the caller gave it.
+	PlaySoundInfo psiFixed;
+	PlaySoundInfo * pPsi = &psi;
+	if (strchr(psi.m_szSoundName, '|'))
+	{
+		psiFixed = psi;
+		for (char * pCh = psiFixed.m_szSoundName; *pCh; pCh++)
+		{
+			if (*pCh == '|') *pCh = '\\';
+		}
+		pPsi = &psiFixed;
+	}
+
+	LTRESULT hResult = g_pLTServer->PlaySound(pPsi);
+	if (pPsi != &psi) psi.m_hSound = psiFixed.m_hSound;
+#else
 	// Play the sound...
 
 	LTRESULT hResult = g_pLTServer->PlaySound(&psi);
+#endif
 
 	if (hResult == LT_OK)
 	{
