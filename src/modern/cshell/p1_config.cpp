@@ -21,6 +21,7 @@
 #include "stdafx.h"
 #include "VarTrack.h"
 #include "ClientUtilities.h"
+#include "CommandIDs.h"
 #include "cshell/p1_modern.h"
 #include "cshell/p7_pad.h"
 
@@ -78,6 +79,34 @@ namespace
 			if (pBindings)
 				g_pLTClient->FreeDeviceBindings(pBindings);
 		}
+	}
+
+	// M-P4-14: the crosshair toggle (CursorTog) has no key by default now;
+	// it was on X. Unbind X only while it is exactly the old default: the
+	// one key that does that and nothing else. A player who moved the
+	// toggle to another key, or put X to another use, keeps the choice.
+	void UnbindOldCrosshairKey()
+	{
+		DeviceBinding* pBindings = g_pLTClient->GetDeviceBindings(DEVICETYPE_KEYBOARD);
+		DeviceBinding* pBinding;
+		bool bOldDefault = false;
+
+		for (pBinding = pBindings; pBinding; pBinding = pBinding->pNext)
+		{
+			GameAction* pAction = pBinding->pActionHead;
+
+			if (_stricmp(pBinding->strTriggerName, "X") && _stricmp(pBinding->strTriggerName, "##45"))
+				continue;
+
+			if (pAction && !pAction->pNext && pAction->nActionCode == COMMAND_ID_CROSSHAIRTOGGLE)
+				bOldDefault = true;
+		}
+
+		if (pBindings)
+			g_pLTClient->FreeDeviceBindings(pBindings);
+
+		if (bOldDefault)
+			g_pLTClient->RunConsoleString("rangebind \"##keyboard\" \"##45\" 0 0 \"\"");
 	}
 }
 
@@ -179,6 +208,13 @@ void P1Config_AfterInit()
 			WriteConsoleInt("UpdateRate", 30);
 		if (GetConsoleFloat("CSendRate", 30.0f) < 30.0f)
 			WriteConsoleFloat("CSendRate", 30.0f);
+	}
+
+	if (fSeen < 1.7f)
+	{
+		// M-P4-14: X toggled the crosshair off by accident (issue #67);
+		// the toggle has no key by default now.
+		UnbindOldCrosshairKey();
 	}
 
 	WriteConsoleFloat("ModPatchNum", P1_CONFIG_VERSION);

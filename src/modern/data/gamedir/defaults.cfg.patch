@@ -28,7 +28,15 @@
  AddAction LeaveUnassigned 99
  AddAction Axis3 -3
  AddAction Axis2 -2
-@@ -218,14 +221,15 @@
+@@ -201,7 +204,6 @@
+ rangebind "##keyboard" "##15" 0.000000 0.000000 "Score" 
+ rangebind "##keyboard" "##24" 0.000000 0.000000 "Mission" 
+ rangebind "##keyboard" "##38" 0.000000 0.000000 "FlashLight" 
+-rangebind "##keyboard" "##45" 0.000000 0.000000 "CursorTog" 
+ rangebind "##keyboard" "##20" 0.000000 0.000000 "SendMessage" 
+ rangebind "##keyboard" "##21" 0.000000 0.000000 "TeamMessage" 
+ rangebind "##keyboard" "##64" 0.000000 0.000000 "QuickSave" 
+@@ -218,14 +220,15 @@
  rangebind "##keyboard" "##11" 0.000000 0.000000 "Weapon_0" 
  rangebind "##keyboard" "##12" 0.000000 0.000000 "IncLayout" 
  rangebind "##keyboard" "##13" 0.000000 0.000000 "DecLayout" 

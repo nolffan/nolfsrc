@@ -12,6 +12,11 @@ covers each change in detail, under its item number (M-P1-01 and so on).
 
 Since the first public release:
 
+- **No default key for the crosshair toggle.** X turned the crosshair off,
+  and a player who pushed it by accident lost the crosshair with no clue
+  why. The toggle has no key now; you can bind one in Customize Controls.
+  An existing config loses X only if X still has its old default. (issue
+  #67)
 - **The game's code and our data are in archives, not `custom/`.**
   `nolfsrc.rez` holds the game code built from source, the modern build's
   new files and its changes to the game's own data. It loads after the

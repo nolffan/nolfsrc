@@ -68,7 +68,7 @@ the modern build.
 | `DisplayTriggers` | 0 | Server: 1 draws trigger volumes as yellow boxes. |
 | `MasterServer` | `master.openspy.net` | The master server for the internet server list and for hosted games (`host` or `host:port`; `none` turns it off). |
 | `NetJoinPassword` | (none) | The password `+connect` uses to join a locked server. |
-| `ModPatchNum` | 0 | The last modern config version applied (now 1.6); it drives one-time upgrades of an old config. Leave it alone. |
+| `ModPatchNum` | 0 | The last modern config version applied (now 1.7); it drives one-time upgrades of an old config. Leave it alone. |
 | `FramerateLock` | (gone) | The old on/off limit. An old config's `FramerateLock 0` becomes `FramerateLimit 0` once. |
 
 ## Display and window
