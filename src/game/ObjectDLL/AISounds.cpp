@@ -178,7 +178,7 @@ m10s01 - american
 }
 
 #ifdef NOLFSRC_MODERN
-// M-P5-21 (issue #64): ServerSnd.txt gives some characters "x" for an
+// M-P5-22 (issue #64): ServerSnd.txt gives some characters "x" for an
 // event (CombAggr0 = "x" for Partner, most events for Frogman, the
 // [Animal] set). The entry stops the search at the character's own set, so
 // that the character does not get the nationality's or the sex's lines,

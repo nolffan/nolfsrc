@@ -556,7 +556,7 @@ wizard, or by editing `NetHost.txt`.
 ### Empty and placeholder sound names fill the console with errors
 Object.lto · `src/game/ObjectDLL/ServerSoundMgr.cpp`, `RotatingWorldModel.cpp`, `AISounds.cpp`
 
-> **✅ FIXED in the modern build** (`NOLFSRC_MODERN`, MODERN.md M-P5-21,
+> **✅ FIXED in the modern build** (`NOLFSRC_MODERN`, MODERN.md M-P5-22,
 > issue #64): `CServerSoundMgr::PlaySound` ignores an empty sound name and
 > does not print an error (`ServerSoundMgr.cpp`). `GetSound` gives "no
 > sound" for the placeholder `"x"` (`AISounds.cpp`). A sound name that is
