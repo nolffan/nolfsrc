@@ -29,6 +29,13 @@ Since the first public release:
   reported an error each time it played that nothing. Now it plays nothing
   without an error. A sound file that is missing is still reported.
   (issue #64)
+- **The music error gives the file.** Twelve levels (among them T01S03,
+  T03S01, M08S02, M11S02, and some multiplayer maps) use a music theme,
+  `Music\UrbanSpy`, that is not in any release of the game. These levels
+  have no level music, and the console showed "Unable to read control
+  file" with no file name. Now the error gives the path of the file. The
+  levels still have no level music, as in retail: there is no theme to
+  restore.
 - **No default key for the crosshair toggle.** X turned the crosshair off,
   and a player who pushed it by accident lost the crosshair with no clue
   why. The toggle has no key now; you can bind one in Customize Controls.

@@ -741,9 +741,12 @@ LTRESULT CLTDirectMusicMgr::InitLevel(const char* sWorkingDirectory, const char*
 		// function.
 		if (!controlFile.Init(sFullName))
 		{
-			dm_Error(sReadError);
 #ifdef NOLFSRC_MODERN
+			// fixed: the error names the file (RETAIL_BUGS.md)
+			dm_Error("ERROR! Unable to read control file \"%s\". (CLTDirectMusicMgr::InitLevel)\n", sFullName);
 			delete [] sFullName;	// fixed: not leaked (RETAIL_BUGS.md)
+#else
+			dm_Error(sReadError);
 #endif
 			return LT_ERROR;
 		}
@@ -754,7 +757,12 @@ LTRESULT CLTDirectMusicMgr::InitLevel(const char* sWorkingDirectory, const char*
 	{
 		if (!controlFile.Init(sControlFileName))
 		{
+#ifdef NOLFSRC_MODERN
+			// fixed: the error names the file (RETAIL_BUGS.md)
+			dm_Error("ERROR! Unable to read control file \"%s\". (CLTDirectMusicMgr::InitLevel)\n", sControlFileName);
+#else
 			dm_Error(sReadError);
+#endif
 			return LT_ERROR;
 		}
 	}

@@ -74,6 +74,7 @@ in.
 * [On a scaled display the cursor is held to part of the screen](#on-a-scaled-display-the-cursor-is-held-to-part-of-the-screen)
 * [Empty and placeholder sound names fill the console with errors](#empty-and-placeholder-sound-names-fill-the-console-with-errors)
 * [Each start leaves an empty file in the temp folder](#each-start-leaves-an-empty-file-in-the-temp-folder)
+* [Twelve worlds use a music theme that is not in the game](#twelve-worlds-use-a-music-theme-that-is-not-in-the-game)
 * [The default mouse buttons are bound by names that Windows can change](#the-default-mouse-buttons-are-bound-by-names-that-windows-can-change)
 * [The console ends a command at some characters above 127](#the-console-ends-a-command-at-some-characters-above-127)
 
@@ -587,6 +588,50 @@ the shark's last step). The entry stops `GetSound` at the character's own
 set, thus the character does not use the lines of its nationality or its
 sex. But `"x"` is not a file: the game plays it, and the console shows
 `Couldn't play sound 'x'`.
+
+### Twelve worlds use a music theme that is not in the game
+`WORLDS/T01S03.dat` and 11 other worlds (NOLF.REZ, NOLFGOTY.REZ, level data) · `0x0043fcd0` (lithtech.exe) · `src/engine/lithtech/clientmusic.cpp` (`CLTDirectMusicMgr::InitLevel`)
+
+> **✅ FIXED in the modern build, the message only** (`NOLFSRC_MODERN`,
+> MODERN.md M-P5-24): the error from `CLTDirectMusicMgr::InitLevel`
+> (`clientmusic.cpp`) gives the path of the control file that it cannot
+> read. It is still an error. These levels still have no level music, as
+> in retail. The release build keeps the retail message, and the level
+> data does not change.
+
+This is a mistake in the level data. In 12 worlds, the `WorldProperties`
+object has `MusicControlFile` = `Music\UrbanSpy\UrbanSpy.txt`. No release
+of the game has a `Music\UrbanSpy` theme. It is not in the GOTY archives
+(NOLF.REZ, NOLF2.REZ, nolfu003.rez, NOLFGOTY.REZ). It is also not in the
+EU, USA, USA GOTY, German, French, Spanish, Swedish, Italian or Mac
+releases. Thus there is nothing to restore.
+
+| world | archive | where |
+|---|---|---|
+| `T01S03` | NOLF.REZ | "The Assignment", level 3 |
+| `T03S01` | NOLF.REZ | "Care to Explain?", level 1 |
+| `M08S02` | NOLF.REZ | "Safecracker", level 2 |
+| `M11S02` | NOLF.REZ | "Low Earth Orbit", level 2 |
+| `MULTI/ASSAULTMAP/01CONSTRUCTIONSITE_AM` | NOLF.REZ | multiplayer, assault |
+| `MULTI/ASSAULTMAP/03MARRAKECH_AM` | NOLF.REZ | multiplayer, assault |
+| `MULTI/ASSAULTMAP/04CITYINRUINS_AM` | NOLF.REZ | multiplayer, assault |
+| `MULTI/ASSAULTMAP/06STORM_AM` | NOLF.REZ | multiplayer, assault |
+| `MULTI/DEATHMATCH/001THEPAD_DM` | NOLF.REZ | multiplayer, deathmatch |
+| `MULTI/DEATHMATCH/002REBAR_DM` | NOLF.REZ | multiplayer, deathmatch |
+| `MULTI/DEATHMATCH/004LOTSABRICK_DM` | NOLF.REZ | multiplayer, deathmatch |
+| `MULTI/DEATHMATCH/008INC2001_DM` | NOLFGOTY.REZ | multiplayer, deathmatch |
+
+The paths are under `WORLDS/`. A later archive does not replace these
+worlds. The other 90 worlds of the GOTY archives (102 in all) use a theme
+that is in the game, or no theme. The list comes from a read of the object
+list of each world, not from a search for the text.
+
+When one of these levels starts, the server splits the property into the
+directory `Music\UrbanSpy` and the file `UrbanSpy.txt`.
+`CLTDirectMusicMgr::InitLevel` cannot read that file, and stops. The level
+has no level music, and the console shows
+`ERROR! Unable to read control file. (CLTDirectMusicMgr::InitLevel)`. The
+message does not give the file, thus the cause is not clear.
 
 ### The default mouse buttons are bound by names that Windows can change
 `0x00438140`, `0x00438470`, `0x00438ad0`, `0x00438d80` (lithtech.exe) · `src/engine/lithtech/clientinput.cpp` (`di_FindDeviceObject`, `cc_SaveInputBindings`), `diblit.cpp` (`di_AddDeviceObjectQ438`, `di_MatchObjectCallbackQ438`); `defctrls.cfg`, `defaults.cfg`
