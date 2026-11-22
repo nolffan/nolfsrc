@@ -32,5 +32,6 @@ void	P7Pad_VehicleFlags(uint32* pdwFlags);	// M-P7-04: on a vehicle, its throttl
 bool	P7Pad_GetMove(float* pRight, float* pForward);	// the left stick, -1..1, past the dead zone
 float	P7Pad_SpeedScale();						// M-P7-04: the share of the walk speed the stick asks for
 void	P7Pad_SetCapture(bool bCapture);		// the Controls folder is waiting for a control
+bool	P7Pad_AnyButtonDown();					// M-P3-27: a button held, or a trigger past half way
 
 #endif // __P7_PAD_H__

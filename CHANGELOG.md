@@ -12,6 +12,15 @@ covers each change in detail, under its item number (M-P1-01 and so on).
 
 Since the first public release:
 
+- **"Press any key to continue." after loading.** On a computer of
+  today a level loads in one or two seconds, and the loading screen
+  went away before you could read the mission's name. Now, after a new
+  level of a mission loads, the loading screen stays with "Press any key
+  to continue.", as in No One Lives Forever 2 and Contract J.A.C.K. A key,
+  the left mouse button or a controller button continues. The game does
+  not run while the prompt waits. A saved game, a custom level and
+  multiplayer do not wait. To turn the prompt off, set `LoadScreenWait 0`
+  in the console. (issue #66)
 - **No more two threads in the renderer at the same time.** While a
   level loads, the loading screen draws from a thread of its own, and
   the main thread also uses the renderer to load textures. The

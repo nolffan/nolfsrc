@@ -63,6 +63,10 @@
 // M-P7: controller support
 #include "cshell/p7_pad.h"
 #endif
+#ifdef NOLFSRC_MODERN
+// M-P3-27: "Press any key to continue." after loading
+#include "cshell/p3_loadprompt.h"
+#endif
 
 #ifdef STRICT
 	WNDPROC g_pfnMainWndProc = NULL;
@@ -4254,6 +4258,10 @@ void CGameClientShell::OnCommandOn(int command)
 	// M-P2-01: no game command while the developer console is open
 	if (P2_OnCommandOn(command)) return;
 #endif
+#ifdef NOLFSRC_MODERN
+	// M-P3-27: no game command while the loading screen waits for a key
+	if (P3LoadPrompt_IsWaiting()) return;
+#endif
 	// Let the interface handle the command first...
 
 	if (IsPlayerInWorld())
@@ -6272,6 +6280,11 @@ LTBOOL CGameClientShell::DoLoadWorld(char* pWorldFile, char* pCurWorldSaveFile,
 
 	// Change to the loading level state...
 
+#ifdef NOLFSRC_MODERN
+	// M-P3-27: a new level of a mission waits for a key once loaded; a
+	// saved game, a custom level and a demo do not
+	P3LoadPrompt_OnLoadWorld(nFlags != LOAD_RESTORE_GAME && !m_bIsCustomLevel && !pPlaydemoFile);
+#endif
 	m_InterfaceMgr.ChangeState(GS_LOADINGLEVEL);
 
 	// Check for special case of not being connected to a server or going to

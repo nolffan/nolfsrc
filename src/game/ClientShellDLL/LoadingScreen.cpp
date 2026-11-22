@@ -24,6 +24,10 @@
 // M-P2-03 / M-P2-12: console lock, speed-run is-loading flag
 #include "cshell/p2_client.h"
 #endif
+#ifdef NOLFSRC_MODERN
+// M-P3-27: "Press any key to continue." after loading
+#include "cshell/p3_loadprompt.h"
+#endif
 
 extern CGameClientShell* g_pGameClientShell;
 
@@ -474,6 +478,10 @@ LTBOOL CLoadingScreen::Update()
 	
 	pFont->Draw(m_hWorldName, hDestSurf, m_TextPos.x+1, m_TextPos.y+1, LTF_JUSTIFY_CENTER,kBlack);
 	pFont->Draw(m_hWorldName, hDestSurf, m_TextPos.x, m_TextPos.y, LTF_JUSTIFY_CENTER,kWhite);
+#ifdef NOLFSRC_MODERN
+	// M-P3-27: and, once the level has loaded, the prompt under it
+	P3LoadPrompt_Draw(hDestSurf);
+#endif
 
     g_pLTClient->EndOptimized2D();
 

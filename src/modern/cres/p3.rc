@@ -23,4 +23,5 @@ BEGIN
     IDS_P3_HELP_MENU_STYLE      "Use the Game of the Year edition's main menu art or the original release's"
     IDS_P3_MENU_GOTY            "Game of the Year"
     IDS_P3_MENU_ORIGINAL        "Original"
+    IDS_P3_PRESS_ANY_KEY        "Press any key to continue."
 END

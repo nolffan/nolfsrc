@@ -43,8 +43,11 @@
 #   click [button] [secs] mouse button (1 = fire), held <secs> (default 0.1)
 #   skipcine [timeout]    until the HUD is up (the health bar is drawn: the
 #                         player is in control), press Space (skips a
-#                         cinematic) and Return (takes the first answer of a
-#                         dialogue decision) in turn, every 3s; returns once
+#                         cinematic, and goes on from the modern build's
+#                         "Press any key to continue." after a level has
+#                         loaded, MODERN.md M-P3-27) and Return (takes the
+#                         first answer of a dialogue decision) in turn,
+#                         every 3s; returns once
 #                         the HUD has been up for 4s, or after <timeout>
 #                         (default 90s)
 #   cinestart [timeout]   until a cinematic is on screen (the letterbox:

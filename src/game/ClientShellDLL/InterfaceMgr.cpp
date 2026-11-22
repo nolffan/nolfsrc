@@ -44,6 +44,10 @@
 #ifdef NOLFSRC_MODERN
 #include "cshell/p6_multiplayer.h"
 #endif
+#ifdef NOLFSRC_MODERN
+// M-P3-27: "Press any key to continue." after loading
+#include "cshell/p3_loadprompt.h"
+#endif
 
 // TESTING DYNAMIC LIGHT IN INTERFACE
 /*
@@ -1079,6 +1083,11 @@ void CInterfaceMgr::UpdateLoadingLevelState()
 	if ((g_pGameClientShell->IsInWorld() && (m_nOldLoadWorldCount != m_nLoadWorldCount)) &&
 		hPlayerObj)
 	{
+#ifdef NOLFSRC_MODERN
+		// M-P3-27: the loading screen stays until a key is pressed
+		if (P3LoadPrompt_Wait(m_LoadingScreen))
+			return;
+#endif
 		// Turn off the loading screen
 		m_LoadingScreen.Hide();
 

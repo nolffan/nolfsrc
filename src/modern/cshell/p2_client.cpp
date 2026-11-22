@@ -36,7 +36,8 @@ struct P2SpeedRunInfo
 	int32	nVersion;			// this layout: 1
 	int32	nMission;			// mission index (CGameClientShell::GetCurrentMission), -1 none
 	int32	nLevel;				// level within it (GetCurrentLevel), -1 none
-	int32	bLoading;			// 1 while a loading screen is up
+	int32	bLoading;			// 1 while a loading screen is up and the level loads
+								// (0 while M-P3-27's prompt waits for a key)
 };
 
 extern "C" __declspec(dllexport) P2SpeedRunInfo NolfSpeedRunInfo =
@@ -91,6 +92,12 @@ void P2_OnLoadingScreen(LTBOOL bShown)
 	NolfSpeedRunInfo.bLoading = bShown ? 1 : 0;
 
 	P2Console_SetLock(P2CONSOLE_LOCK_LOADING, bShown);
+}
+
+void P2_OnLoadingDone()
+{
+	SpeedRunSample();
+	NolfSpeedRunInfo.bLoading = 0;
 }
 
 LTBOOL P2_OnCommandOn(int nCommand)

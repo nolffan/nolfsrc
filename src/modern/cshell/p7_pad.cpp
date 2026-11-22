@@ -315,6 +315,11 @@ void P7Pad_AddLook(float* pOffsets)
 		pOffsets[1] -= s_fLookY * fScale * c_fPitchRate;
 }
 
+bool P7Pad_AnyButtonDown()
+{
+	return s_Pad.wButtons != 0 || s_Pad.bLeftTrigger > 128 || s_Pad.bRightTrigger > 128;
+}
+
 bool P7Pad_GetMove(float* pRight, float* pForward)
 {
 	if (s_fMoveMag <= 0.0f)

@@ -24,4 +24,7 @@
 #define IDS_P3_MENU_GOTY				31217
 #define IDS_P3_MENU_ORIGINAL			31218
 
+// M-P3-27: the loading screen's prompt, NOLF2's IDS_PRESS_ANY_KEY (551)
+#define IDS_P3_PRESS_ANY_KEY			31219
+
 #endif // P3_STRINGS_H

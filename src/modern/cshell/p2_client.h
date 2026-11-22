@@ -29,6 +29,10 @@ void P2_Update();
 // CLoadingScreen::Show / Hide (M-P2-03 lock, M-P2-12 is-loading flag).
 void P2_OnLoadingScreen(LTBOOL bShown);
 
+// M-P3-27: the level is loaded, and the loading screen only waits for a
+// key: the is-loading flag goes to 0 before the screen goes away.
+void P2_OnLoadingDone();
+
 // LTTRUE: the developer console took this command (GameClientShell's
 // OnCommandOn returns at once).
 LTBOOL P2_OnCommandOn(int nCommand);
