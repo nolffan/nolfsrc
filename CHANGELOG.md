@@ -67,6 +67,14 @@ Since the first public release:
   the fans were silent, and the console showed "Couldn't play sound" two
   times when the level started. Now the game reads `|` in a sound name as
   `\`, and the fans play `tunnelfan2.wav`. (related to issue #64)
+- **No "Couldn't play sound" errors for text-only dialogue.** Some
+  dialogue lines have text but no voice: Cate's choices and silent
+  replies (". . .", "(Question one.)", "(Torture him.)" and others), and
+  the weapon names of the weapon menu in the training levels. The game
+  tried to play a voice file for each, and the console showed
+  `Couldn't play sound 'Voice\9017.wav'` and so on. Now the game plays no
+  voice file for these lines. The text shows as before. A voice file that
+  is missing for any other line is still reported. (refs issue #65)
 - **The music error gives the file.** Twelve levels (among them T01S03,
   T03S01, M08S02, M11S02, and some multiplayer maps) use a music theme,
   `Music\UrbanSpy`, that is not in any release of the game. These levels

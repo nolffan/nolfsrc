@@ -2334,6 +2334,11 @@ void CCharacterFX::PlayTaunt(uint32 nTauntId, LTBOOL bForce)
 	LTBOOL bIsLocalClient = (g_pLTClient->GetClientObject() == m_hServerObject);
 	if (bIsLocalClient && !bForce) return;
 
+#ifdef NOLFSRC_MODERN
+	// A text-only ID has no voice file (M-P5-25, issue #65).
+	if (IsTextOnlyDialogueId(nTauntId)) return;
+#endif
+
 	CString csSound = g_pClientSoundMgr->GetSoundFilenameFromId("Dialogue", nTauntId);
 	if (csSound.IsEmpty()) return;
 

@@ -616,6 +616,48 @@ Tested: a run of the retail game on M05S04 shows the two lines at the
 start. The other rotating objects of the 102 worlds have correct sound
 names.
 
+### Text-only dialogue lines try to play a voice file
+`src/game/ObjectDLL/Character.cpp` (`CCharacter::PlayDialogue`), `src/game/ClientRes/ClientRes.rc` (`IDS_TEXT_DIALOGUE_9000` to `9017`)
+
+> **✅ FIXED in the modern build** (`NOLFSRC_MODERN`, MODERN.md M-P5-25,
+> refs issue #65): `PlayDialogue` does not play a voice file for a fixed
+> list of text-only IDs (`IsTextOnlyDialogueId` in
+> `src/game/Shared/SoundMgr.h`). It stops the current dialogue sound, as
+> retail did, and shows the text. A voice file that is missing for any
+> other ID is still reported. The release build keeps the retail code.
+
+`CCharacter::PlayDialogue` does two things for each dialogue line. It plays
+the voice file of the line's ID (`GetSoundFilenameFromId("Dialogue", id)`,
+which is `Voice\<id>.wav`), and then it shows the ID's text in the dialogue
+window. It does not know which lines have a voice.
+
+Some lines are text only. `IDS_TEXT_DIALOGUE_9000` to `IDS_TEXT_DIALOGUE_9017`
+(`ClientRes.rc`) are Cate's choices and her silent replies: `". . ."`,
+`"(Question one.)"` to `"(Question eight.)"`, `"(Torture him.)"`,
+`"(What now?)"`, `"(Which weapon would you like to practice with?)"` and
+others. The worlds use them in the `Dialogue` and `Decisions` properties of
+`CinematicTrigger` objects (M01S02, M01S03, M02S02, M03S01, M07S02, M07S03,
+M13S02, T01S02, T01S03, T02S01, T03S01, T08S01). The weapon menu of T01S03
+and T08S01 (`weaponchoice`) also gives four choices that are not dialogue:
+4001, 4000 and 4008 (`IDS_WEAPON_2`, `IDS_WEAPON_1`, `IDS_WEAPON_9`, the
+weapon names) and 37 (`IDS_NONE`, "None"). The player "says" the choice
+that is picked, thus the game also plays its ID as a voice file.
+
+No release of the game has a voice file for these IDs (we examined the
+VOICE folder of 9 NOLF releases: EU, EU GOTY, USA, USA GOTY, German,
+French, Spanish, Swedish and Italian). Thus the console shows two errors
+for each such line, for example
+`ERROR in CServerSoundMgr::PlaySound() - Couldn't play sound 'Voice\9017.wav'`
+and the same from `CClientSoundMgr::PlaySound()`. The dialogue itself
+works. Tested: in T01S03, in the modern build without the fix (this code
+is retail), `trigger weaponchoice on` in the console, then the first
+choice, gives four errors (`Voice\9017.wav` and `Voice\4001.wav`).
+
+Not all missing voice files are of this type. Some lines with real text
+have no voice file in any release, for example `IDS_DIALOGUE_13717` ("I
+guess the blokes in the lab have something new to show you.", T01S03,
+`guardconv2`). The modern build still reports these.
+
 ### Twelve worlds use a music theme that is not in the game
 `WORLDS/T01S03.dat` and 11 other worlds (NOLF.REZ, NOLFGOTY.REZ, level data) · `0x0043fcd0` (lithtech.exe) · `src/engine/lithtech/clientmusic.cpp` (`CLTDirectMusicMgr::InitLevel`)
 

@@ -331,6 +331,9 @@ class CCharacter : public GameBase
 
 		virtual void	KillDlgSnd();
 		void			KillDialogueSound() { KillDlgSnd(); }
+#ifdef NOLFSRC_MODERN
+		void			StopDialogSoundForTextOnly();
+#endif
 
         LTBOOL          PlayDialogue(char *szDialogue, CinematicTrigger* pCinematic, BOOL bWindow = FALSE,
                             BOOL bStayOpen = FALSE, const char *szCharOverride = NULL, char *szDecisions = NULL, unsigned char byMood=0);

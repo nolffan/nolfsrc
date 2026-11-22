@@ -1872,6 +1872,27 @@ void CCharacter::PlayDamageSound(DamageType eType)
 }
 
 
+#ifdef NOLFSRC_MODERN
+// ----------------------------------------------------------------------- //
+//
+//	ROUTINE:	CCharacter::StopDialogSoundForTextOnly
+//
+//	PURPOSE:	For a text-only dialogue ID (M-P5-25, issue #65), do what
+//				PlayDialogSound does before it plays a sound: stop the
+//				current dialogue sound. Then play nothing.
+//
+// ----------------------------------------------------------------------- //
+
+void CCharacter::StopDialogSoundForTextOnly()
+{
+	if (m_damage.IsDead()) return;
+	if (!m_bCanPlayDialogSound) return;
+
+	KillDlgSnd();
+}
+
+#endif
+
 // ----------------------------------------------------------------------- //
 //
 //	ROUTINE:	CCharacter::PlayDialogSound
@@ -2028,6 +2049,14 @@ LTBOOL CCharacter::PlayDialogue(DWORD dwID, CinematicTrigger* pCinematic,
     if (!dwID) return LTFALSE;
 
 	CString csSound = g_pServerSoundMgr->GetSoundFilenameFromId("Dialogue", dwID);
+#ifdef NOLFSRC_MODERN
+	// A text-only ID has no voice file (M-P5-25, issue #65).
+	if (IsTextOnlyDialogueId(dwID))
+	{
+		StopDialogSoundForTextOnly();
+	}
+	else
+#endif
 	PlayDialogSound((char *)(LPCSTR)csSound, CST_EXCLAMATION);
 
 	if (bWindow)
@@ -2066,6 +2095,14 @@ LTBOOL CCharacter::PlayDialogue(char *szDialogue, CinematicTrigger* pCinematic,
 		csSound = szDialogue;
 	}
 
+#ifdef NOLFSRC_MODERN
+	// A text-only ID has no voice file (M-P5-25, issue #65).
+	if (dwID && IsTextOnlyDialogueId(dwID))
+	{
+		StopDialogSoundForTextOnly();
+	}
+	else
+#endif
 	PlayDialogSound((char *)(LPCSTR)csSound, CST_EXCLAMATION);
 
 	if (bWindow)

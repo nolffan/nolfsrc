@@ -1948,6 +1948,14 @@ LTBOOL CInterfaceMgr::OnMessage(uint8 messageID, HMESSAGEREAD hMessage)
 			}
 
 
+#ifdef NOLFSRC_MODERN
+			if (nSound && IsTextOnlyDialogueId(nSound))
+			{
+				// A text-only ID has no voice file (M-P5-25, issue #65):
+				// play no sound.
+			}
+			else
+#endif
 			if (nSound)
 			{
 				CString csSound = g_pClientSoundMgr->GetSoundFilenameFromId("Dialogue", nSound);
