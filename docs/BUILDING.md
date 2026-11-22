@@ -467,6 +467,13 @@ binary's preferred base; `ext/tools/mapaddr.py out/nolf-legacy-debug/d3d.map
 The playtest runs the game in `out/play/<name>/`, so a playtest's
 `nolfsrc.log` is there.
 
+The modern debug build (`make modern-debug`) has test hooks that the
+release builds do not have:
+
+| Variable | What it does | For |
+|---|---|---|
+| `NOLFSRC_TEST_MOUSENAMES` | a `printf` format, for example `Taste %d`: the system mouse's buttons get the names that it gives, by button number, as on a Windows in another language | M-P1-33 (issue #59) |
+
 ## Playing your build
 
 To play a release download, see [`INSTALL.md`](INSTALL.md); this is about

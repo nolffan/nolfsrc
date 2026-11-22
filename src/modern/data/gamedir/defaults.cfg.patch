@@ -48,10 +48,12 @@
  rangebind "##mouse" "##y-axis" 0.000000 0.000000 "Axis2" 
  scale "##mouse" "##y-axis" 0.004625
 -rangebind "##mouse" "##z-axis" -255.000000 -0.100000 "ZoomOut" 0.100000 255.000000 "ZoomIn"
-+rangebind "##mouse" "##z-axis" -255.000000 -0.100000 "NextWeapon" 0.100000 255.000000 "PrevWeapon"
- rangebind "##mouse" "Button 0" 0.000000 0.000000 "Fire" 
- rangebind "##mouse" "Button 1" 0.000000 0.000000 "Activate" 
+-rangebind "##mouse" "Button 0" 0.000000 0.000000 "Fire" 
+-rangebind "##mouse" "Button 1" 0.000000 0.000000 "Activate" 
 -rangebind "##mouse" "Button 2" 0.000000 0.000000 "Reload" 
 -
-+rangebind "##mouse" "Button 2" 0.000000 0.000000 "ToggleZoom" 
++rangebind "##mouse" "##z-axis" -255.000000 -0.100000 "NextWeapon" 0.100000 255.000000 "PrevWeapon"
++rangebind "##mouse" "##button0" 0.000000 0.000000 "Fire" 
++rangebind "##mouse" "##button1" 0.000000 0.000000 "Activate" 
++rangebind "##mouse" "##button2" 0.000000 0.000000 "ToggleZoom" 
 +

@@ -27,7 +27,7 @@
 // The config version this build upgrades autoexec.cfg to (ModPatchNum,
 // M-P1-12).  Raise it, and add a step to P1Config_AfterInit, for every new
 // one-time change.
-#define P1_CONFIG_VERSION		1.7f
+#define P1_CONFIG_VERSION		1.8f
 
 // p1_config.cpp -- the console variables and the start-up steps.
 

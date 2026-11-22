@@ -583,6 +583,7 @@ LITHTECH_SRC := lithtech.cpp ..\server\msgterm.cpp ..\server\sdkforce.cpp ..\ser
     ..\server\worldbsp.cpp ..\server\worldmodels.cpp ..\server\worldsim.cpp worldtree.cpp clientmusic.cpp
 # The modern build's own engine code (MODERN.md): the ##gamepad device.
 LITHTECH_SRC += $(if $(MODERN),..\..\modern\engine\p7_gamepad.cpp)
+LITHTECH_SRC += $(if $(MODERN),..\..\modern\engine\p1_mousebutton.cpp)
 LITHTECH_OD_SRC := ..\server\localdriver.cpp
 LITHTECH_GX_SRC := controlfile.cpp
 lithtech_flags = $(subst /O2,$(strip \

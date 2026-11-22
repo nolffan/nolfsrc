@@ -73,6 +73,8 @@ in.
 * [Stepping up onto a slope where it is not](#stepping-up-onto-a-slope-where-it-is-not)
 * [On a scaled display the cursor is held to part of the screen](#on-a-scaled-display-the-cursor-is-held-to-part-of-the-screen)
 * [Empty and placeholder sound names fill the console with errors](#empty-and-placeholder-sound-names-fill-the-console-with-errors)
+* [The default mouse buttons are bound by names that Windows can change](#the-default-mouse-buttons-are-bound-by-names-that-windows-can-change)
+* [The console ends a command at some characters above 127](#the-console-ends-a-command-at-some-characters-above-127)
 
 Every entry names the retail address it was read from, the binary, and the
 file that reproduces it. An entry is listed only once its function is
@@ -584,6 +586,73 @@ the shark's last step). The entry stops `GetSound` at the character's own
 set, thus the character does not use the lines of its nationality or its
 sex. But `"x"` is not a file: the game plays it, and the console shows
 `Couldn't play sound 'x'`.
+
+### The default mouse buttons are bound by names that Windows can change
+`0x00438140`, `0x00438470`, `0x00438ad0`, `0x00438d80` (lithtech.exe) · `src/engine/lithtech/clientinput.cpp` (`di_FindDeviceObject`, `cc_SaveInputBindings`), `diblit.cpp` (`di_AddDeviceObjectQ438`, `di_MatchObjectCallbackQ438`); `defctrls.cfg`, `defaults.cfg`
+
+> **✅ FIXED in the modern build** (`NOLFSRC_MODERN`, MODERN.md M-P1-33,
+> issue #59): each mouse button has a fixed name by its number,
+> `##button0` to `##button7` (`src/modern/engine/p1_mousebutton.cpp`). A
+> binding finds the button by this name, by the name that DirectInput
+> gives, or by the retail name `Button <N>`. The config save writes the
+> fixed name, and the default controls use it. The release build keeps the
+> retail code.
+
+A binding names a device object (a key, an axis or a button) by its name.
+The engine finds the object only by its name: `di_FindDeviceObject`
+compares the name with the two names of each object that has a binding,
+and `di_AddDeviceObject` compares it with the DirectInput name (`tszName`)
+of each object of the device. A name that starts with `##` is different:
+the engine finds that object by its type and position. The default
+controls use such names for the keys (`##<code>`) and for the mouse axes
+(`##x-axis`, `##y-axis`, and `##z-axis` for the wheel).
+
+But the default controls (`defctrls.cfg`, `defaults.cfg`) bind the three
+mouse buttons by their DirectInput names: `"Button 0"` (Fire), `"Button 1"`
+(Activate) and `"Button 2"`. DirectInput gets these names from Windows. The
+names are `Button 0` and so on with an English Windows, but Windows in
+another language, or a mouse driver, can give other names. Then the button
+bindings do not attach to a button, and the mouse buttons do nothing. The
+config save (`cc_SaveInputBindings`, 0x00438d80) writes only the bindings
+that are attached, thus `autoexec.cfg` loses the three lines when the game
+stops. The mouse turns the view and the wheel operates, because their names
+are fixed names.
+
+The engine has fixed names for three buttons (`##Button 0` to
+`##Button 2`, by type and data offset, 0x00438470), but the default
+controls do not use them. Also, the config save writes the name that the
+binding used, thus a binding made in Customize Controls is saved with the
+DirectInput name. When that name has a character above 127, the binding
+can also fail in Customize Controls (see the next entry).
+
+### The console ends a command at some characters above 127
+`0x0041b710` (lithtech.exe), `0x10005e24` (server.dll) · `src/engine/server/console.cpp` (`parse_Token`)
+
+> **✅ FIXED in the modern build** (`NOLFSRC_MODERN`, MODERN.md M-P1-33,
+> issue #59): `parse_Token` gives the character to `iscntrl` as an
+> `unsigned char`. The release build keeps the retail code.
+
+The console parser tests each character of a command with `iscntrl(c)`,
+and `c` is a signed `char`. Thus a character above 127 is a negative
+number, and `iscntrl` uses it as an index into the type table of the C
+library: it reads memory before the table. For some of these characters,
+the bit for "control character" is set in that memory, and the parser ends
+the command at the character. Which characters these are depends on the
+data before the table in the program. In the file of the retail
+lithtech.exe, 22 of the 128 characters have the bit, for example 0xDF
+(German "ß" in code page 1252) and 0xE0 to 0xE2 (Russian "а" to "в" in code
+page 1251). In the modern build before the fix, 41 characters have it, for
+example 0xF3 (Spanish "ó"). The data can change while the program runs,
+thus these lists are not certain.
+
+Customize Controls binds a mouse button by its DirectInput name, with a
+console command (`rangebind "Mouse" "<name>" ...`). When the name has one of
+these characters, the command stops at that character. It then has too few
+arguments, and it does nothing, without a message. The menu shows the new
+binding, but the binding is not there: the button does nothing, and the
+config save does not write it. Keys are not affected when they are bound,
+because Customize Controls binds a key by its code (`##<code>`). But it
+removes the old binding of a key by the key's name.
 
 ---
 

@@ -12,6 +12,15 @@ covers each change in detail, under its item number (M-P1-01 and so on).
 
 Since the first public release:
 
+- **The mouse buttons keep their bindings.** The default controls named
+  the mouse buttons by the names that Windows gives them ("Button 0" and
+  so on). Where Windows or the mouse driver gives other names, the mouse
+  buttons did nothing, and the game removed their bindings from
+  `autoexec.cfg`. Also, when a button's name has a letter such as "ó",
+  a binding made in Customize Controls did nothing. Now the buttons have
+  fixed names (`##button0` and so on), a binding finds its button by any
+  of its names, and such letters do not stop a binding. A config that has
+  no mouse button bound gets the default mouse buttons again. (issue #59)
 - **No more "Couldn't play sound ''" errors in the console.** Some level
   objects, and some characters, have no sound for an event, and the game
   reported an error each time it played that nothing. Now it plays nothing

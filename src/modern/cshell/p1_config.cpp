@@ -108,6 +108,64 @@ namespace
 		if (bOldDefault)
 			g_pLTClient->RunConsoleString("rangebind \"##keyboard\" \"##45\" 0 0 \"\"");
 	}
+
+	// M-P1-33: a config whose mouse buttons have no binding at all lost
+	// them to a name that was not the button's own (issue #59: the default
+	// controls named the buttons "Button 0" ..., and the config save drops
+	// a binding that did not attach). Give it defctrls.cfg's mouse buttons
+	// again, by their fixed names. A config with a mouse button bound keeps
+	// what the player set.
+	void RestoreMouseButtons()
+	{
+		DeviceObject*  pObjects = g_pLTClient->GetDeviceObjects(DEVICETYPE_MOUSE);
+		DeviceBinding* pBindings = g_pLTClient->GetDeviceBindings(DEVICETYPE_MOUSE);
+		DeviceBinding* pBinding;
+		DeviceObject*  pObject;
+		bool bBound = false;
+
+		for (pBinding = pBindings; pBinding && !bBound; pBinding = pBinding->pNext)
+		{
+			if (!pBinding->pActionHead)
+				continue;
+
+			for (pObject = pObjects; pObject; pObject = pObject->m_pNext)
+			{
+				if (pObject->m_ObjectType == CONTROLTYPE_BUTTON &&
+					!strcmp(pObject->m_ObjectName, pBinding->strTriggerName))
+				{
+					bBound = true;
+					break;
+				}
+			}
+		}
+
+		if (pBindings)
+			g_pLTClient->FreeDeviceBindings(pBindings);
+		if (pObjects)
+			g_pLTClient->FreeDeviceObjects(pObjects);
+
+		if (bBound)
+			return;
+
+		FILE* pFile = fopen("defctrls.cfg", "r");
+		char  szLine[256];
+
+		if (!pFile)
+			return;
+
+		while (fgets(szLine, sizeof(szLine), pFile))
+		{
+			char* p = szLine + strlen(szLine);
+
+			while (p > szLine && (p[-1] == '\n' || p[-1] == '\r'))
+				*--p = '\0';
+
+			if (strstr(szLine, "\"##mouse\" \"##button"))
+				g_pLTClient->RunConsoleString(szLine);
+		}
+
+		fclose(pFile);
+	}
 }
 
 // Called from OnEngineInitialized with the shell's other variables, before
@@ -215,6 +273,12 @@ void P1Config_AfterInit()
 		// M-P4-14: X toggled the crosshair off by accident (issue #67);
 		// the toggle has no key by default now.
 		UnbindOldCrosshairKey();
+	}
+
+	if (fSeen < 1.8f)
+	{
+		// M-P1-33: the mouse buttons, when none is bound (issue #59).
+		RestoreMouseButtons();
 	}
 
 	WriteConsoleFloat("ModPatchNum", P1_CONFIG_VERSION);

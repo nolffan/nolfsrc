@@ -418,7 +418,16 @@ static int parse_Token(char** ppPos, char** ppOut)
 			if (c == 0)
 				break;
 		}
+#ifdef NOLFSRC_MODERN
+		// M-P1-33: a character above 127 is not a control character. The
+		// signed char made it a negative index into the CRT's type table,
+		// and some of them (for example 0xF3, "o" with an acute accent)
+		// ended the command there: a binding of a mouse button with such a
+		// name in Customize Controls did nothing (RETAIL_BUGS.md).
+		else if (c == ';' || iscntrl((unsigned char)c))
+#else
 		else if (c == ';' || iscntrl(c))
+#endif
 		{
 			**ppOut = 0;
 			(*ppOut)++;

@@ -80,6 +80,7 @@
 
 #ifdef NOLFSRC_MODERN
 #include "..\..\modern\engine\p7_gamepad.h"   // M-P7-01: ##gamepad
+#include "..\..\modern\engine\p1_mousebutton.h" // M-P1-33: ##button<N>
 #endif
 
 #include <math.h>
@@ -684,6 +685,34 @@ CDeviceObject* di_FindDeviceObject(InputDevice* pDevice, char* pName)
 			return pCur;
 	}
 
+#ifdef NOLFSRC_MODERN
+	// M-P1-33: a mouse button by any of its names -- the fixed one
+	// ("##button<N>"), DirectInput's, or retail's "Button <N>" -- is the
+	// object of that button, which has the fixed name (input_AddTrigger).
+	if (GET_DIDEVICE_TYPE(pDevice->m_dwDevType) == DIDEVTYPE_MOUSE)
+	{
+		char szFixed[16];
+		int  nButton;
+
+		nButton = P1Mouse_ButtonNumber(pDevice->m_pDevice, pName, LTNULL, 0);
+
+		if (nButton >= 0)
+		{
+			P1Mouse_FixedName(nButton, szFixed);
+
+			pos = pDevice->m_Objects.m_pHead;
+
+			while (pos)
+			{
+				pCur = pDevice->m_Objects.GetNext(pos);
+
+				if (stricmp(pCur->m_TriggerName, szFixed) == 0)
+					return pCur;
+			}
+		}
+	}
+#endif
+
 	return LTNULL;
 }
 
@@ -787,6 +816,41 @@ extern int g_DebugLevel;                     // 0x004b0ab0
 // "find or create" for a device object.
 CDeviceObject* di_AddDeviceObject(InputDevice* pDevice, char* pName);
 
+#ifdef NOLFSRC_MODERN
+// M-P1-33: the create half for the modern build.  A mouse button is created
+// by its DirectInput name, whatever name the binding gave, and takes its
+// fixed name ("##button<N>") as the name the config save writes.  A fixed
+// name of a button that the mouse does not have creates nothing: the
+// retail "##" parse would read "##button2" as instance 0 (atoi of
+// "button2"), which is the X axis.
+CDeviceObject* di_AddDeviceObjectP1(InputDevice* pDevice, char* pName)
+{
+	char           szReal[MAX_PATH];
+	CDeviceObject* pObj;
+	int            nButton;
+
+	if (GET_DIDEVICE_TYPE(pDevice->m_dwDevType) != DIDEVTYPE_MOUSE)
+		return di_AddDeviceObject(pDevice, pName);
+
+	nButton = P1Mouse_ButtonNumber(pDevice->m_pDevice, pName, szReal, sizeof(szReal));
+
+	if (nButton < 0)
+	{
+		if (P1Mouse_IsFixedName(pName))
+			return LTNULL;
+
+		return di_AddDeviceObject(pDevice, pName);
+	}
+
+	pObj = di_AddDeviceObject(pDevice, szReal);
+
+	if (pObj)
+		P1Mouse_FixedName(nButton, pObj->m_TriggerName);
+
+	return pObj;
+}
+#endif
+
 // 0x004381a0 -- slot 11 (+0x2c), the trigger binder: hang a binding of
 // pActionName, over [rangeLow, rangeHigh], off the named object of the named
 // device, and rebuild the device's state; "Bound %s (on %s) to action %s"
@@ -839,7 +903,11 @@ LTBOOL input_AddTrigger(InputMgr* pMgr, char* pDeviceName, char* pTriggerName,
 
 	if (!pObj)
 	{
+#ifdef NOLFSRC_MODERN
+		pObj = di_AddDeviceObjectP1(pDevice, pTriggerName);
+#else
 		pObj = di_AddDeviceObject(pDevice, pTriggerName);
+#endif
 
 		if (!pObj)
 			return LTFALSE;
@@ -1595,6 +1663,10 @@ LTBOOL input_EnableDevice(InputMgr* pMgr, char* strDeviceName)
 				// M-P7-01: ##gamepad is ours, not DirectInput's.
 				if (P7Pad_CreateDevice(g_pDirectInput, guid, &pCreated) != DI_OK)
 					return LTFALSE;
+#ifdef NOLFSRC_DEBUG
+				// M-P1-33's test: other names for the mouse's buttons.
+				pCreated = P1Mouse_TestWrap(guid, pCreated);
+#endif
 #else
 				if (g_pDirectInput->CreateDevice(guid, &pCreated, LTNULL) != DI_OK)
 					return LTFALSE;
