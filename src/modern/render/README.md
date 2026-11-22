@@ -40,6 +40,39 @@ Console variables it reads besides the engine's own (the names and defaults
 `opengl.log` or `d3d9.log` beside the game, 4 logs every 2D call), and, ours, `VSync` and `Antialiasing` (0, 2, 4 or 8 samples per pixel: the renderers draw into a multisampled target and resolve it before a flip or a read).
 `RenderCommand info` prints the device in use.
 
+## Threads
+
+The engine calls the renderer from more than one thread. While a level
+loads, the game's loading screen draws whole frames from a thread of its
+own (`LoadingScreen.cpp`, `CLoadingScreen::RunThread`), and the main thread
+binds textures, makes surfaces and makes the world's context in the same
+time. The core's state and the device are not safe for this. Thus each way
+into the renderer (each `RenderStruct` slot, the `FillScreenRect` hook, and
+the movie stand-ins' `Blt` and `BltFast`) holds one recursive lock for all
+of its call (`MRLock`, `mr.h` and `mr_main.cpp`; MODERN.md, M-P0-06).
+`d3d9.ren` also makes its device with `D3DCREATE_MULTITHREADED`. A new way
+in must hold the lock too.
+
+## Debug checks
+
+The modern-debug build installs both renderers built with `NOLFSRC_DEBUG`
+(`build/ext.sh` puts them in `out/ext/debug/`, each with a `.pdb`). In
+them:
+
+- `MR_CHECK` reports a bad request that the code then refuses or clips (a
+  rectangle partly outside a texture or the screen, a viewport outside the
+  target), once for each place in the code.
+- `MR_ASSERT` reports what must never get to the device (a lock or a draw
+  out of the bounds of its buffer, a draw or a present without the lock),
+  and then stops the game with an illegal instruction. Thus the crash
+  handler logs a stack in the renderer, not in the graphics driver.
+- The lock reports each time a thread must wait for another thread, and
+  each slot that a thread other than `Init`'s calls for the first time.
+
+A report goes to the console, to stderr (`wine.log` in a playtest) and to
+the backend's log (`d3d9.log` or `opengl.log`), whatever `RenderDebug` is.
+The release build has none of these checks.
+
 ## Status
 
 | stage | what | state |

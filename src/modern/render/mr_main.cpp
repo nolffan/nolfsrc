@@ -25,6 +25,19 @@ void mr_Print(const char* pFormat, ...)
         g.pStruct->ConsolePrint("%s", buf);
 }
 
+// One line into the backend's log (opengl.log) beside the game.
+static void mr_LogLine(const char* pLine)
+{
+    static FILE* f;
+    if (!f)
+        f = fopen(g_RDLog, "w");
+    if (f)
+    {
+        fprintf(f, "%s\n", pLine);
+        fflush(f);
+    }
+}
+
 // RenderDebug 1+ goes to the console; RenderDebug 3+ also to the backend's
 // log (opengl.log) beside the game, which survives a crash.
 void mr_Debug(int nLevel, const char* pFormat, ...)
@@ -38,17 +51,145 @@ void mr_Debug(int nLevel, const char* pFormat, ...)
     va_end(ap);
     mr_Print("%s: %s", g_RDDll, buf);
     if (cvi(CV_RenderDebug) >= 3)
+        mr_LogLine(buf);
+}
+
+// ---- one thread at a time (mr.h) ----------------------------------------------
+
+static CRITICAL_SECTION s_csLock;
+static volatile LONG    s_nLockInit;            // 0, 1 (being made), 2 (made)
+static DWORD            s_nLockOwner;           // valid while s_nLockDepth > 0
+static int              s_nLockDepth;
+#ifdef NOLFSRC_DEBUG
+static const char* volatile s_pLockWhat;        // the outermost call that holds it
+static DWORD            s_nMainThread;          // the thread Init ran on
+#endif
+
+static void mr_InitLock(void)
+{
+    if (s_nLockInit == 2)
+        return;
+    if (InterlockedCompareExchange(&s_nLockInit, 1, 0) == 0)
     {
-        static FILE* f;
-        if (!f)
-            f = fopen(g_RDLog, "w");
-        if (f)
+        InitializeCriticalSection(&s_csLock);
+        s_nLockInit = 2;
+    }
+    while (s_nLockInit != 2)
+        Sleep(0);
+}
+
+MRLock::MRLock(const char* pWhat)
+{
+    (void)pWhat;
+    mr_InitLock();
+#ifdef NOLFSRC_DEBUG
+    // Another thread is in the renderer now: without the lock, the two
+    // would have used the device and the core's state at the same time.
+    if (!TryEnterCriticalSection(&s_csLock))
+    {
+        static volatile LONG s_nReports;
+        const char* pOther = s_pLockWhat;
+        DWORD nOther = s_nLockOwner;
+        EnterCriticalSection(&s_csLock);
+        if (InterlockedIncrement(&s_nReports) <= 20)
+            mr_CheckFailed(__FILE__, __LINE__, false,
+                           "%s on thread %lu waited: thread %lu was in %s (two threads in the renderer)",
+                           pWhat, (unsigned long)GetCurrentThreadId(), (unsigned long)nOther,
+                           pOther ? pOther : "?");
+    }
+#else
+    EnterCriticalSection(&s_csLock);
+#endif
+    if (s_nLockDepth++ == 0)
+    {
+        s_nLockOwner = GetCurrentThreadId();
+#ifdef NOLFSRC_DEBUG
+        s_pLockWhat = pWhat;
+        // Each slot the first time it comes from a thread other than Init's.
+        if (s_nMainThread && s_nLockOwner != s_nMainThread)
         {
-            fprintf(f, "%s\n", buf);
-            fflush(f);
+            static const char* s_pSeen[64];
+            static int s_nSeen;
+            bool bSeen = false;
+            for (int i = 0; i < s_nSeen && !bSeen; i++)
+                bSeen = s_pSeen[i] == pWhat;
+            if (!bSeen && s_nSeen < 64)
+            {
+                s_pSeen[s_nSeen++] = pWhat;
+                mr_Print("%s: %s called on thread %lu (Init ran on %lu)", g_RDDll, pWhat,
+                         (unsigned long)s_nLockOwner, (unsigned long)s_nMainThread);
+                fprintf(stderr, "%s: %s called on thread %lu (Init ran on %lu)\n", g_RDDll, pWhat,
+                        (unsigned long)s_nLockOwner, (unsigned long)s_nMainThread);
+            }
         }
+#endif
     }
 }
+
+MRLock::~MRLock()
+{
+    if (--s_nLockDepth == 0)
+    {
+        s_nLockOwner = 0;
+#ifdef NOLFSRC_DEBUG
+        s_pLockWhat = NULL;
+#endif
+    }
+    LeaveCriticalSection(&s_csLock);
+}
+
+bool mr_LockHeld(void)
+{
+    return s_nLockDepth > 0 && s_nLockOwner == GetCurrentThreadId();
+}
+
+// A slot's function with the lock held around it: MRLocked<name, fn>::Call
+// has fn's own type, so it goes in the slot fn went in.
+template <const char* N, auto F> struct MRLocked;
+template <const char* N, typename R, typename... A, R (*F)(A...)>
+struct MRLocked<N, F> {
+    static R Call(A... a)
+    {
+        MRLock lock(N);
+        return F(a...);
+    }
+};
+
+#ifdef NOLFSRC_DEBUG
+void mr_CheckFailed(const char* pFile, int nLine, bool bFatal, const char* pFormat, ...)
+{
+    // Once per site (the first 64 sites), so a check that fails every frame
+    // does not flood the log; a fatal one always reports.
+    static struct { const char* m_pFile; int m_nLine; } s_Sites[64];
+    static int s_nSites;
+    if (!bFatal)
+    {
+        for (int i = 0; i < s_nSites; i++)
+            if (s_Sites[i].m_nLine == nLine && s_Sites[i].m_pFile == pFile)
+                return;
+        if (s_nSites >= 64)
+            return;
+        s_Sites[s_nSites].m_pFile = pFile;
+        s_Sites[s_nSites].m_nLine = nLine;
+        s_nSites++;
+    }
+    char msg[512], line[700];
+    va_list ap;
+    va_start(ap, pFormat);
+    vsnprintf(msg, sizeof(msg), pFormat, ap);
+    va_end(ap);
+    const char* pName = strrchr(pFile, '/');
+    pName = pName ? pName + 1 : pFile;
+    snprintf(line, sizeof(line), "RENDER %s %s:%d: %s", bFatal ? "ASSERT" : "CHECK", pName, nLine, msg);
+    mr_Print("%s: %s", g_RDDll, line);
+    fprintf(stderr, "%s: %s\n", g_RDDll, line);
+    fflush(stderr);
+    OutputDebugStringA(line);
+    mr_LogLine(line);
+    if (bFatal)
+        __builtin_trap();
+}
+#endif
 
 // The names and defaults d3d.ren and the Mac renderer register, where they
 // share one; VSync and Antialiasing are ours.
@@ -190,6 +331,9 @@ static void r_Term(void);
 static int r_Init(RenderStructInit* pInit)
 {
     pInit->m_nVersion = RENDERSTRUCT_VERSION;
+#ifdef NOLFSRC_DEBUG
+    s_nMainThread = GetCurrentThreadId();
+#endif
 
     mr_RegisterVars();
     mr_ReadConsoleVariables();
@@ -337,10 +481,11 @@ static void r_RenderCommand(int argc, char** argv)
 // DirectDraw ("LPDIRECTDRAW", "BACKBUFFER"): they get mr_movie.cpp's
 // stand-ins. The modern engine asks for "FillScreenRect" (MODERN.md
 // M-P0-03).
+static constexpr char mrn_FillScreenRect[] = "FillScreenRect";
 static void* r_GetHook(const char* pName)
 {
     if (pName && !_stricmp(pName, "FillScreenRect"))
-        return (void*)&mr_FillScreenRect;
+        return (void*)&MRLocked<mrn_FillScreenRect, mr_FillScreenRect>::Call;
     return mr_MovieHook(pName);
 }
 
@@ -439,45 +584,55 @@ static void r_ReadConsoleVariables(void)
 
 // ---- the export --------------------------------------------------------------
 
+// Every slot, and the function behind it: each is called with the lock held.
+#define MR_SLOTS(X) \
+    X(Init, r_Init) \
+    X(Term, r_Term) \
+    X(BindTexture, mr_BindTexture) \
+    X(UnbindTexture, mr_UnbindTexture) \
+    X(CreateContext, mr_CreateContext) \
+    X(DeleteContext, mr_DeleteContext) \
+    X(Clear, r_Clear) \
+    X(Start3D, r_Start3D) \
+    X(End3D, r_End3D) \
+    X(IsIn3D, r_IsIn3D) \
+    X(StartOptimized2D, mr_StartOptimized2D) \
+    X(EndOptimized2D, mr_EndOptimized2D) \
+    X(IsInOptimized2D, r_IsInOptimized2D) \
+    X(SetOptimized2DBlend, r_SetOptimized2DBlend) \
+    X(GetOptimized2DBlend, r_GetOptimized2DBlend) \
+    X(SetOptimized2DColor, r_SetOptimized2DColor) \
+    X(GetOptimized2DColor, r_GetOptimized2DColor) \
+    X(RenderScene, mr_RenderScene) \
+    X(RenderCommand, r_RenderCommand) \
+    X(GetHook, r_GetHook) \
+    X(SwapBuffers, r_SwapBuffers) \
+    X(GetInfoFlags, r_GetInfoFlags) \
+    X(GetScreenFormat, r_GetScreenFormat) \
+    X(CreateSurface, mr_CreateSurface) \
+    X(DeleteSurface, mr_DeleteSurface) \
+    X(GetSurfaceInfo, mr_GetSurfaceInfo) \
+    X(LockSurface, mr_LockSurface) \
+    X(UnlockSurface, mr_UnlockSurface) \
+    X(OptimizeSurface, mr_OptimizeSurface) \
+    X(UnoptimizeSurface, mr_UnoptimizeSurface) \
+    X(LockScreen, mr_LockScreen) \
+    X(UnlockScreen, mr_UnlockScreen) \
+    X(BlitToScreen, mr_BlitToScreen) \
+    X(WarpToScreen, mr_WarpToScreen) \
+    X(MakeScreenShot, r_MakeScreenShot) \
+    X(ReadConsoleVariables, r_ReadConsoleVariables) \
+    X(BlitFromScreen, mr_BlitFromScreen)
+#define MR_SLOT_NAME(slot, fn) static constexpr char mrn_##slot[] = #slot;
+MR_SLOTS(MR_SLOT_NAME)
+#undef MR_SLOT_NAME
+
 extern "C" void RenderDLLSetup(RenderStruct* pStruct)
 {
+    mr_InitLock();
     g.pStruct = pStruct;
 
-    pStruct->Init                 = r_Init;
-    pStruct->Term                 = r_Term;
-    pStruct->BindTexture          = mr_BindTexture;
-    pStruct->UnbindTexture        = mr_UnbindTexture;
-    pStruct->CreateContext        = mr_CreateContext;
-    pStruct->DeleteContext        = mr_DeleteContext;
-    pStruct->Clear                = r_Clear;
-    pStruct->Start3D              = r_Start3D;
-    pStruct->End3D                = r_End3D;
-    pStruct->IsIn3D               = r_IsIn3D;
-    pStruct->StartOptimized2D     = mr_StartOptimized2D;
-    pStruct->EndOptimized2D       = mr_EndOptimized2D;
-    pStruct->IsInOptimized2D      = r_IsInOptimized2D;
-    pStruct->SetOptimized2DBlend  = r_SetOptimized2DBlend;
-    pStruct->GetOptimized2DBlend  = r_GetOptimized2DBlend;
-    pStruct->SetOptimized2DColor  = r_SetOptimized2DColor;
-    pStruct->GetOptimized2DColor  = r_GetOptimized2DColor;
-    pStruct->RenderScene          = mr_RenderScene;
-    pStruct->RenderCommand        = r_RenderCommand;
-    pStruct->GetHook              = r_GetHook;
-    pStruct->SwapBuffers          = r_SwapBuffers;
-    pStruct->GetInfoFlags         = r_GetInfoFlags;
-    pStruct->GetScreenFormat      = r_GetScreenFormat;
-    pStruct->CreateSurface        = mr_CreateSurface;
-    pStruct->DeleteSurface        = mr_DeleteSurface;
-    pStruct->GetSurfaceInfo       = mr_GetSurfaceInfo;
-    pStruct->LockSurface          = mr_LockSurface;
-    pStruct->UnlockSurface        = mr_UnlockSurface;
-    pStruct->OptimizeSurface      = mr_OptimizeSurface;
-    pStruct->UnoptimizeSurface    = mr_UnoptimizeSurface;
-    pStruct->LockScreen           = mr_LockScreen;
-    pStruct->UnlockScreen         = mr_UnlockScreen;
-    pStruct->BlitToScreen         = mr_BlitToScreen;
-    pStruct->WarpToScreen         = mr_WarpToScreen;
-    pStruct->MakeScreenShot       = r_MakeScreenShot;
-    pStruct->ReadConsoleVariables = r_ReadConsoleVariables;
-    pStruct->BlitFromScreen       = mr_BlitFromScreen;
+#define MR_SLOT_SET(slot, fn) pStruct->slot = MRLocked<mrn_##slot, fn>::Call;
+    MR_SLOTS(MR_SLOT_SET)
+#undef MR_SLOT_SET
 }

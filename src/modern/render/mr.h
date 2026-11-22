@@ -41,6 +41,43 @@ extern MRGlobals g;
 void mr_Print(const char* pFormat, ...);
 void mr_Debug(int nLevel, const char* pFormat, ...);
 
+// ---- one thread at a time --------------------------------------------------
+//
+// The engine calls the renderer from more than one thread: the game's
+// loading screen draws whole frames from a thread of its own
+// (LoadingScreen.cpp, CLoadingScreen::RunThread) while the main thread
+// loads the level, and the main thread binds, frees and makes textures and
+// the world's context in that time. The core's state and the device are
+// not safe for that, so every way in (the RenderStruct slots, the
+// FillScreenRect hook, the movie stand-ins' Blt) holds one recursive lock
+// for its whole call (mr_main.cpp, MODERN.md M-P0-06).
+struct MRLock {
+    explicit MRLock(const char* pWhat);
+    ~MRLock();
+    MRLock(const MRLock&) = delete;
+    MRLock& operator=(const MRLock&) = delete;
+};
+// The calling thread holds the lock (for the debug checks).
+bool mr_LockHeld(void);
+
+// ---- debug checks (NOLFSRC_DEBUG) ------------------------------------------
+//
+// In the debug build, MR_CHECK reports a condition that the code then
+// handles (a bad rectangle from the caller, refused or clipped): once per
+// site, to the console, stderr and the backend's log, whatever RenderDebug
+// is. MR_ASSERT is for what must never reach the device (a lock or a draw
+// out of bounds): it reports the same way, then stops the game with an
+// illegal instruction, so the crash handler logs a stack in the renderer
+// instead of in the driver. Both are nothing in the release build.
+#ifdef NOLFSRC_DEBUG
+void mr_CheckFailed(const char* pFile, int nLine, bool bFatal, const char* pFormat, ...);
+#define MR_CHECK(c, ...)  ((c) ? (void)0 : mr_CheckFailed(__FILE__, __LINE__, false, __VA_ARGS__))
+#define MR_ASSERT(c, ...) ((c) ? (void)0 : mr_CheckFailed(__FILE__, __LINE__, true, __VA_ARGS__))
+#else
+#define MR_CHECK(c, ...)  ((void)0)
+#define MR_ASSERT(c, ...) ((void)0)
+#endif
+
 // mr_movie.cpp: DirectDraw stand-ins for the movie players (GetHook).
 void* mr_MovieHook(const char* pName);
 

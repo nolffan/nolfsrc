@@ -12,6 +12,16 @@ covers each change in detail, under its item number (M-P1-01 and so on).
 
 Since the first public release:
 
+- **No more two threads in the renderer at the same time.** While a
+  level loads, the loading screen draws from a thread of its own, and
+  the main thread also uses the renderer to load textures. The
+  `d3d9.ren` and `opengl.ren` renderers did not stop the two threads from
+  using the renderer and the Direct3D device at the same time, which can
+  give bad data to the graphics driver. This is a possible cause of the
+  hard freezes in play that were reported with an NVIDIA driver. Now
+  the renderers let one thread in at a time. `d3d9.ren` also refuses or
+  clips some rectangles that are partly outside a texture or the screen.
+  (issue #50)
 - **Better crash reports for a crash at a bad address.** When the game
   crashes at an address that is in no module (for example, a call through
   a bad function pointer or vtable), the debug build's crash report in

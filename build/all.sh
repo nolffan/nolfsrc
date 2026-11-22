@@ -201,7 +201,11 @@ chmod +x "$OUT/linux-run.sh" "$OUT/linux-server.sh"
 if [ "${NOLF_MIDDLEWARE:-retail}" = open ]; then
     step "2. open runtime: OpenMiles, our Bink player on FFmpeg and our renderers (build/ext.sh)"
     bash build/ext.sh
-    python3 build/retailextract.py openruntime "${NOLF_EXT_OUT:-out/ext}" "$OUT"
+    # modern-debug: the renderers with their debug checks (out/ext/debug/)
+    case "${NOLFSRC_CFLAGS:-}" in
+        *NOLFSRC_DEBUG*) python3 build/retailextract.py openruntime "${NOLF_EXT_OUT:-out/ext}" "$OUT" debug ;;
+        *)               python3 build/retailextract.py openruntime "${NOLF_EXT_OUT:-out/ext}" "$OUT" ;;
+    esac
 else
     if [ -n "$NODISCS" ]; then
         step "2. third-party runtime: without the retail game, only the manifest rows of Miles + Bink"

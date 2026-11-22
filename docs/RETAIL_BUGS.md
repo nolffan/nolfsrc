@@ -1046,6 +1046,25 @@ the level count and the levels that follow the table.
 
 ---
 
+### The loading screen draws from a second thread while the main thread uses the renderer
+`CLoadingScreen::RunThread` (CShell.dll) · `src/game/ClientShellDLL/LoadingScreen.cpp`; `RenderDLLSetup` (d3d.ren, `0x10021410`) · `src/engine/d3d/w26_10020fd0_osoiqip.cpp`
+
+> **Not fixed in `d3d7.ren`.** The modern build's own renderers,
+> `d3d9.ren` (the default) and `opengl.ren`, let one thread in at a time
+> (MODERN.md, M-P0-06). `d3d7.ren` is the retail renderer and still has
+> the problem.
+
+`CLoadingScreen::Resume` starts a thread that draws the loading screen
+about ten times a second (`ClearScreen`, `Start3D`, the interface effects,
+2D, `FlipScreen`) while the main thread loads the level. During the load
+the main thread also calls the renderer: it binds textures, makes surfaces
+and makes the world's render context. Nothing in the game, the engine or
+`d3d.ren` stops the two threads from being in the renderer at the same
+time, and `d3d.ren` sets its DirectDraw cooperative level without
+`DDSCL_MULTITHREADED`. Thus the two threads can change the renderer's
+state and call DirectDraw and Direct3D at the same time. The playtests of
+the modern build's debug renderer show this at each level load.
+
 ## Leaks
 
 ### `ci_GetRenderModes` never closes its find handle

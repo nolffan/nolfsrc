@@ -176,6 +176,7 @@ static void mr_DrawMovie(MRDDSurface* pSrc, const RECT& dst, const RECT& src)
 
 static HRESULT __stdcall surf_Blt(void* p, RECT* pDst, void* pSrcSurf, RECT* pSrc, DWORD nFlags, void* pFX)
 {
+    MRLock lock("movie Blt");           // the engine calls these, not through a slot
     MRDDSurface* s = (MRDDSurface*)p;
     if (nFlags & DDBLT_COLORFILL)
     {
@@ -198,6 +199,7 @@ static HRESULT __stdcall surf_Blt(void* p, RECT* pDst, void* pSrcSurf, RECT* pSr
 
 static HRESULT __stdcall surf_BltFast(void* p, DWORD x, DWORD y, void* pSrcSurf, RECT* pSrc, DWORD)
 {
+    MRLock lock("movie BltFast");
     MRDDSurface* s = (MRDDSurface*)p;
     MRDDSurface* pFrom = (MRDDSurface*)pSrcSurf;
     if (!s->m_bBackBuffer || !pFrom)

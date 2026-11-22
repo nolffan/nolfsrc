@@ -308,6 +308,9 @@ static IDirect3DTexture9* d9_Realise(D9Texture* t)
         d9_LevelBytes(t->m_Fmt, (int)desc.Width, (int)desc.Height, &nDevRowBytes, &nDevRows);
         uint32_t nCopy = nRowBytes < nDevRowBytes ? nRowBytes : nDevRowBytes;
         int nCopyRows = nRows < nDevRows ? nRows : nDevRows;
+        MR_ASSERT(nCopy == nDevRowBytes && nCopyRows == nDevRows,
+                  "texture %dx%d level %d: staged %dx%d, Direct3D's %ux%u", t->m_StageW[0], t->m_StageH[0],
+                  i, t->m_StageW[i], t->m_StageH[i], desc.Width, desc.Height);
         D3DLOCKED_RECT lr;
         if (FAILED(t->m_pTex->LockRect(i, &lr, NULL, 0)))
             continue;
@@ -616,6 +619,8 @@ void rd_TexSubImage(int nLevel, int x, int y, int w, int h, RDPixels ePixels, co
         if (x < 0 || y < 0 || w <= 0 || h <= 0 ||
             x + w > t->m_StageW[nLevel] || y + h > t->m_StageH[nLevel])
         {
+            MR_CHECK(false, "texture %dx%d level %d: sub-image %d,%d %dx%d outside it; refused",
+                     t->m_StageW[nLevel], t->m_StageH[nLevel], nLevel, x, y, w, h);
             mr_Debug(1, "texture %dx%d level %d: sub-image %d,%d %dx%d outside it; refused",
                      t->m_StageW[nLevel], t->m_StageH[nLevel], nLevel, x, y, w, h);
             return;
@@ -628,10 +633,25 @@ void rd_TexSubImage(int nLevel, int x, int y, int w, int h, RDPixels ePixels, co
     }
     if (!t->m_pTex || nLevel >= t->m_nLevels)
         return;
+    // The same refusal as for a staged level: Direct3D's retail runtime does
+    // not check a LockRect rectangle against the level, and a row written
+    // past the level's end goes into the runtime's copy of the texture.
+    D3DSURFACE_DESC desc;
+    if (FAILED(t->m_pTex->GetLevelDesc(nLevel, &desc)))
+        return;
+    if (x < 0 || y < 0 || w <= 0 || h <= 0 || x + w > (int)desc.Width || y + h > (int)desc.Height)
+    {
+        MR_CHECK(false, "texture %ux%u level %d: sub-image %d,%d %dx%d outside it; refused",
+                 desc.Width, desc.Height, nLevel, x, y, w, h);
+        mr_Debug(1, "texture %ux%u level %d: sub-image %d,%d %dx%d outside it; refused",
+                 desc.Width, desc.Height, nLevel, x, y, w, h);
+        return;
+    }
     RECT rc = { x, y, x + w, y + h };
     D3DLOCKED_RECT lr;
     if (FAILED(t->m_pTex->LockRect(nLevel, &lr, &rc, 0)))
         return;
+    MR_ASSERT(lr.Pitch >= (INT)(w * bpp), "texture level %d: pitch %d for %d pixels", nLevel, lr.Pitch, w);
     for (int r = 0; r < h; r++)
         d9_ConvertRow(t->m_Fmt, ePixels, (const uint8_t*)pData + r * nSrcPitch, (uint8_t*)lr.pBits + r * lr.Pitch, w);
     t->m_pTex->UnlockRect(nLevel);
@@ -817,6 +837,10 @@ static void d9_Apply(void)
         s_pDev->SetScissorRect(&rc);
     }
 
+    MR_CHECK(s.m_Viewport[0] >= 0 && s.m_Viewport[1] >= 0 && s.m_Viewport[2] > 0 && s.m_Viewport[3] > 0 &&
+             s.m_Viewport[0] + s.m_Viewport[2] <= s_nWidth && s.m_Viewport[1] + s.m_Viewport[3] <= s_nHeight,
+             "viewport %d,%d %dx%d outside the %dx%d target (SetViewport refuses it)", s.m_Viewport[0],
+             s.m_Viewport[1], s.m_Viewport[2], s.m_Viewport[3], s_nWidth, s_nHeight);
     D3DVIEWPORT9 vp = { (DWORD)s.m_Viewport[0], (DWORD)s.m_Viewport[1],
                         (DWORD)s.m_Viewport[2], (DWORD)s.m_Viewport[3],
                         s.m_DepthRange[0], s.m_DepthRange[1] };
@@ -917,6 +941,7 @@ struct D9Vertex {
 #define D9_FVF (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX4 | D3DFVF_TEXCOORDSIZE4(0) | \
                 D3DFVF_TEXCOORDSIZE4(1) | D3DFVF_TEXCOORDSIZE4(2) | D3DFVF_TEXCOORDSIZE4(3))
 #define D9_MAXVERTS 8192
+static_assert(sizeof(D9Vertex) == 3 * 4 + 4 + D9_UNITS * 4 * 4, "D9_FVF's stride");
 
 static D9Vertex s_Verts[D9_MAXVERTS];
 static D9Vertex s_Quads[D9_MAXVERTS / 4 * 6];
@@ -941,6 +966,7 @@ struct D9TVertex {
     float t[D9_UNITS][2];
 };
 #define D9_TFVF (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_SPECULAR | D3DFVF_TEX4)
+static_assert(sizeof(D9TVertex) == 4 * 4 + 4 + 4 + D9_UNITS * 2 * 4, "D9_TFVF's stride");
 static D9TVertex s_TVerts[D9_MAXVERTS / 4 * 6 > D9_MAXVERTS * 3 ? D9_MAXVERTS / 4 * 6 : D9_MAXVERTS * 3];
 
 static void d9_Xform(const D9Matrix& M, const float* v, float* o)
@@ -1059,6 +1085,7 @@ static void d9_DrawClamped(D3DPRIMITIVETYPE eType, const D9Vertex* pVerts, int n
     }
     if (!nOut)
         return;
+    MR_ASSERT(nOut <= nMaxOut && nOut % nPer == 0, "clamped draw: %d vertices of %d, %d each", nOut, nMaxOut, nPer);
     for (int i = 0; i < 8; i++)
         d9_TSS(i, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
     d9_RS(D3DRS_FOGTABLEMODE, D3DFOG_NONE);
@@ -1096,6 +1123,16 @@ static void d9_Draw(int n)
     }
     if (nPrims <= 0)
         return;
+    MR_ASSERT(mr_LockHeld(), "draw without the renderer's lock (thread %lu)", (unsigned long)GetCurrentThreadId());
+#ifdef NOLFSRC_DEBUG
+    {
+        int nNeed = eType == D3DPT_TRIANGLEFAN ? nPrims + 2 : eType == D3DPT_LINELIST ? nPrims * 2 : nPrims * 3;
+        int nHave = pVerts == s_Quads ? (int)(sizeof(s_Quads) / sizeof(s_Quads[0])) : n;
+        MR_ASSERT(n >= 0 && n <= D9_MAXVERTS && nNeed <= nHave,
+                  "draw of %d primitives (type %d) needs %d vertices, has %d (%d gathered)", nPrims, (int)eType,
+                  nNeed, nHave, n);
+    }
+#endif
     d9_BeginScene();
     d9_Apply();
     if (s_S.m_Caps[RD_DEPTH_CLAMP])
@@ -1175,6 +1212,7 @@ void rd_Vertex3f(float x, float y, float z)
             s_nVerts = 2;
         }
     }
+    MR_ASSERT(s_nVerts >= 0 && s_nVerts < D9_MAXVERTS, "vertex %d of %d", s_nVerts, D9_MAXVERTS);
     D9Vertex& v = s_Verts[s_nVerts++];
     v = s_Cur;
     v.x = x;
@@ -1227,8 +1265,27 @@ void rd_Clear(uint32_t nWhat)
     s_pDev->Clear(1, &rc, nFlags, D3DCOLOR_COLORVALUE(c[0], c[1], c[2], c[3]), 1.0f, 0);
 }
 
+static IDirect3DSurface9* s_pAutoDepth;      // the implicit depth surface, while s_pMSDepth is bound
+
 static void d9_DestroyTarget(void)
 {
+    // The back buffer and the implicit depth surface bound again first, so
+    // the device holds no reference to the surfaces released here.
+    if (s_pMSColor && s_pDev)
+    {
+        IDirect3DSurface9* pBack = NULL;
+        if (SUCCEEDED(s_pDev->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBack)))
+        {
+            s_pDev->SetRenderTarget(0, pBack);
+            pBack->Release();
+        }
+    }
+    if (s_pAutoDepth)
+    {
+        s_pDev->SetDepthStencilSurface(s_pAutoDepth);
+        s_pAutoDepth->Release();
+        s_pAutoDepth = NULL;
+    }
     if (s_pMSColor)
     {
         s_pMSColor->Release();
@@ -1257,6 +1314,7 @@ static void d9_CreateTarget(void)
         s_eMS = D3DMULTISAMPLE_NONE;
         return;
     }
+    s_pDev->GetDepthStencilSurface(&s_pAutoDepth);
     s_pDev->SetRenderTarget(0, s_pMSColor);
     s_pDev->SetDepthStencilSurface(s_pMSDepth);
 }
@@ -1281,6 +1339,15 @@ void rd_ReadPixels(int x, int y, int w, int h, RDPixels ePixels, void* pDest, bo
     (void)bFront;
     if (!s_pDev || w <= 0 || h <= 0)
         return;
+    // Only what lies on the surface is read: the caller's rectangle can lie
+    // partly off it (BlitFromScreen takes the engine's), and a row read past
+    // the system-memory copy reads past its end. Pixels off the surface come
+    // back black.
+    if (x < 0 || y < 0 || x + w > s_nWidth || y + h > s_nHeight)
+    {
+        MR_CHECK(false, "read-back %d,%d %dx%d outside the %dx%d screen; clipped", x, y, w, h, s_nWidth, s_nHeight);
+        memset(pDest, 0, (size_t)w * h * (ePixels == RD_PIX_565 ? 2 : 4));
+    }
     d9_EndScene();
     if (!bFront)
         d9_Resolve();
@@ -1294,13 +1361,16 @@ void rd_ReadPixels(int x, int y, int w, int h, RDPixels ePixels, void* pDest, bo
     if (s_pReadback && SUCCEEDED(s_pDev->GetRenderTargetData(pBack, s_pReadback)) &&
         SUCCEEDED(s_pReadback->LockRect(&lr, NULL, D3DLOCK_READONLY)))
     {
+        int x0 = x < 0 ? -x : 0, x1 = x + w > s_nWidth ? s_nWidth - x : w;
         for (int r = 0; r < h; r++)
         {
+            if (y + r < 0 || y + r >= s_nHeight || x1 <= x0)
+                continue;
             const uint32_t* pSrc = (const uint32_t*)((const uint8_t*)lr.pBits + (y + r) * lr.Pitch) + x;
             if (ePixels == RD_PIX_565)
             {
                 uint16_t* d = (uint16_t*)pDest + r * w;
-                for (int i = 0; i < w; i++)
+                for (int i = x0; i < x1; i++)
                 {
                     uint32_t p = pSrc[i];
                     d[i] = (uint16_t)((((p >> 16) & 0xff) >> 3) << 11 | (((p >> 8) & 0xff) >> 2) << 5 | ((p & 0xff) >> 3));
@@ -1309,7 +1379,7 @@ void rd_ReadPixels(int x, int y, int w, int h, RDPixels ePixels, void* pDest, bo
             else
             {
                 uint32_t* d = (uint32_t*)pDest + r * w;
-                for (int i = 0; i < w; i++)
+                for (int i = x0; i < x1; i++)
                     d[i] = pSrc[i] | 0xff000000;
             }
         }
@@ -1369,12 +1439,17 @@ bool rd_CreateDevice(void* hWnd, uint32_t nWidth, uint32_t nHeight, bool bWindow
 
     // FPU_PRESERVE: Direct3D leaves the FPU alone; RenderScene sets the
     // single precision the engine runs at, as retail d3d.ren does
-    // (mr_SetFPUPrecision24, mr_scene.cpp).
+    // (mr_SetFPUPrecision24, mr_scene.cpp). MULTITHREADED: the loading
+    // screen draws from a thread of its own (mr.h, MRLock); the core's lock
+    // already lets one thread in at a time, and this makes the runtime and
+    // the driver expect calls from more than one thread.
     HRESULT hr = s_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, (HWND)hWnd,
-                                      D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_FPU_PRESERVE, &s_pp, &s_pDev);
+                                      D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_FPU_PRESERVE | D3DCREATE_MULTITHREADED,
+                                      &s_pp, &s_pDev);
     if (FAILED(hr))
         hr = s_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, (HWND)hWnd,
-                                  D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_FPU_PRESERVE, &s_pp, &s_pDev);
+                                  D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_FPU_PRESERVE | D3DCREATE_MULTITHREADED,
+                                  &s_pp, &s_pDev);
     if (FAILED(hr))
     {
         mr_Print("d3d9.ren: could not create a Direct3D 9 device (%08lx)", (unsigned long)hr);
@@ -1461,6 +1536,7 @@ void rd_Present(void)
 {
     if (!s_pDev)
         return;
+    MR_ASSERT(mr_LockHeld(), "present without the renderer's lock (thread %lu)", (unsigned long)GetCurrentThreadId());
     d9_EndScene();
     d9_Resolve();
     HRESULT hr = s_pDev->Present(NULL, NULL, NULL, NULL);

@@ -8,9 +8,12 @@ the build takes out of the retail binaries, is this file's).
 
   build/retailextract.py resources   <retaildir> <gamedir>  game DATA only (no binary)
   build/retailextract.py thirdparty  <retaildir> <gamedir>  Miles + Bink, nothing else
-  build/retailextract.py openruntime <extdir> <gamedir>     the modern build's open
+  build/retailextract.py openruntime <extdir> <gamedir> [debug]
+                                                            the modern build's open
                                                             replacements for them
-                                                            (build/ext.sh's output)
+                                                            (build/ext.sh's output;
+                                                            debug: the renderers
+                                                            from <extdir>/debug/)
   build/retailextract.py art install                        the committed art (assets/art/)
                                                             into the directories
                                                             the resource scripts
@@ -424,7 +427,7 @@ def install_directmusic(gamedir, man):
     return len(targets)
 
 
-def cmd_openruntime(extdir, gamedir):
+def cmd_openruntime(extdir, gamedir, debug=False):
     gamedir = Path(gamedir)
     gamedir.mkdir(parents=True, exist_ok=True)
     man = Manifest(gamedir)
@@ -434,7 +437,16 @@ def cmd_openruntime(extdir, gamedir):
             man.rows.pop(f.name, None)
             print(f"   removed {f.name}")
     for name, origin in OPEN_RUNTIME:
-        shutil.copyfile(Path(extdir) / name, gamedir / name)
+        src = Path(extdir) / name
+        if debug and name.endswith(".ren"):
+            # modern-debug: the renderer with its debug checks, and its .pdb
+            src = Path(extdir) / "debug" / name
+            origin += ", NOLFSRC_DEBUG"
+            pdb = Path(name).with_suffix(".pdb").name
+            if (src.parent / pdb).exists():
+                shutil.copyfile(src.parent / pdb, gamedir / pdb)
+                man.add(pdb, f"EXT {origin}: symbols (build/ext.sh)")
+        shutil.copyfile(src, gamedir / name)
         man.add(name, f"EXT {origin} (build/ext.sh)")
         print(f"   {name}  <-  {origin}")
     ndm = install_directmusic(gamedir, man)
@@ -943,6 +955,8 @@ def main():
         cmd_thirdparty(sys.argv[2], sys.argv[3])
     elif cmd == "openruntime" and len(sys.argv) == 4:
         cmd_openruntime(sys.argv[2], sys.argv[3])
+    elif cmd == "openruntime" and len(sys.argv) == 5 and sys.argv[4] == "debug":
+        cmd_openruntime(sys.argv[2], sys.argv[3], debug=True)
     elif cmd == "art" and sys.argv[2:] == ["install"]:
         cmd_art("install")
     elif cmd == "art" and len(sys.argv) == 4 and sys.argv[2] in ("write", "check"):

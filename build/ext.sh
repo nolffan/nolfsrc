@@ -12,6 +12,9 @@
 #                         beside d3d.ren; "RenderDll" "opengl.ren" picks it
 #   out/ext/d3d9.ren      our Direct3D 9 renderer, the same core over its
 #                         Direct3D 9 backend; "RenderDll" "d3d9.ren" picks it
+#   out/ext/debug/        both renderers again with NOLFSRC_DEBUG (the
+#                         core's lock, lock and draw bound checks: mr.h),
+#                         frame pointers and a .pdb each, for modern-debug
 #
 # Everything is compiled with Zig (the build image has the version
 # ext/openmiles/build.zig.zon asks for): OpenMiles is Zig, and `zig cc` is
@@ -158,4 +161,25 @@ else
         -ld3d9 -lgdi32 -luser32
     rm -f "$OUT/d3d9.lib" "$OUT/d3d9.pdb"
     stamp d3d9 build/ext.sh $DSRC
+fi
+
+# --- the renderers with their debug checks -> out/ext/debug/ ------------------
+# The same sources and flags with NOLFSRC_DEBUG (src/modern/render/mr.h:
+# MR_CHECK, MR_ASSERT), not stripped, with frame pointers so that the crash
+# handler's stack walk goes through them; modern-debug installs these
+# (build/all.sh, retailextract.py openruntime ... debug).
+if fresh renderdebug build/ext.sh $GSRC $DSRC; then
+    echo "== debug renderers: up to date ($OUT/debug/)"
+else
+    echo "== debug renderers: $R/ -> $OUT/debug/{opengl,d3d9}.ren (NOLFSRC_DEBUG)"
+    mkdir -p "$OUT/debug"
+    DBG="-O2 -DNOLFSRC_DEBUG -fno-omit-frame-pointer -shared -std=c++17 -fno-exceptions -fno-rtti -nostdlib++ -Wall -Wno-unused-function"
+    zig c++ -target $TARGET $DBG -o "$OUT/debug/opengl.ren" \
+        $(ls "$R"/*.cpp "$R"/gl/*.cpp | sort) "$R/gl/opengl.rc" "$R/gl/opengl.def" \
+        -lopengl32 -lgdi32 -luser32
+    zig c++ -target $TARGET $DBG -o "$OUT/debug/d3d9.ren" \
+        $(ls "$R"/*.cpp "$R"/d3d9/*.cpp | sort) "$R/d3d9/d3d9.rc" "$R/d3d9/d3d9.def" \
+        -ld3d9 -lgdi32 -luser32
+    rm -f "$OUT/debug/"*.lib
+    stamp renderdebug build/ext.sh $GSRC $DSRC
 fi
