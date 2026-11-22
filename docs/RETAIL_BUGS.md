@@ -72,6 +72,7 @@ in.
 * [The server's setup wizard never closes its find handle](#the-servers-setup-wizard-never-closes-its-find-handle)
 * [Stepping up onto a slope where it is not](#stepping-up-onto-a-slope-where-it-is-not)
 * [On a scaled display the cursor is held to part of the screen](#on-a-scaled-display-the-cursor-is-held-to-part-of-the-screen)
+* [Empty and placeholder sound names fill the console with errors](#empty-and-placeholder-sound-names-fill-the-console-with-errors)
 
 Every entry names the retail address it was read from, the binary, and the
 file that reproduces it. An entry is listed only once its function is
@@ -551,6 +552,38 @@ the settings `NetLevel` and `NetCALevel`, which nothing reads: the levels
 are `NetLevel0`, `NetLevel1`, ... (and `NetCALevel0`, ...), counted by
 `NetNumLevels` (`NetCANumLevels`). The level list can only be set by the
 wizard, or by editing `NetHost.txt`.
+
+### Empty and placeholder sound names fill the console with errors
+Object.lto · `src/game/ObjectDLL/ServerSoundMgr.cpp`, `RotatingWorldModel.cpp`, `AISounds.cpp`
+
+> **✅ FIXED in the modern build** (`NOLFSRC_MODERN`, MODERN.md M-P5-21,
+> issue #64): `CServerSoundMgr::PlaySound` ignores an empty sound name and
+> does not print an error (`ServerSoundMgr.cpp`). `GetSound` gives "no
+> sound" for the placeholder `"x"` (`AISounds.cpp`). A sound name that is
+> not found is still reported. The release build keeps the retail code.
+
+The console shows `ERROR in CServerSoundMgr::PlaySound() - Couldn't play
+sound ''`, one time or more, when some levels start. The sound name is
+empty. The game plays nothing in its place, thus the only effect is the
+error lines.
+
+The cause is level objects that read a sound property into a string and do
+not check for an empty value. `RotatingWorldModel::ReadProp` makes a string
+from `BusySound`, `SpinUpSound` and `SpinDownSound` when the property is
+there, also when it is empty. `StartSound` only checks for no string, not
+for an empty one, and plays it (for example, `SetNormalRotation` plays the
+busy sound when the level starts). The engine cannot find a file with no
+name, and `CServerSoundMgr::PlaySound` prints the error. M07S01 gives two of
+these lines when it starts. The fix is in `PlaySound`, thus it also covers
+other callers that give an empty name.
+
+`ATTRIBUTES/ServerSnd.txt` also gives `"x"` as the sound for some character
+events: `CombAggr0` and `CombDef0` for `[Partner]`, all events but `Death`
+and `Pain` for `[Frogman]`, and all events for `[Animal]` (the dog's and
+the shark's last step). The entry stops `GetSound` at the character's own
+set, thus the character does not use the lines of its nationality or its
+sex. But `"x"` is not a file: the game plays it, and the console shows
+`Couldn't play sound 'x'`.
 
 ---
 

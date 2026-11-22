@@ -133,6 +133,15 @@ HLTSOUND CServerSoundMgr::PlaySound(PlaySoundInfo & psi)
 {
 	HLTSOUND hSnd = LTNULL;
 
+#ifdef NOLFSRC_MODERN
+	// M-P5-21 (issue #64): an empty name is "no sound", not an error. Level
+	// objects read their sound properties into strings without checking for
+	// an empty value (RotatingWorldModel's BusySound, SpinUpSound and
+	// SpinDownSound, for example), so retail printed "Couldn't play sound
+	// ''" for each of them. A name that is not found is still reported.
+	if (!psi.m_szSoundName[0]) return LTNULL;
+#endif
+
 	// Play the sound...
 
 	LTRESULT hResult = g_pLTServer->PlaySound(&psi);

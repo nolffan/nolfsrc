@@ -177,6 +177,19 @@ m10s01 - american
 	}
 }
 
+#ifdef NOLFSRC_MODERN
+// M-P5-21 (issue #64): ServerSnd.txt gives some characters "x" for an
+// event (CombAggr0 = "x" for Partner, most events for Frogman, the
+// [Animal] set). The entry stops the search at the character's own set, so
+// that the character does not get the nationality's or the sex's lines,
+// but "x" is no file: retail plays it, and the console shows "Couldn't
+// play sound 'x'". The placeholder means "no sound".
+static LTBOOL IsNoSoundPlaceholder(CString & str)
+{
+	return (stricmp(str.GetBuffer(0), "x") == 0);
+}
+#endif
+
 // ----------------------------------------------------------------------- //
 //
 //	ROUTINE:	GetSound()
@@ -209,6 +222,9 @@ char* GetSound(CCharacter* pCharacter, AISound ais)
 
 	if (str.GetLength() > 0)
 	{
+#ifdef NOLFSRC_MODERN
+		if (IsNoSoundPlaceholder(str)) return LTNULL;
+#endif
 		strcpy(s_FileBuffer, str.GetBuffer(0));
 		return s_FileBuffer;
 	}
@@ -221,6 +237,9 @@ char* GetSound(CCharacter* pCharacter, AISound ais)
 
 		if (str.GetLength() > 0)
 		{
+#ifdef NOLFSRC_MODERN
+			if (IsNoSoundPlaceholder(str)) return LTNULL;
+#endif
 			strcpy(s_FileBuffer, str.GetBuffer(0));
 			return s_FileBuffer;
 		}
@@ -233,6 +252,9 @@ char* GetSound(CCharacter* pCharacter, AISound ais)
 
 			if (str.GetLength() > 0)
 			{
+#ifdef NOLFSRC_MODERN
+				if (IsNoSoundPlaceholder(str)) return LTNULL;
+#endif
 				strcpy(s_FileBuffer, str.GetBuffer(0));
 				return s_FileBuffer;
 			}

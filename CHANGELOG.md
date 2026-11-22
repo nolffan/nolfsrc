@@ -12,6 +12,11 @@ covers each change in detail, under its item number (M-P1-01 and so on).
 
 Since the first public release:
 
+- **No more "Couldn't play sound ''" errors in the console.** Some level
+  objects, and some characters, have no sound for an event, and the game
+  reported an error each time it played that nothing. Now it plays nothing
+  without an error. A sound file that is missing is still reported.
+  (issue #64)
 - **No default key for the crosshair toggle.** X turned the crosshair off,
   and a player who pushed it by accident lost the crosshair with no clue
   why. The toggle has no key now; you can bind one in Customize Controls.
