@@ -12,6 +12,12 @@ covers each change in detail, under its item number (M-P1-01 and so on).
 
 Since the first public release:
 
+- **The music after a load or the jukebox.** The music stops before a
+  level or a saved game loads, and when you leave the jukebox. When it
+  started again at the same intensity as before the stop, the game
+  refused the request, and the music stayed silent until the next change
+  of mood. This occurred with the Game of the Year theme. Now the music
+  starts again. (refs issue #68)
 - **X on a controller closes a popup again.** When you picked up an
   intelligence item with a controller, X (Activate) did not close its
   text, and B closed it but also made you crouch. Now X, A, B and Start

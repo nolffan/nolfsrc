@@ -494,6 +494,15 @@ LTRESULT CLTDirectMusicMgr::Stop(const LTDMEnactTypes nStart)
 
 	m_pQueueAfter = LTNULL;
 
+#ifdef NOLFSRC_MODERN
+	// M-P4-15, fixed: a stop forgets the intensity (RETAIL_BUGS.md). The
+	// performance plays nothing now, so the next ChangeIntensity starts its
+	// intensity as at the start of a level; retail kept the number, and a
+	// request for that same number was then refused ("new intensity same
+	// as old"), which left the music silent.
+	m_nCurIntensity = 0;
+#endif
+
 	LeaveCriticalSection(&m_CriticalSection);
 	return LT_OK;
 }

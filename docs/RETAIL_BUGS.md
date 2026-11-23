@@ -43,6 +43,7 @@ in.
 * [`at_Advance` divides by the last keyframe's time](#at_advance-divides-by-the-last-keyframes-time)
 * [Model shadows are switched off for good by the first cinematic](#model-shadows-are-switched-off-for-good-by-the-first-cinematic)
 * [`StopSecondary` and `StopMotif` test the wrong object when given a name](#stopsecondary-and-stopmotif-test-the-wrong-object-when-given-a-name)
+* [After a stop, the music does not start again at the same intensity](#after-a-stop-the-music-does-not-start-again-at-the-same-intensity)
 * [`ci_GetModelNodeName` refuses node 0 and does not terminate](#ci_getmodelnodename-refuses-node-0-and-does-not-terminate)
 * [`se_ModelHashCleanup` uses a global instead of its argument, and leaks](#se_modelhashcleanup-uses-a-global-instead-of-its-argument-and-leaks)
 * [`ws_AddClippedContact` divides by a dot product that can be zero](#ws_addclippedcontact-divides-by-a-dot-product-that-can-be-zero)
@@ -454,6 +455,32 @@ instead. The by-name loop re-runs `FindByName` until nothing is found and
 loaded but not playing would be found forever: a hang. Nothing reaches that
 state today (a node is only added once DirectMusic has returned a segment
 state), so the wrong test is the only thing between the loop and the hang.
+
+### After a stop, the music does not start again at the same intensity
+`0x00440480` (lithtech.exe) · `src/engine/lithtech/clientmusic.cpp` (`CLTDirectMusicMgr::Stop`)
+
+> **✅ FIXED in the modern build** (`NOLFSRC_MODERN`, MODERN.md M-P4-15,
+> refs issue #68): `Stop` sets the current intensity to 0, as `InitLevel`
+> does. The release build keeps the retail code.
+
+`Stop` stops the performance and empties the queue, but it does not
+change `m_nCurIntensity`. `ChangeIntensity` does nothing when the new
+intensity is equal to `m_nCurIntensity` ("new intensity same as old
+nothing to do"). Thus, after a stop, a request for the same intensity
+does not start the music.
+
+The game stops the music before it loads a level or a saved game
+(`CInterfaceMgr::PreLoadingLevelState`), and the modern build's jukebox
+stops it when the player leaves. To start the music again, `CMusic::Play`
+calls `Play`, which asks for the initial intensity of the control file,
+and then `ChangeIntensity`. When the intensity before the stop, the
+initial intensity and the new intensity are the same, the manager refuses
+both requests and the music stays silent until the next change of mood.
+In the retail data, only the Game of the Year theme (`Music\GOTY`) has
+an initial intensity that is not silent: intensity 2, "Ambience". Tested:
+in `GOTY\M16S01`, with `LTDMConsoleOutput 4`, the console commands
+`music i 2`, `music s x` and `music i 2` give `Stop` and then two
+refusals.
 
 ### Model shadows are switched off for good by the first cinematic
 `CGameClientShell::TurnOnAlternativeCamera`, `TurnOffAlternativeCamera` (CShell.dll) · `src/game/ClientShellDLL/GameClientShell.cpp`
