@@ -48,6 +48,10 @@
 // M-P3-27: "Press any key to continue." after loading
 #include "cshell/p3_loadprompt.h"
 #endif
+#ifdef NOLFSRC_MODERN
+// M-P7-10: the controller's buttons that close a popup
+#include "cshell/p7_pad.h"
+#endif
 
 // TESTING DYNAMIC LIGHT IN INTERFACE
 /*
@@ -141,6 +145,28 @@ namespace
 	LTBOOL g_bInGameFogEnabled = LTTRUE;
 
 	HLTCOLOR hShadeColor;
+
+#ifdef NOLFSRC_MODERN
+	// M-P5-17, M-P7-10: a popup closes when the key or button that asks
+	// for it (the Activate key, the right mouse button, a controller
+	// button) is released, so that it does not go on into play
+	LTBOOL g_bClosePopup = LTFALSE;
+	int    g_nPopupActivateKey = -1;		// the key bound to Activate, when the popup came
+
+	// The popup pauses the game (M-P3-15), and while the game is paused
+	// the engine turns every command off: IsCommandOn(COMMAND_ID_ACTIVATE)
+	// is always false here.  So the keys and buttons are read themselves.
+	LTBOOL PopupCloseInputDown()
+	{
+		if (g_nPopupActivateKey > 0 && IsKeyDown(g_nPopupActivateKey))
+			return LTTRUE;
+
+		if (IsKeyDown(VK_RBUTTON))
+			return LTTRUE;
+
+		return P7Pad_PopupButtonDown() ? LTTRUE : LTFALSE;
+	}
+#endif
 }
 
 // ----------------------------------------------------------------------- //
@@ -755,20 +781,36 @@ LTBOOL CInterfaceMgr::Update()
 
 		case GS_POPUP:
 		{
-			if (g_bLockPopup && !g_pLTClient->IsCommandOn(COMMAND_ID_ACTIVATE))
+#ifdef NOLFSRC_MODERN
+			// M-P5-17, M-P7-10 (issue #63): retail's lock reads the
+			// Activate command, which is always off while the popup pauses
+			// the game, so it let go at once.  The lock now holds while
+			// the key or button that opened the popup is down.  A close
+			// asked for after that (OnKeyDown, OnRButtonDown, a controller
+			// button) is done when every such key and button is up.
+			LTBOOL bCloseDown = PopupCloseInputDown();
+
+			if (g_bLockPopup && !bCloseDown)
 			{
 				g_bLockPopup = LTFALSE;
 			}
-#ifdef NOLFSRC_MODERN
-			// M-P5-17: Activate closes the popup, on whatever it is bound
-			// to (a controller's button too, which sends no key), once the
-			// press that opened it is let go. OnCommandOn's own close never
-			// runs: the popup pauses the game (M-P3-15), which stops the
-			// commands, while their state is still read here.
-			else if (!g_bLockPopup && m_PopupText.IsVisible() &&
-					 g_pLTClient->IsCommandOn(COMMAND_ID_ACTIVATE))
+
+			if (P7Pad_PopupClosePressed() && !g_bLockPopup)
 			{
-				m_PopupText.Clear();
+				g_bClosePopup = LTTRUE;
+			}
+
+			if (g_bClosePopup && !bCloseDown)
+			{
+				g_bClosePopup = LTFALSE;
+
+				if (m_PopupText.IsVisible())
+					m_PopupText.Clear();
+			}
+#else
+			if (g_bLockPopup && !g_pLTClient->IsCommandOn(COMMAND_ID_ACTIVATE))
+			{
+				g_bLockPopup = LTFALSE;
 			}
 #endif
 
@@ -2662,11 +2704,12 @@ LTBOOL CInterfaceMgr::OnKeyDown(int key, int rep)
 		{
 #ifdef NOLFSRC_MODERN
 			// M-P5-17: the Activate key closes a popup too, once the press
-			// that opened it is let go (g_bLockPopup)
+			// that opened it is let go (g_bLockPopup); when the key is
+			// released (Update), so that it does not activate in play
 			if (m_PopupText.IsVisible() && !g_bLockPopup && key > 0 &&
 				key == GetCommandKey(COMMAND_ID_ACTIVATE))
 			{
-				m_PopupText.Clear();
+				g_bClosePopup = LTTRUE;
 				return LTTRUE;
 			}
 #endif
@@ -3273,6 +3316,12 @@ LTBOOL CInterfaceMgr::PrePopupState(GameState eCurState)
 	g_pGameClientShell->AllowPlayerMovement(LTFALSE);
 
 	g_bLockPopup = LTTRUE;
+
+#ifdef NOLFSRC_MODERN
+	// M-P7-10: no close asked for yet; the Activate key the lock waits for
+	g_bClosePopup = LTFALSE;
+	g_nPopupActivateKey = GetCommandKey(COMMAND_ID_ACTIVATE);
+#endif
 
 #ifdef NOLFSRC_MODERN
 	// M-P3-15: with the cursor shown
@@ -4245,9 +4294,9 @@ void CInterfaceMgr::OnRButtonDown(int x, int y)
 	case GS_POPUP:
 		{
 			// M-P5-17: the right button (Activate by default) closes a
-			// popup, as Escape does
+			// popup, as Escape does; when it is released (Update)
 			if (m_PopupText.IsVisible() && !g_bLockPopup)
-				m_PopupText.Clear();
+				g_bClosePopup = LTTRUE;
 		}	break;
 #endif
 	case GS_SPLASHSCREEN:

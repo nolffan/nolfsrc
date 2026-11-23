@@ -458,10 +458,14 @@ static void Close()
 	s_bVisible = LTFALSE;
 	ClearEdit();
 
+	// A popup that came while the console was open (a "Trigger" typed
+	// in it) paused the game too: it goes on when the popup closes
+	// (M-P7-10).
 	if (s_bWePaused)
 	{
 		s_bWePaused = LTFALSE;
-		if (g_pGameClientShell && g_pGameClientShell->IsGamePaused())
+		if (g_pGameClientShell && g_pGameClientShell->IsGamePaused() &&
+			g_pInterfaceMgr->GetGameState() != GS_POPUP)
 			g_pGameClientShell->PauseGame(LTFALSE);
 	}
 }

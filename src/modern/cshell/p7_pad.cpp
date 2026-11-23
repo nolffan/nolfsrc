@@ -39,6 +39,17 @@
 //           (IClientShell's), as the engine delivers a key.  Not while the Controls folder
 //           is waiting for a control to bind.
 //
+//           Popups (M-P7-10): a popup (the text of an intelligence item)
+//           pauses the game, and while the game is paused the engine
+//           turns every bound command off, so the button bound to
+//           Activate does nothing there.  While a popup is up, A, B,
+//           Start and every button bound to Activate (X by default) are
+//           read here instead: a press that starts while the popup is up
+//           asks the popup to close (P7Pad_PopupClosePressed), and the
+//           interface closes it when the button is released
+//           (P7Pad_PopupButtonDown), so that the button does not go on
+//           into play (X would activate, A jump, B duck).
+//
 //           Modern build only (NOLFSRC_MODERN).
 //
 // ----------------------------------------------------------------------- //
@@ -84,6 +95,126 @@ namespace
 	int			s_nHeldKey;
 	float		s_fHeldTime;
 	float		s_fNextRepeat;
+
+	// M-P7-10: the buttons that close a popup (P7PAD_ bits, and the two
+	// triggers above them), found when the popup comes up; a press of one
+	// of them since then.
+	const DWORD	c_dwLeftTrigger		= 0x10000;
+	const DWORD	c_dwRightTrigger	= 0x20000;
+
+	bool		s_bInPopup;
+	DWORD		s_dwPopupButtons;
+	bool		s_bPopupPressed;
+	DWORD		s_dwPrevPopupHeld;
+
+	// The pad's buttons as the engine's ##gamepad device names them
+	// (engine/p7_gamepad.cpp), with their bits.
+	struct ButtonName
+	{
+		const char*	pName;
+		DWORD		dwBit;
+	};
+
+	const ButtonName s_ButtonNames[] =
+	{
+		{ "A Button",			P7PAD_A },
+		{ "B Button",			P7PAD_B },
+		{ "X Button",			P7PAD_X },
+		{ "Y Button",			P7PAD_Y },
+		{ "Left Bumper",		P7PAD_LEFT_SHOULDER },
+		{ "Right Bumper",		P7PAD_RIGHT_SHOULDER },
+		{ "Back",				P7PAD_BACK },
+		{ "Start",				P7PAD_START },
+		{ "Left Stick Click",	P7PAD_LEFT_THUMB },
+		{ "Right Stick Click",	P7PAD_RIGHT_THUMB },
+		{ "D-Pad Up",			P7PAD_DPAD_UP },
+		{ "D-Pad Down",			P7PAD_DPAD_DOWN },
+		{ "D-Pad Left",			P7PAD_DPAD_LEFT },
+		{ "D-Pad Right",		P7PAD_DPAD_RIGHT },
+		{ "Left Trigger",		c_dwLeftTrigger },
+		{ "Right Trigger",		c_dwRightTrigger },
+	};
+
+	const int c_nButtonNames = sizeof(s_ButtonNames) / sizeof(s_ButtonNames[0]);
+
+	// The buttons held, with the triggers past XInput's threshold (as the
+	// ##gamepad device reports them).
+	DWORD HeldButtons()
+	{
+		DWORD dwHeld = s_Pad.wButtons;
+
+		if (s_Pad.bLeftTrigger > P7PAD_TRIGGER_THRESHOLD)
+			dwHeld |= c_dwLeftTrigger;
+		if (s_Pad.bRightTrigger > P7PAD_TRIGGER_THRESHOLD)
+			dwHeld |= c_dwRightTrigger;
+
+		return dwHeld;
+	}
+
+	// The pad's buttons bound to a command (COMMAND_ID_*).
+	DWORD ButtonsBoundTo(int nCommand)
+	{
+		DeviceBinding* pBindings = g_pLTClient->GetDeviceBindings(DEVICETYPE_JOYSTICK);
+		DeviceBinding* pBinding;
+		DWORD dwButtons = 0;
+
+		for (pBinding = pBindings; pBinding; pBinding = pBinding->pNext)
+		{
+			GameAction* pAction;
+
+			if (_stricmp(pBinding->strDeviceName, "##gamepad"))
+				continue;
+
+			for (pAction = pBinding->pActionHead; pAction; pAction = pAction->pNext)
+			{
+				if (pAction->nActionCode != nCommand)
+					continue;
+
+				for (int i = 0; i < c_nButtonNames; i++)
+				{
+					if (!_stricmp(s_ButtonNames[i].pName, pBinding->strTriggerName))
+						dwButtons |= s_ButtonNames[i].dwBit;
+				}
+			}
+		}
+
+		if (pBindings)
+			g_pLTClient->FreeDeviceBindings(pBindings);
+
+		return dwButtons;
+	}
+
+	// M-P7-10: while a popup is up, its close buttons instead of the menu
+	// keys.  Only a press that starts while the popup is up counts: the
+	// press that opened it (X on an intelligence item) is held from
+	// before.  Returns false when no popup is up.
+	bool UpdatePopup()
+	{
+		DWORD dwHeld;
+
+		if (!g_pInterfaceMgr || g_pInterfaceMgr->GetGameState() != GS_POPUP)
+		{
+			s_bInPopup      = false;
+			s_bPopupPressed = false;
+			return false;
+		}
+
+		dwHeld = HeldButtons();
+
+		if (!s_bInPopup)
+		{
+			s_bInPopup        = true;
+			s_bPopupPressed   = false;
+			s_dwPopupButtons  = P7PAD_A | P7PAD_B | P7PAD_START | ButtonsBoundTo(COMMAND_ID_ACTIVATE);
+			s_dwPrevPopupHeld = dwHeld;
+		}
+
+		if (dwHeld & ~s_dwPrevPopupHeld & s_dwPopupButtons)
+			s_bPopupPressed = true;
+
+		s_dwPrevPopupHeld = dwHeld;
+		return true;
+	}
 
 	float ReadVar(VarTrack& vt, float fDefault)
 	{
@@ -153,6 +284,12 @@ namespace
 	void UpdateMenus(WORD wPressed)
 	{
 		int nKey;
+
+		if (UpdatePopup())
+		{
+			s_nHeldKey = 0;
+			return;
+		}
 
 		if (InPlay())
 		{
@@ -318,6 +455,19 @@ void P7Pad_AddLook(float* pOffsets)
 bool P7Pad_AnyButtonDown()
 {
 	return s_Pad.wButtons != 0 || s_Pad.bLeftTrigger > 128 || s_Pad.bRightTrigger > 128;
+}
+
+bool P7Pad_PopupClosePressed()
+{
+	bool bPressed = s_bPopupPressed;
+
+	s_bPopupPressed = false;
+	return bPressed;
+}
+
+bool P7Pad_PopupButtonDown()
+{
+	return s_bInPopup && (HeldButtons() & s_dwPopupButtons) != 0;
 }
 
 bool P7Pad_GetMove(float* pRight, float* pForward)

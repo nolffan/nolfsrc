@@ -7,9 +7,10 @@
 //           (src/modern/engine/p7_gamepad.cpp) gives the buttons to the
 //           bindings like any key's; this reads the pad itself for what
 //           must not depend on them: the sticks (analog look, M-P7-03;
-//           analog movement, M-P7-04) and the menus' navigation and Start
-//           (M-P7-05).  The retail files call into these from #ifdef
-//           NOLFSRC_MODERN blocks.
+//           analog movement, M-P7-04), the menus' navigation and Start
+//           (M-P7-05) and the buttons that close a popup (M-P7-10).  The
+//           retail files call into these from #ifdef NOLFSRC_MODERN
+//           blocks.
 //
 //           Compiled only in the modern build (NOLFSRC_MODERN).
 //
@@ -33,5 +34,7 @@ bool	P7Pad_GetMove(float* pRight, float* pForward);	// the left stick, -1..1, pa
 float	P7Pad_SpeedScale();						// M-P7-04: the share of the walk speed the stick asks for
 void	P7Pad_SetCapture(bool bCapture);		// the Controls folder is waiting for a control
 bool	P7Pad_AnyButtonDown();					// M-P3-27: a button held, or a trigger past half way
+bool	P7Pad_PopupClosePressed();				// M-P7-10: a popup's close button pressed while it was up (once)
+bool	P7Pad_PopupButtonDown();				// M-P7-10: a popup's close button held
 
 #endif // __P7_PAD_H__

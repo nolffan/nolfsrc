@@ -12,6 +12,13 @@ covers each change in detail, under its item number (M-P1-01 and so on).
 
 Since the first public release:
 
+- **X on a controller closes a popup again.** When you picked up an
+  intelligence item with a controller, X (Activate) did not close its
+  text, and B closed it but also made you crouch. Now X, A, B and Start
+  close a popup. The popup closes when you release the button, so the
+  button does not also activate, jump or crouch in the game. The keyboard's
+  Activate key and the right mouse button also close a popup on release
+  now. (M-P5-17, M-P7-10. Refs issue #63)
 - **"Press any key to continue." after loading.** On a computer of
   today a level loads in one or two seconds, and the loading screen
   went away before you could read the mission's name. Now, after a new
