@@ -44,6 +44,7 @@ in.
 * [Model shadows are switched off for good by the first cinematic](#model-shadows-are-switched-off-for-good-by-the-first-cinematic)
 * [`StopSecondary` and `StopMotif` test the wrong object when given a name](#stopsecondary-and-stopmotif-test-the-wrong-object-when-given-a-name)
 * [After a stop, the music does not start again at the same intensity](#after-a-stop-the-music-does-not-start-again-at-the-same-intensity)
+* [A load chooses the music of the save again, at random](#a-load-chooses-the-music-of-the-save-again-at-random)
 * [`ci_GetModelNodeName` refuses node 0 and does not terminate](#ci_getmodelnodename-refuses-node-0-and-does-not-terminate)
 * [`se_ModelHashCleanup` uses a global instead of its argument, and leaks](#se_modelhashcleanup-uses-a-global-instead-of-its-argument-and-leaks)
 * [`ws_AddClippedContact` divides by a dot product that can be zero](#ws_addclippedcontact-divides-by-a-dot-product-that-can-be-zero)
@@ -481,6 +482,27 @@ an initial intensity that is not silent: intensity 2, "Ambience". Tested:
 in `GOTY\M16S01`, with `LTDMConsoleOutput 4`, the console commands
 `music i 2`, `music s x` and `music i 2` give `Stop` and then two
 refusals.
+
+### A load chooses the music of the save again, at random
+`src/game/ObjectDLL/MusicMgr.cpp` (`CMusicMgr::Update`, `CMusicMgr::Load`)
+
+> **✅ FIXED in the modern build** (`NOLFSRC_MODERN`, MODERN.md M-P4-16,
+> refs issue #68): after a load, the first choice of a mood keeps the
+> saved intensity when that intensity is a level of the mood. The release
+> build keeps the retail code.
+
+Each mood has a list of intensities (`ATTRIBUTES/Music.txt`, for example
+`None0` and `None1`). When the mood changes, `Update` picks one of them at
+random. A saved game has the moods, but not the last mood
+(`m_eLastMood`), thus the first update after a load sees a change of mood
+and picks again. The music after a load is then often not the music at
+the save. Tested: in `GOTY\M16S01`, six loads of one quicksave, made at
+intensity 1 (mood "Routine", which has four intensities), played
+intensities 3, 1, 3, 2, 4 and 2.
+
+The save also has the intensity of the client at the save
+(`m_iRestoreMusicIntensity`, from `MID_SAVE_GAME`), but the retail code
+uses it only when the mood is locked (scripted music).
 
 ### Model shadows are switched off for good by the first cinematic
 `CGameClientShell::TurnOnAlternativeCamera`, `TurnOffAlternativeCamera` (CShell.dll) · `src/game/ClientShellDLL/GameClientShell.cpp`

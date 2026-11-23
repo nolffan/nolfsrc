@@ -18,6 +18,11 @@ Since the first public release:
   refused the request, and the music stayed silent until the next change
   of mood. This occurred with the Game of the Year theme. Now the music
   starts again. (refs issue #68)
+- **A load keeps the music of the save.** Each mood has a list of
+  pieces, and the game picks one at random when the mood changes. A load
+  picked again, thus each load of the same save could play a different
+  piece. Now a load plays the piece of the save when it is in the list
+  of the mood. (refs issue #68)
 - **X on a controller closes a popup again.** When you picked up an
   intelligence item with a controller, X (Activate) did not close its
   text, and B closed it but also made you crouch. Now X, A, B and Start

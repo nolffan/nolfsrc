@@ -59,6 +59,9 @@ CMusicMgr::CMusicMgr()
 	m_bLockedEvent = LTFALSE;
 
 	m_bInitialized = LTFALSE;
+#ifdef NOLFSRC_MODERN
+	m_bP4Loaded = LTFALSE;
+#endif
 }
 
 // ----------------------------------------------------------------------- //
@@ -148,6 +151,9 @@ void CMusicMgr::Term()
 	m_bRestoreMusicIntensity = LTFALSE;
 	m_eLastMood = eMoodInvalid;
 	m_bEnabled = LTFALSE;
+#ifdef NOLFSRC_MODERN
+	m_bP4Loaded = LTFALSE;
+#endif
 
 	for ( uint32 iMood = 0 ; iMood < kNumMoods ; ++iMood )
 	{
@@ -183,6 +189,9 @@ void CMusicMgr::Load(HMESSAGEREAD hRead)
 	LOAD_BOOL(m_bLockedMood);
 	LOAD_BOOL(m_bLockedEvent);
 	LOAD_INT(m_iRestoreMusicIntensity);
+#ifdef NOLFSRC_MODERN
+	m_bP4Loaded = LTTRUE;
+#endif
 }
 
 // ----------------------------------------------------------------------- //
@@ -211,6 +220,10 @@ void CMusicMgr::Update()
 			m_eLastMood = eMoodInvalid;
 			m_bRestoreMusicIntensity = LTFALSE;
 		}
+#ifdef NOLFSRC_MODERN
+		// M-P4-16: the music of a locked mood is restored above
+		m_bP4Loaded = LTFALSE;
+#endif
 
 		return;
 	}
@@ -232,6 +245,26 @@ void CMusicMgr::Update()
 #endif
 				char szMusic[128];
 				uint32 iLevel = GetRandom(0, m_acMoods[iMood]-1);
+#ifdef NOLFSRC_MODERN
+				// M-P4-16, fixed: the first choice after a load picked the
+				// mood's level at random again, so the music changed at each
+				// load of the same save (RETAIL_BUGS.md). When the music of
+				// the save (the client's intensity, saved for the locked
+				// case) is a level of this mood, keep it.
+				if ( m_bP4Loaded )
+				{
+					for ( uint32 iSaved = 0 ; iSaved < m_acMoods[iMood] ; iSaved++ )
+					{
+						if ( m_aanMoods[iMood][iSaved] == m_iRestoreMusicIntensity )
+						{
+							iLevel = iSaved;
+							break;
+						}
+					}
+
+					m_bP4Loaded = LTFALSE;
+				}
+#endif
 				sprintf(szMusic, "MUSIC I %d measure", m_aanMoods[iMood][iLevel]);
 //				g_pLTServer->CPrint(szMusic);
 

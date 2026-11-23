@@ -105,6 +105,12 @@ class CMusicMgr
 		LTFLOAT		m_afEventChances[kNumEvents];
 
 		LTBOOL		m_bEnabled;
+
+#ifdef NOLFSRC_MODERN
+		// M-P4-16: a saved game was loaded, and no mood has been chosen
+		// since; the first choice keeps the music of the save
+		LTBOOL		m_bP4Loaded;
+#endif
 };
 
 #endif // MUSICMGR_H
