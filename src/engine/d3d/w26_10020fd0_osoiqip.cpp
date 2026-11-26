@@ -327,8 +327,8 @@ inline void FreeDeviceList()
 		pCur = pNext;
 	}
 
-	g_1008bf78.m_pPrev = &g_1008bf78;
 	g_1008bf78.m_pNext = &g_1008bf78;
+	g_1008bf78.m_pPrev = &g_1008bf78;
 }
 
 
@@ -606,8 +606,8 @@ struct TUInit10021580
 	TUInit10021580()
 	{
 		*(void**)&g_1008bf28 = g_10089390;
-		g_1008bf78.m_pPrev = &g_1008bf78;
 		g_1008bf78.m_pNext = &g_1008bf78;
+		g_1008bf78.m_pPrev = &g_1008bf78;
 	}
 };
 static TUInit10021580 s_TUInit10021580;

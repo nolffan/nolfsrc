@@ -6996,7 +6996,10 @@ LTBOOL CAIHumanStateGetBackup::Init(CAIHuman* pAIHuman)
 		return LTFALSE;
 	}
 
-	m_pStrategyFollowPath->SetMovement(aniRun);
+	// The source release reads aniRun here. The Game of the Year
+	// Object.lto loads aniWalk (0x1005b512: 0x101c11c0, the address that the
+	// other identical rows prove is aniWalk), so the AI walks to get backup.
+	m_pStrategyFollowPath->SetMovement(aniWalk);
 	m_pStrategyFollowPath->SetUrgency(CAIHumanStrategyFollowPath::eUrgencyAggressive);
 
 	return LTTRUE;

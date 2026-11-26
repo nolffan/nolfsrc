@@ -171,10 +171,16 @@ void            dsi_ServerErrorV(char* pFormat, ...);    // 0x0042e6f0
 		return code; \
 	}
 
+// Not written through V_RETURN_ERROR_SYM: the preprocessor expands `code`
+// before V_RETURN_ERROR_SYM can apply `#` to it, and then the code string is
+// "60" (see de_error.h's RETURN_ERROR_NAMED).
 #define V_RETURN_ERROR_NAMED(level, fnName, code) \
 	{ \
 		static char* pErrFnName = fnName; \
-		V_RETURN_ERROR_SYM(level, pErrFnName, code) \
+		dsi_OnReturnErrorV(code); \
+		if (g_DebugLevelV >= level) \
+			dsi_ServerErrorV(g_pErrorFormatV, pErrFnName, #code, V_ERRDESC); \
+		return code; \
 	}
 
 

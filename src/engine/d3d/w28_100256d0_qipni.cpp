@@ -220,6 +220,9 @@ extern void     sub_1000f650(void* pPoly);              // 0x1000f650  w15_1000f
 // ======================================================================= //
 //  0x100256d0 -- 250 bytes.
 // ======================================================================= //
+// VC6 writes a chain of stores of one register in the opposite order to the
+// source, so each chain below is in the opposite order to the shipped
+// stores (the data-reference check of ext/tools 9c3083b proves the order).
 static void sub_100256d0(int32 nMode)
 {
 	DrawSlotFn pfn;
@@ -231,8 +234,8 @@ static void sub_100256d0(int32 nMode)
 	if (g_1008d96c)
 	{
 		pfn = (DrawSlotFn)sub_10073140;
-		g_1008ce9c = pfn;
 		g_1008cea0 = pfn;
+		g_1008ce9c = pfn;
 	}
 	else
 	{
@@ -242,32 +245,32 @@ static void sub_100256d0(int32 nMode)
 	if (g_CV_ShowFillInfo)
 	{
 		pfn = (DrawSlotFn)sub_10024090;
-		g_1008ce98 = pfn;
-		g_1008ce94 = pfn;
-		g_1008ce9c = pfn;
 		g_1008cea0 = pfn;
+		g_1008ce9c = pfn;
+		g_1008ce94 = pfn;
+		g_1008ce98 = pfn;
 	}
 	else if (g_CV_DrawFlat)
 	{
 		pfn = (DrawSlotFn)sub_10024020;
-		g_1008ce98 = pfn;
-		g_1008ce94 = pfn;
-		g_1008ce9c = pfn;
 		g_1008cea0 = pfn;
+		g_1008ce9c = pfn;
+		g_1008ce94 = pfn;
+		g_1008ce98 = pfn;
 	}
 	else if (!g_CV_LightMap || !g_1008d978 ||
 	         !(*(uint32*)((uint8*)g_p1008beac + 0x180) & 4))
 	{
 		pfn = (DrawSlotFn)sub_1003dc80;
-		g_1008cea0 = pfn;
 		g_1008ce9c = pfn;
+		g_1008cea0 = pfn;
 	}
 
 	if (nMode == 1)
 	{
 		pfn = (DrawSlotFn)sub_1003dc80;
-		g_1008cea0 = pfn;
 		g_1008ce9c = pfn;
+		g_1008cea0 = pfn;
 	}
 
 	if (!g_1008beb8->m_p00)

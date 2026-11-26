@@ -79,8 +79,8 @@ void sub_1003b3d0(LTRect* pRect)
 
 	if (!pRect)
 	{
-		g_DirtyRects[0].top    = 0;
 		g_DirtyRects[0].left   = 0;
+		g_DirtyRects[0].top    = 0;
 		g_DirtyRects[0].right  = g_nWindowWidth;
 		g_DirtyRects[0].bottom = g_nWindowHeight;
 		g_1008e730 = 1;

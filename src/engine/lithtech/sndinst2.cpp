@@ -1319,7 +1319,8 @@ LTRESULT CSoundInstanceQ47C::sub_47d9a0()
 //     field-level shadow selection, same `* m_f34 + 0.5f` rate, same 0x40 pan,
 //     same SetUserData (0x004819f0 is clientsoundmgr.cpp's
 //     SetStreamUserData), same AIL_unlock.
-//   * the format string at 0x004ae710 is "\\\\%d" and the handle is
+//   * the format string at 0x004ae710 is four backslashes and "%d" (the C
+//     literal "\\\\\\\\%d"), and the handle is
 //     CreateFileA's, which is Miles' documented way of streaming from an
 //     already-open Win32 file.
 //   * the CreateFileA arguments read off 0x0047ddd7..0x0047ddee are
@@ -1381,7 +1382,15 @@ LTRESULT CSoundInstanceQ47C::sub_47dd50()
 			}
 		}
 
+		// The shipped format string (0x004ae710) is four backslashes and
+		// the handle. OpenMiles, which the modern build links, reads only
+		// two backslashes and the handle (ext/openmiles stream.zig,
+		// handleFromStreamName), so the modern build keeps that form.
+#ifdef NOLFSRC_MODERN
 		sprintf(szName, "\\\\%d", m_hFile50);
+#else
+		sprintf(szName, "\\\\\\\\%d", m_hFile50);
+#endif
 
 		AIL_lock();
 

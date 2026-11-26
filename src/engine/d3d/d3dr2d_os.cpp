@@ -665,8 +665,8 @@ void sub_10020f30()
 		pCur = pNext;
 	}
 
-	g_1008bf78.m_pPrev = &g_1008bf78;
 	g_1008bf78.m_pNext = &g_1008bf78;
+	g_1008bf78.m_pPrev = &g_1008bf78;
 }
 
 

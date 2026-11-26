@@ -381,7 +381,7 @@ void sub_10039930()
 		pCur = pNext;
 	}
 
-	g_1008e634.m_pNext = g_1008e634.m_pPrev = &g_1008e634;
+	g_1008e634.m_pPrev = g_1008e634.m_pNext = &g_1008e634;
 
 	g_10091950.sub_1006d3e0();
 }
