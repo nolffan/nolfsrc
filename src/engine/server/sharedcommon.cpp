@@ -131,7 +131,7 @@ LTRESULT SharedCommonLT::GetAttachmentTransform(HATTACHMENT hAttachment, LTransf
 	ILTModel* pModelLT = m_pModelLT;
 
 	if (!hAttachment)
-		RETURN_ERROR_NAMED(1, "SharedCommonLT::GetAttachmentTransform", LT_INVALIDPARAMS);
+		RETURN_ERROR_NAMED_NUM(1, "SharedCommonLT::GetAttachmentTransform", LT_INVALIDPARAMS);
 
 	dResult = GetAttachmentObjects(hAttachment, hParent, hChild);
 	if (dResult != LT_OK)

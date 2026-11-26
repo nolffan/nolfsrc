@@ -477,7 +477,7 @@ LTRESULT bm_SetInstanceHandle(CModuleRef* pRef)
 	void (*pfn)(void* hModule);
 
 	if (!pRef)
-		RETURN_ERROR(1, bm_SetInstanceHandle, LT_INVALIDPARAMS);
+		RETURN_ERROR(1, "bm_SetInstanceHandle", LT_INVALIDPARAMS);
 
 	pfn = (void (*)(void*))GetProcAddress((HMODULE)pRef->m_hModule,
 	                                      "SetInstanceHandle");

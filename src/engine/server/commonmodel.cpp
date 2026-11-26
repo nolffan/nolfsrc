@@ -69,12 +69,12 @@ LTRESULT CommonModelLT::GetPiece(HOBJECT hObj, char* pPieceName, HMODELPIECE& hP
 
 	Model* pModel = ((ModelInstance*)hObj)->m_AnimTracker.m_TimeRef.m_pModel;
 	if (!pModel)
-		RETURN_ERROR_NAMED(1, "ILTModel::GetPiece", LT_NOTINITIALIZED);
+		RETURN_ERROR_NAMED_NUM(1, "ILTModel::GetPiece", LT_NOTINITIALIZED);
 
 	if (pModel->FindPiece(pPieceName, &hPiece))
 		return LT_OK;
 
-	RETURN_ERROR_NAMED(1, "ILTModel::GetPiece", LT_NOTFOUND);
+	RETURN_ERROR_NAMED_NUM(1, "ILTModel::GetPiece", LT_NOTFOUND);
 }
 
 // The SDK calls this FindWeightSet; the shipped check literal says
@@ -88,12 +88,12 @@ LTRESULT CommonModelLT::FindWeightSet(HOBJECT hObj, char* pSetName, HMODELWEIGHT
 
 	Model* pModel = ((ModelInstance*)hObj)->m_AnimTracker.m_TimeRef.m_pModel;
 	if (!pModel)
-		RETURN_ERROR_NAMED(1, "ILTModel::GetWeightSet", LT_NOTINITIALIZED);
+		RETURN_ERROR_NAMED_NUM(1, "ILTModel::GetWeightSet", LT_NOTINITIALIZED);
 
 	if (pModel->FindWeightSet(pSetName, &hSet))
 		return LT_OK;
 
-	RETURN_ERROR_NAMED(1, "ILTModel::GetWeightSet", LT_NOTFOUND);
+	RETURN_ERROR_NAMED_NUM(1, "ILTModel::GetWeightSet", LT_NOTFOUND);
 }
 
 LTRESULT CommonModelLT::GetMainTracker(HOBJECT hObj, LTAnimTracker*& pTracker)
@@ -304,7 +304,7 @@ LTRESULT CommonModelLT::GetCurAnimLength(LTAnimTracker* pTracker, uint32& length
 
 	pAnim = pTracker->m_TimeRef.m_pModel->m_AnimArray.m_pArray[pTracker->m_TimeRef.m_Cur.m_iAnim].m_pAnim;
 	if (!pAnim)
-		RETURN_ERROR_NAMED(1, "ILTModel::GetCurAnimLength", LT_NOTINITIALIZED);
+		RETURN_ERROR_NAMED_NUM(1, "ILTModel::GetCurAnimLength", LT_NOTINITIALIZED);
 
 	length = pAnim->GetLength();
 	return LT_OK;

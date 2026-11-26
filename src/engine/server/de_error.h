@@ -131,7 +131,27 @@ extern char g_ShutdownMessage[];
 // name can live in the macro's own braces. A function with two sites shares one
 // variable — the shipped code pushes the same pointer at both — so those
 // declare it themselves and call RETURN_ERROR_SYM / RETURN_ERROR directly.
+// Do not write this macro through RETURN_ERROR_SYM: the preprocessor expands
+// `code` before RETURN_ERROR_SYM can apply `#` to it. Then the code string is
+// "60", and the shipped code string is "LT_INVALIDPARAMS" (the literal check
+// of ext/tools 3d9e068 and later shows this). The body is duplicated on
+// purpose.
 #define RETURN_ERROR_NAMED(level, fnName, code) \
+	{ \
+		static char* pErrFnName = fnName; \
+		dsi_OnReturnError(code); \
+		if (g_DebugLevel >= level) \
+			dsi_ServerError(g_pErrorFormat, pErrFnName, #code, LT_ERRDESC); \
+		return code; \
+	}
+
+// The same, but the code string is the number ("60", "61", "73"). The
+// shipped level-1 sites use this form (LT_NOTINITIALIZED, LT_NOTFOUND, and
+// the LT_INVALIDPARAMS check of SharedCommonLT::GetAttachmentTransform),
+// while the level-2 LT_INVALIDPARAMS sites use the symbolic form above: the
+// shipped server.dll has no "LT_NOTINITIALIZED" string at all. RETURN_ERROR_SYM gets `code` expanded, so its `#` gives the
+// number.
+#define RETURN_ERROR_NAMED_NUM(level, fnName, code) \
 	{ \
 		static char* pErrFnName = fnName; \
 		RETURN_ERROR_SYM(level, pErrFnName, code) \

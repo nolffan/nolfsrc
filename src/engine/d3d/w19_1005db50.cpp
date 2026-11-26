@@ -29,8 +29,10 @@ void sub_1005db50()
 	sub_10021cb0(g_p1008fe60);
 	sub_10021cb0(g_p1008fe64);
 
-	g_n1008fea0 = 0;
-	g_p1008fe64 = 0;
-	g_n1008fe9c = 0;
+	// In the opposite order to the shipped stores (fea0, fe64, fe9c,
+	// fe60): VC6 writes a chain of stores of one register from the last.
 	g_p1008fe60 = 0;
+	g_n1008fe9c = 0;
+	g_p1008fe64 = 0;
+	g_n1008fea0 = 0;
 }

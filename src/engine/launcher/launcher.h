@@ -267,7 +267,6 @@ extern HCURSOR		g_hCursorHand;
 extern HCURSOR		g_hCursorClick;
 extern HCURSOR		g_hCursorArrow;
 
-extern char			g_chSomething;
 extern int			g_nNumRunsCfg;
 extern int			g_bRestoreDefaults;
 extern int			g_bDisplaySet;

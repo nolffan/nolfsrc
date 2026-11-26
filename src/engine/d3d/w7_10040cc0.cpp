@@ -339,8 +339,10 @@ void C10044f74::sub_10047b60(uint32* pbFullbright)
 	uint32 bBlend;
 	uint32 bFullbright;
 
-	g_f1008ac90 = 0.0f;
+	// In the opposite order to the shipped stores: VC6 writes the second
+	// of two stores of one register first (the data-reference check).
 	g_f1008ac94 = 0.0f;
+	g_f1008ac90 = 0.0f;
 	m_n308 = 0;
 
 	if (g_CV_TextureModels && (m_dwFlags694 & 1))

@@ -746,8 +746,8 @@ void sub_100395f0()
 		pCur = pNext;
 	}
 
-	g_List1008e6a4.m_pPrev = &g_List1008e6a4;
 	g_List1008e6a4.m_pNext = &g_List1008e6a4;
+	g_List1008e6a4.m_pPrev = &g_List1008e6a4;
 
 	memset(&g_1008e6b0, 0, sizeof(g_1008e6b0));
 

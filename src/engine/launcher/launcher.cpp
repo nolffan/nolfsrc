@@ -65,8 +65,6 @@ HCURSOR		g_hCursorHand;			// 0x4434
 HCURSOR		g_hCursorClick;			// 0x4438
 HCURSOR		g_hCursorArrow;			// 0x443c
 
-char		g_chSomething;			// 0x4188
-
 CDibMgr*	g_pDibMgr;				// 0x4418
 CDib*		g_pDib;					// 0x4420
 CDibPal*	g_pPal;					// 0x441c
@@ -182,7 +180,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// Make sure the game itself isn't running...
 
-	char sLithTech[128] = { g_chSomething };
+	char sLithTech[128] = "";
 
 	GetCurrentDirectory(125, sLithTech);
 	if (strlen(sLithTech) > 3) strcat(sLithTech, "\\");
@@ -654,7 +652,7 @@ BOOL LaunchGame(char* sCmdLine, BOOL bMultiplayer)
 	char sCmds[1024];
 	strcpy(sCmds, csCmd);
 
-	FILE* pFile = fopen("nolfcmds.txt", "wt");
+	FILE* pFile = fopen("nolfcmds.txt", "w");
 	if (!pFile) return(FALSE);
 
 #ifdef NOLFSRC_MODERN

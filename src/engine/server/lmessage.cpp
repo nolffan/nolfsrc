@@ -100,7 +100,7 @@ LTRESULT LMessageImpl::WriteMessage(IMessageWrite* hMsg)
 	{
 		// A dead message writes the 0xffff sentinel instead.
 		((IMessageWrite*)this)->WriteWord(0xffff);
-		RETURN_ERROR_NAMED(1, "LMessageImpl::WriteMessage", LT_NOTINITIALIZED);
+		RETURN_ERROR_NAMED_NUM(1, "LMessageImpl::WriteMessage", LT_NOTINITIALIZED);
 	}
 
 	// The length word, then the payload minus its leading id byte — the

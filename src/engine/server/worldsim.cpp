@@ -614,7 +614,10 @@ uint32 g_nPhysMoveTime;
 // adds as shipped; `vPush = normal * (BIAS - fMin)` through the operator is
 // what keeps fMin on the stack (`flds BIAS; fsub %st(1),%st; fstp %st(1)`)
 // instead of a named fPush's `fsubrs`; and with Init in place,
-// `for (i = 0, nTries = 0; ...)` orders lithtech's two zeroing xors.
+// `for (i = 0, nTries = 0; ...)` orders lithtech's two zeroing xors. The
+// shipped code loads g_vMoveBase first and adds g_vMoveEnd; VC6 loads the
+// right operand of the sum first, so the source names g_vMoveEnd first (the
+// data-reference check of ext/tools 9c3083b found the operands swapped).
 //
 // Push the box out of every contact plane it is still inside. One pass is not
 // enough: pushing clear of one plane can bury the box in another, so a plane
@@ -632,9 +635,9 @@ void ws_PushBoxOutOfContacts()
 	float       fMin, fDist;
 	int         i, nTries, n;
 
-	vTest.Init(g_vMoveBase.x + g_vMoveEnd.x,
-	           g_vMoveBase.y + g_vMoveEnd.y,
-	           g_vMoveBase.z + g_vMoveEnd.z);
+	vTest.Init(g_vMoveEnd.x + g_vMoveBase.x,
+	           g_vMoveEnd.y + g_vMoveBase.y,
+	           g_vMoveEnd.z + g_vMoveBase.z);
 
 	pState = g_pMoveState;
 
