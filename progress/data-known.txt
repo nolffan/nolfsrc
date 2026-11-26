@@ -60,7 +60,6 @@ lithtech.exe	retail	Net_UG.tbl
 server.dll	retail	Net_G.tbl
 server.dll	retail	Net_UG.tbl
 server.dll	retail	Screenshot
-server.dll	retail	bm_SetInstanceHandle
 
 # The retail lithtech.exe linked dplayx.lib and called it from code /OPT:REF then discarded: the linker keeps the DLL's name. No function of ours calls DirectPlay
 lithtech.exe	retail	DPLAYX.dll
